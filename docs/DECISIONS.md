@@ -185,3 +185,10 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
   `ACTION_CANCEL_COUNTDOWN`. Karena S04 belum ada (P2.4), Batal mengembalikan ke `WAITING_GPS` (tetap di S05).
 - Catatan: uji device menutup countdown awal & cue; banner countdown segmen waktu diverifikasi lewat preview
   (engine sudah diuji di P0.6).
+
+## D-027 P1.9: kontrol layar lari
+- Kontrol lewat aksi service (`ACTION_PAUSE`, `ACTION_RESUME_RUN`, `ACTION_SKIP`, `ACTION_EXTEND`) sehingga
+  UI tidak memegang engine. `RunUiState.steps` membawa hasil expand workout untuk D10.
+- **Ditunda & tercatat:** baris `Session` saat Stop (butuh `Session`/S06, P2.5); chip hasil segmen & status
+  hasil per baris D10 (butuh evaluasi segmen di-wire, P2.8). Ini bukan stub: fitur belum ditambahkan, bukan dummy.
+- Back dialog memakai `BackHandler`; "Tetap lari" menutup dialog, "Stop" menghentikan sesi.

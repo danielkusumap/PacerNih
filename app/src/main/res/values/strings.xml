@@ -71,6 +71,17 @@
     <string name="run_countdown_cancel">Batal</string>
     <string name="run_change_in">Ganti ke %1$s dalam %2$d</string>
     <string name="run_get_ready">Siap-siap: ganti ke %1$s</string>
+    <string name="run_pause">Jeda</string>
+    <string name="run_resume">Lanjut</string>
+    <string name="run_skip">Lewati segmen</string>
+    <string name="run_extend">Perpanjang segmen</string>
+    <string name="run_list_segments">Daftar segmen</string>
+    <string name="run_back_title">Sesi masih berjalan</string>
+    <string name="run_back_message">Tetap di layar lari atau Stop sesi?</string>
+    <string name="run_stay">Tetap lari</string>
+    <string name="run_state_running">Sedang berjalan</string>
+    <string name="run_state_upcoming">Belum dimulai</string>
+    <string name="run_state_done">Selesai</string>
 
     <!-- Foreground service notification -->
     <string name="notification_channel_run">Sesi lari</string>

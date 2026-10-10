@@ -1,6 +1,7 @@
 package com.daniel.runcoach.service
 
 import com.daniel.runcoach.engine.alert.CorrectionState
+import com.daniel.runcoach.engine.model.Segment
 import com.daniel.runcoach.engine.runner.RunnerPhase
 import com.daniel.runcoach.engine.runner.RunnerState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +18,7 @@ data class RunUiState(
     val correction: CorrectionState = CorrectionState.STABLE,
     val requiredPaceSecPerKm: Double? = null,
     val keepScreenOn: Boolean = false,
+    val steps: List<Segment> = emptyList(),
 )
 
 /** Single source of run state for the UI. Updated by [RunForegroundService] every second. */

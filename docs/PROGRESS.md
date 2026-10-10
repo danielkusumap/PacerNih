@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P1 — P1.9 (kontrol & sheet layar lari); P1.1–P1.8 selesai (lihat bawah).
+- **Berikutnya:** FASE P1 SELESAI. FASE P2 dikerjakan step by step (lihat bawah).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -253,4 +253,19 @@ Semua task P0 selesai dan AC hijau; boleh lanjut ke FASE P1. Sisa yang sifatnya 
 - `@Preview` countdown ditambahkan. **Uji device**: mulai sesi → overlay tampil (`Lari Bebas`, `3`, `Cancel`) lalu
   transisi ke RUNNING setelah 5 dtk; Stop menghentikan service.
 - Catatan: karena S04 belum ada (P2.4), **Batal** mengembalikan ke phase WAITING_GPS (belum menavigasi keluar).
+
+## P1.9 Kontrol dan sheet layar lari — selesai (2026-10-11)
+- Aksi service: `ACTION_PAUSE`, `ACTION_RESUME_RUN`, `ACTION_SKIP`, `ACTION_EXTEND` (meter/detik),
+  plus `ACTION_CANCEL_COUNTDOWN`.
+- S05 blok H: **Jeda/Lanjut**, **Lewati segmen**, **Perpanjang** (dialog +100 m/+500 m atau +30 s/+1 mnt),
+  **Daftar segmen** (D10), **Stop**. Dialog back (`BackHandler`) "Sesi masih berjalan" → Tetap lari / Stop.
+- D10 memakai `steps` (hasil expand workout) di `RunUiState`; status baris: Selesai / Sedang berjalan / Belum dimulai.
+- **Uji device**: Pause → PAUSED + Resume; Resume lanjut; Daftar segmen terbuka; Stop menghentikan service; tanpa crash.
+- **Ditunda (cross-task, sengaja):**
+  - "Stop menyimpan sesi (`Session` sebelum S06)" → butuh tabel `Session` + S06 (**P2.5**).
+  - Chip hasil segmen (blok G, LULUS/GAGAL) & status hasil per baris D10 → butuh evaluasi segmen di-wire (**P2.8**).
+
+## Gerbang P1 — SELESAI (2026-10-11)
+P1.1–P1.9 selesai dan diuji di device (Realme/Android 11) secara bergantian. Sisa lintas-fase: F7/KmMarker (D-013),
+dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by step**.
 

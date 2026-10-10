@@ -27,6 +27,7 @@ import com.daniel.runcoach.engine.model.LocationSample
 import com.daniel.runcoach.engine.model.Segment
 import com.daniel.runcoach.engine.model.SegmentKind
 import com.daniel.runcoach.engine.model.Workout
+import com.daniel.runcoach.engine.model.WorkoutExpander
 import com.daniel.runcoach.engine.model.WorkoutJson
 import com.daniel.runcoach.engine.runner.RunnerPhase
 import com.daniel.runcoach.engine.runner.RunnerState
@@ -73,6 +74,7 @@ class RunForegroundService : Service() {
     private var stopping = false
     private var trackIdx = 0
     private var lastFlushMs = 0L
+    private var expandedSteps: List<Segment> = emptyList()
     private val trackBuffer = mutableListOf<com.daniel.runcoach.data.TrackPointEntity>()
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -103,6 +105,29 @@ class RunForegroundService : Service() {
 
             ACTION_CANCEL_COUNTDOWN -> {
                 runner?.onCancelCountdown()
+                return START_NOT_STICKY
+            }
+
+            ACTION_PAUSE -> {
+                runner?.onPause(SystemClock.elapsedRealtime())
+                return START_NOT_STICKY
+            }
+
+            ACTION_RESUME_RUN -> {
+                runner?.onResume(SystemClock.elapsedRealtime())
+                return START_NOT_STICKY
+            }
+
+            ACTION_SKIP -> {
+                runner?.onSkipSegment(SystemClock.elapsedRealtime())
+                return START_NOT_STICKY
+            }
+
+            ACTION_EXTEND -> {
+                runner?.onExtendSegment(
+                    deltaMeters = intent.getDoubleExtra(EXTRA_EXTEND_METERS, 0.0),
+                    deltaSeconds = intent.getIntExtra(EXTRA_EXTEND_SECONDS, 0),
+                )
                 return START_NOT_STICKY
             }
         }
@@ -153,6 +178,10 @@ class RunForegroundService : Service() {
         locationSource = LocationSourceFactory.create(this)
         lastFlushMs = SystemClock.elapsedRealtime()
         alertEngine = AlertEngine()
+        expandedSteps = workout?.let { w ->
+            runCatching { WorkoutExpander.expandFinite(w.items) }
+                .getOrElse { WorkoutExpander.lazySteps(w.items).take(80).toList() }
+        } ?: emptyList()
 
         val activeAnnouncer = RunAnnouncer(this).also { it.start() }
         announcer = activeAnnouncer
@@ -204,6 +233,7 @@ class RunForegroundService : Service() {
                 correction = engine.state(),
                 requiredPaceSecPerKm = required,
                 keepScreenOn = false,
+                steps = expandedSteps,
             ),
         )
     }
@@ -373,6 +403,12 @@ class RunForegroundService : Service() {
         const val ACTION_STOP = "com.daniel.runcoach.action.STOP_RUN"
         const val ACTION_RESUME = "com.daniel.runcoach.action.RESUME_RUN"
         const val ACTION_CANCEL_COUNTDOWN = "com.daniel.runcoach.action.CANCEL_COUNTDOWN"
+        const val ACTION_PAUSE = "com.daniel.runcoach.action.PAUSE"
+        const val ACTION_RESUME_RUN = "com.daniel.runcoach.action.RESUME_RUN"
+        const val ACTION_SKIP = "com.daniel.runcoach.action.SKIP"
+        const val ACTION_EXTEND = "com.daniel.runcoach.action.EXTEND"
+        const val EXTRA_EXTEND_METERS = "extend_meters"
+        const val EXTRA_EXTEND_SECONDS = "extend_seconds"
         const val EXTRA_WORKOUT = "workout_json"
         const val EXTRA_SESSION_ID = "session_id"
 
@@ -395,6 +431,27 @@ class RunForegroundService : Service() {
 
         fun cancelCountdown(context: Context) {
             context.startService(Intent(context, RunForegroundService::class.java).setAction(ACTION_CANCEL_COUNTDOWN))
+        }
+
+        fun pause(context: Context) {
+            context.startService(Intent(context, RunForegroundService::class.java).setAction(ACTION_PAUSE))
+        }
+
+        fun resumeRun(context: Context) {
+            context.startService(Intent(context, RunForegroundService::class.java).setAction(ACTION_RESUME_RUN))
+        }
+
+        fun skip(context: Context) {
+            context.startService(Intent(context, RunForegroundService::class.java).setAction(ACTION_SKIP))
+        }
+
+        fun extend(context: Context, meters: Double, seconds: Int) {
+            context.startService(
+                Intent(context, RunForegroundService::class.java)
+                    .setAction(ACTION_EXTEND)
+                    .putExtra(EXTRA_EXTEND_METERS, meters)
+                    .putExtra(EXTRA_EXTEND_SECONDS, seconds),
+            )
         }
     }
 }

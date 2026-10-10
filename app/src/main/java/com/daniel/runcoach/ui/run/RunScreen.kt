@@ -1,5 +1,6 @@
 package com.daniel.runcoach.ui.run
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,17 +10,26 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -43,7 +53,7 @@ import com.daniel.runcoach.service.RunUiState
 import com.daniel.runcoach.ui.Formatters
 import com.daniel.runcoach.ui.theme.RunCoachTheme
 
-/** S05 route: observes the run state, keeps the screen on when asked, and forwards controls. */
+/** S05 route: observes the run state, keeps the screen on, and forwards controls to the service. */
 @Composable
 fun RunRoute(onStop: () -> Unit) {
     val ui by RunStateHolder.state.collectAsStateWithLifecycle()
@@ -53,26 +63,61 @@ fun RunRoute(onStop: () -> Unit) {
         onDispose { view.keepScreenOn = false }
     }
     val context = LocalContext.current
+    var showBackDialog by remember { mutableStateOf(false) }
+    val active = ui.phase != RunnerPhase.IDLE && ui.phase != RunnerPhase.STOPPED
+
+    BackHandler(enabled = active) { showBackDialog = true }
+    if (showBackDialog) {
+        AlertDialog(
+            onDismissRequest = { showBackDialog = false },
+            title = { Text(stringResource(R.string.run_back_title)) },
+            text = { Text(stringResource(R.string.run_back_message)) },
+            confirmButton = { TextButton(onClick = { showBackDialog = false }) { Text(stringResource(R.string.run_stay)) } },
+            dismissButton = {
+                TextButton(onClick = {
+                    showBackDialog = false
+                    RunForegroundService.stop(context)
+                    onStop()
+                }) { Text(stringResource(R.string.action_stop_run)) }
+            },
+        )
+    }
+
     RunScreen(
         ui = ui,
         onStop = { RunForegroundService.stop(context); onStop() },
         onCancelCountdown = { RunForegroundService.cancelCountdown(context) },
+        onPause = { RunForegroundService.pause(context) },
+        onResumeRun = { RunForegroundService.resumeRun(context) },
+        onSkip = { RunForegroundService.skip(context) },
+        onExtend = { meters, seconds -> RunForegroundService.extend(context, meters, seconds) },
     )
 }
 
 /**
- * S05 Layar Lari (plan section 8): header, segment, live-pace hero with the correction badge, segment
- * metrics, totals, and the next-segment preview, plus the countdown overlay and pre-segment banners.
- * Stateless, so every state can be previewed.
+ * S05 Layar Lari (plan section 8): header, segment, live-pace hero with correction badge, segment metrics,
+ * totals, next-segment preview, countdown overlay, banners, and the run controls. Stateless.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RunScreen(ui: RunUiState, onStop: () -> Unit, onCancelCountdown: () -> Unit = {}) {
+fun RunScreen(
+    ui: RunUiState,
+    onStop: () -> Unit,
+    onCancelCountdown: () -> Unit = {},
+    onPause: () -> Unit = {},
+    onResumeRun: () -> Unit = {},
+    onSkip: () -> Unit = {},
+    onExtend: (Double, Int) -> Unit = { _, _ -> },
+) {
     val state = ui.state
     val segment = state.segment
     val monospace = MaterialTheme.typography.displayMedium.copy(
         fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Bold,
     )
+    var showExtend by remember { mutableStateOf(false) }
+    var showSegments by remember { mutableStateOf(false) }
+
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -82,60 +127,43 @@ fun RunScreen(ui: RunUiState, onStop: () -> Unit, onCancelCountdown: () -> Unit 
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // Pre-segment banners (must not cover the pace hero).
                 val segCountdown = state.segmentCountdownSec
                 val cueKind = state.distanceCueNextKind
                 if (state.phase == RunnerPhase.RUNNING && segCountdown != null) {
-                    val nextKind = state.nextSegment?.kind
-                    Banner(
-                        text = stringResource(
-                            R.string.run_change_in,
-                            nextKind?.let { kindLabel(it) } ?: "",
-                            segCountdown,
-                        ),
-                    )
+                    Banner(stringResource(R.string.run_change_in, state.nextSegment?.kind?.let { kindLabel(it) } ?: "", segCountdown))
                 }
                 if (state.distanceCueActive && cueKind != null) {
-                    Banner(text = stringResource(R.string.run_get_ready, kindLabel(cueKind)))
+                    Banner(stringResource(R.string.run_get_ready, kindLabel(cueKind)))
                 }
 
-                // A. Header
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(ui.workoutName, style = MaterialTheme.typography.titleSmall)
-                    if (state.gpsLost) {
-                        Text(stringResource(R.string.run_gps_lost), color = MaterialTheme.colorScheme.error)
-                    }
+                    if (state.gpsLost) Text(stringResource(R.string.run_gps_lost), color = MaterialTheme.colorScheme.error)
                 }
 
-                // B. Segment
                 if (ui.phase == RunnerPhase.WAITING_GPS) {
                     Text(stringResource(R.string.run_waiting_gps), style = MaterialTheme.typography.headlineSmall)
                 }
                 if (segment != null) {
-                    val total = state.stepCount
                     Text(
-                        text = stringResource(R.string.run_segment_of, state.stepIndex, total ?: state.stepIndex) +
+                        stringResource(R.string.run_segment_of, state.stepIndex, state.stepCount ?: state.stepIndex) +
                             " · ${kindLabel(segment.kind)}",
                         style = MaterialTheme.typography.titleMedium,
                     )
-                    LinearProgressIndicator(
-                        progress = { segmentProgress(state, segment) },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    LinearProgressIndicator(progress = { segmentProgress(state, segment) }, modifier = Modifier.fillMaxWidth())
                     Text(segmentRemainingText(state, segment), style = MaterialTheme.typography.bodySmall)
                 }
 
-                // C. Hero: live pace + target + badge
                 Text(Formatters.pace(state.paceLiveSecPerKm), style = monospace)
                 Text(
-                    text = segment?.targetPaceSecPerKm
+                    segment?.targetPaceSecPerKm
                         ?.let { stringResource(R.string.run_target, Formatters.pace(it.toDouble())) }
                         ?: stringResource(R.string.run_no_target),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 if (segment?.targetPaceSecPerKm != null) {
                     Text(
-                        text = correctionLabel(ui.correction),
+                        correctionLabel(ui.correction),
                         color = when (ui.correction) {
                             CorrectionState.STABLE -> MaterialTheme.colorScheme.primary
                             CorrectionState.TOO_SLOW -> MaterialTheme.colorScheme.error
@@ -145,7 +173,6 @@ fun RunScreen(ui: RunUiState, onStop: () -> Unit, onCancelCountdown: () -> Unit 
                     )
                 }
 
-                // D. Segment metrics
                 if (segment?.targetPaceSecPerKm != null && ui.requiredPaceSecPerKm != null) {
                     Text(
                         stringResource(R.string.run_required, Formatters.pace(ui.requiredPaceSecPerKm)),
@@ -153,7 +180,6 @@ fun RunScreen(ui: RunUiState, onStop: () -> Unit, onCancelCountdown: () -> Unit 
                     )
                 }
 
-                // E. Totals
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(12.dp),
@@ -161,17 +187,13 @@ fun RunScreen(ui: RunUiState, onStop: () -> Unit, onCancelCountdown: () -> Unit 
                     ) {
                         TotalItem(stringResource(R.string.run_label_total), Formatters.duration(state.movingMs))
                         TotalItem("", Formatters.distanceKm(state.totalDistanceM))
-                        TotalItem(
-                            "",
-                            Formatters.pace(if (state.totalDistanceM > 0) state.movingMs / state.totalDistanceM else null),
-                        )
+                        TotalItem("", Formatters.pace(if (state.totalDistanceM > 0) state.movingMs / state.totalDistanceM else null))
                     }
                 }
 
-                // F. Next segment preview
                 Text(stringResource(R.string.run_next), style = MaterialTheme.typography.labelLarge)
                 Text(
-                    text = state.nextSegment?.let { describeSegment(it) } ?: stringResource(R.string.run_next_free),
+                    state.nextSegment?.let { describeSegment(it) } ?: stringResource(R.string.run_next_free),
                     style = MaterialTheme.typography.bodyMedium,
                 )
 
@@ -181,9 +203,20 @@ fun RunScreen(ui: RunUiState, onStop: () -> Unit, onCancelCountdown: () -> Unit 
                     Text(stringResource(R.string.run_paused), style = MaterialTheme.typography.headlineSmall)
                 }
 
-                Button(onClick = onStop, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.action_stop_run))
+                // H. Controls
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    if (ui.phase == RunnerPhase.PAUSED_MANUAL || ui.phase == RunnerPhase.PAUSED_AUTO) {
+                        Button(onClick = onResumeRun, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.run_resume)) }
+                    } else {
+                        OutlinedButton(onClick = onPause, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.run_pause)) }
+                    }
+                    OutlinedButton(onClick = onSkip, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.run_skip)) }
                 }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(onClick = { showExtend = true }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.run_extend)) }
+                    OutlinedButton(onClick = { showSegments = true }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.run_list_segments)) }
+                }
+                Button(onClick = onStop, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_stop_run)) }
             }
 
             if (state.phase == RunnerPhase.COUNTDOWN) {
@@ -191,6 +224,60 @@ fun RunScreen(ui: RunUiState, onStop: () -> Unit, onCancelCountdown: () -> Unit 
             }
         }
     }
+
+    if (showExtend && segment != null) {
+        ExtendDialog(segment = segment, onDismiss = { showExtend = false }, onExtend = { m, s -> onExtend(m, s); showExtend = false })
+    }
+    if (showSegments) {
+        SegmentListSheet(ui = ui, onDismiss = { showSegments = false })
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SegmentListSheet(ui: RunUiState, onDismiss: () -> Unit) {
+    val state = ui.state
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(stringResource(R.string.run_list_segments), style = MaterialTheme.typography.titleLarge)
+            ui.steps.forEachIndexed { index, seg ->
+                val number = index + 1
+                val marker = when {
+                    number < state.stepIndex -> stringResource(R.string.run_state_done)
+                    number == state.stepIndex -> stringResource(R.string.run_state_running)
+                    else -> stringResource(R.string.run_state_upcoming)
+                }
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                    Text(
+                        "$number. ${describeSegmentText(seg)}",
+                        fontWeight = if (number == state.stepIndex) FontWeight.Bold else FontWeight.Normal,
+                    )
+                    Text(marker, style = MaterialTheme.typography.labelSmall)
+                }
+                HorizontalDivider()
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExtendDialog(segment: Segment, onDismiss: () -> Unit, onExtend: (Double, Int) -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.run_extend)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (segment.limit is Limit.Distance) {
+                    Button(onClick = { onExtend(100.0, 0) }) { Text("+100 m") }
+                    Button(onClick = { onExtend(500.0, 0) }) { Text("+500 m") }
+                } else {
+                    Button(onClick = { onExtend(0.0, 30) }) { Text("+30 s") }
+                    Button(onClick = { onExtend(0.0, 60) }) { Text("+1 min") }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.run_countdown_cancel)) } },
+    )
 }
 
 @Composable
@@ -205,10 +292,7 @@ private fun Banner(text: String) {
 
 @Composable
 private fun CountdownOverlay(workoutName: String, seconds: Int, onCancel: () -> Unit) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.85f),
-    ) {
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.85f)) {
         Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.Center,
@@ -253,6 +337,17 @@ private fun correctionLabel(correction: CorrectionState): String = stringResourc
     },
 )
 
+@Composable
+private fun describeSegmentText(segment: Segment): String {
+    val limit = when (val l = segment.limit) {
+        is Limit.Distance -> "${l.meters} m"
+        is Limit.Duration -> Formatters.duration(l.seconds * 1000L)
+        Limit.Open -> stringResource(R.string.run_no_target)
+    }
+    val target = segment.targetPaceSecPerKm?.let { ", ≤ ${Formatters.pace(it.toDouble())}" } ?: ""
+    return "${kindLabel(segment.kind)} $limit$target"
+}
+
 private fun segmentProgress(state: RunnerState, segment: Segment): Float = when (val limit = segment.limit) {
     is Limit.Distance -> (state.segmentDistanceM / limit.meters.toDouble()).coerceIn(0.0, 1.0).toFloat()
     is Limit.Duration -> (state.segmentMovingMs / (limit.seconds * 1000.0)).coerceIn(0.0, 1.0).toFloat()
@@ -266,15 +361,7 @@ private fun segmentRemainingText(state: RunnerState, segment: Segment): String =
 }
 
 @Composable
-private fun describeSegment(segment: Segment): String {
-    val limit = when (val l = segment.limit) {
-        is Limit.Distance -> "${l.meters} m"
-        is Limit.Duration -> Formatters.duration(l.seconds * 1000L)
-        Limit.Open -> stringResource(R.string.run_no_target)
-    }
-    val target = segment.targetPaceSecPerKm?.let { ", ≤ ${Formatters.pace(it.toDouble())}" } ?: ""
-    return "${kindLabel(segment.kind)} $limit$target"
-}
+private fun describeSegment(segment: Segment): String = describeSegmentText(segment)
 
 // --- Previews -------------------------------------------------------------------
 
@@ -293,6 +380,11 @@ private fun sampleState(
         workoutName = "Interval 200/400",
         correction = correction,
         requiredPaceSecPerKm = required,
+        steps = listOf(
+            Segment("Warm up", SegmentKind.WARMUP, Limit.Distance(1500), 480),
+            segment,
+            Segment("Recovery", SegmentKind.RECOVERY, Limit.Distance(200), 480),
+        ),
         state = RunnerState(
             phase = phase,
             stepIndex = 2,
