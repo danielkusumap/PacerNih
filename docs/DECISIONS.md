@@ -28,5 +28,22 @@ Studio JBR). Contoh: set `JAVA_HOME=C:\Program Files\Android\Android Studio\jbr`
 ## D-006 `EngineConfig` berupa data class (bukan konstanta global)
 Aturan anti-slop #5 meminta semua ambang di satu file. Bentuk `data class` dipilih agar nilai bisa
 disetel per-run (mis. dari Pengaturan) tanpa menyentuh algoritma, dan mudah di-inject di test.
-Untuk sekarang hanya konstanta 6.1 yang sudah dipakai (P0.1-P0.3) yang ditambahkan; sisanya
+Untuk sekarang hanya konstanta 6.1 yang sudah dipakai (P0.1-P0.10) yang ditambahkan; sisanya
 menyusul saat task terkait membutuhkannya. Nilai masih provisional menunggu 6.14 (Q-003).
+
+## D-007 Pemisahan `SampleFilter` (penyaring) dan `DistanceTracker` (akumulator)
+Penyaringan sample dan akumulasi jarak dipisah jadi dua kelas dengan tanggung jawab tunggal.
+Konsekuensi: gap GPS / terowongan **tidak** butuh kode khusus di tracker. Loncatan tidak masuk akal
+dibuang `SampleFilter` (aturan kecepatan tersirat), sedangkan loncatan wajar dihitung sebagai garis
+lurus. Diuji sebagai integrasi filter+tracker (DistanceTrackerTest).
+
+## D-008 `BestEffortCalculator`: anomali dibuang per-window, input = waktu berjalan
+Interpretasi 6.10: window yang pace-nya lebih cepat dari `recordMinValidPaceSecPerKm` dianggap anomali
+GPS dan **window itu** dibuang, bukan seluruh rekor jarak tersebut (window valid tercepat tetap dipakai).
+Kontrak input: `DistTimePoint.elapsedMs` harus **waktu berjalan** (tanpa jeda); kalkulator tidak pernah
+melihat wall clock. Algoritma dua-pointer O(n) dengan interpolasi titik awal window.
+
+## D-009 Urutan task menyimpang dari plan (P0.10 sebelum P0.5)
+Plan menganjurkan urutan prioritas, tetapi P0.5/P0.7/P0.8/P0.9/P0.11 bergantung pada 6.14 yang belum ada.
+P0.10 (mandiri, angka di 6.10) dikerjakan lebih dulu agar ada kemajuan tanpa mengarang. P0.6 dan P0.8
+ditunda karena detail tepinya (F15, pembulatan) berpotensi berubah. Tidak melompat fase (masih P0).

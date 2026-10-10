@@ -2,6 +2,14 @@
 
 Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diketahui.
 
+## Status P0 (diperbarui 2026-10-10)
+- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.10.
+- **Belum:** P0.5, P0.6, P0.7, P0.8, P0.9, P0.11 — terblokir penuh atau berisiko karena 6.14 belum ada
+  (lihat `OPEN_QUESTIONS.md` Q-001, Q-005).
+- **Gerbang P0 belum tercapai**, jadi P1 (runtime Android) belum dimulai.
+- **Repo:** Git di-init (`main`), `.gitignore` dibersihkan. Belum ada remote (Q-007).
+- **Test:** `:engine` 56 unit test hijau; `:app:assembleDebug` sukses.
+
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
 - Proyek multi-modul: `:app` (Android, Compose) + `:engine` (Kotlin/JVM murni, tanpa Android).
