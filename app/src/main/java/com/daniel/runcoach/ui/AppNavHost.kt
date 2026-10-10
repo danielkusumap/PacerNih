@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.daniel.runcoach.data.WorkoutTemplateRepository
 import com.daniel.runcoach.ui.battery.BatteryGuideScreen
+import com.daniel.runcoach.ui.components.RcCatalogScreen
 import com.daniel.runcoach.ui.debug.SimulatorScreen
 import com.daniel.runcoach.ui.editor.EditorRequestHolder
 import com.daniel.runcoach.ui.editor.EditorScreen
@@ -41,6 +42,7 @@ object Routes {
     const val FINISHED = "finished"
     const val EDITOR = "editor"
     const val DEBUG = "debug"
+    const val CATALOG = "catalog"
 }
 
 @Composable
@@ -120,6 +122,7 @@ fun AppNavHost() {
                 onOpenBatteryGuide = { navController.navigate(Routes.BATTERY) },
                 onOpenData = { navController.navigate(Routes.DATA) },
                 onOpenSimulator = { navController.navigate(Routes.DEBUG) },
+                onOpenCatalog = { navController.navigate(Routes.CATALOG) },
                 onSelectTab = { tab ->
                     when (tab) {
                         MainTab.WORKOUT -> navController.popBackStack(Routes.HOME, false)
@@ -178,6 +181,9 @@ fun AppNavHost() {
         }
         composable(Routes.DEBUG) {
             SimulatorScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.CATALOG) {
+            RcCatalogScreen(onBack = { navController.popBackStack() })
         }
     }
 }

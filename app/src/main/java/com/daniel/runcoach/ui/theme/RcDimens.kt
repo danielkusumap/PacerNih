@@ -51,3 +51,6 @@ data class RcMotion(
 val LocalRcSpacing = staticCompositionLocalOf { RcSpacing() }
 val LocalRcShapes = staticCompositionLocalOf { RcShapes() }
 val LocalRcMotion = staticCompositionLocalOf { RcMotion() }
+
+/** True when the dark palette is active (some rules differ, e.g. card borders are mandatory in light). */
+val LocalRcDark = staticCompositionLocalOf { true }

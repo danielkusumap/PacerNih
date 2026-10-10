@@ -21,6 +21,8 @@
     <string name="action_battery_guide">Panduan baterai</string>
     <string name="action_start">Mulai</string>
     <string name="action_back">Kembali</string>
+    <string name="rc_retry">Coba lagi</string>
+    <string name="rc_catalog">Katalog komponen (debug)</string>
 
     <!-- S14 Panduan Baterai -->
     <string name="battery_title">Panduan baterai</string>

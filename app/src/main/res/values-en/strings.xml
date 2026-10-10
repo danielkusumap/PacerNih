@@ -21,6 +21,8 @@
     <string name="action_battery_guide">Battery guide</string>
     <string name="action_start">Start</string>
     <string name="action_back">Back</string>
+    <string name="rc_retry">Try again</string>
+    <string name="rc_catalog">Component catalog (debug)</string>
 
     <!-- S14 Battery guide -->
     <string name="battery_title">Battery guide</string>

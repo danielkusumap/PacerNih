@@ -467,6 +467,15 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
   (token benar di dua tema, `primary` = aksen, keluarga font Inter). Instrumented **30/30 hijau**.
 - Penyesuaian token: `textTertiary` light `#6A737C` → `#66707A` agar lolos 4,5:1 (D-046).
 
+## U1 Katalog komponen (DESIGN.md) — selesai (2026-10-11)
+- `ui/components`: `RcButton`/`RcIconButton`, `RcCard`/`SectionHeader`/`ListRow`/`RcDivider`/`InfoIcon`,
+  `StatusBadge`/`ResultChip`/`Banner`, `MetricBlock`/`HeroPace` (autosize 96→72sp), `SegmentProgressBar`/
+  `SegmentStrip`/`ResultStrip`, `SegmentedControl`/`RcSwitchRow`/`Switch`/`NumberStepper`/`RcTextField`,
+  `TopBar`/`RcBottomBar`/`RcSheet`/`RcDialog`, `EmptyState`/`ErrorState`/`Skeleton`/`ProgressRing`.
+- Layar katalog debug `RcCatalogScreen` (route `catalog`, dari S12 → Pengembang) + `@Preview` light/dark.
+- Test device `RcCatalogTest`. Instrumented **31/31 hijau**.
+- Grafik (`ChartBar`/`ChartLine`) menyusul di U2 saat re-skin S08/S09/S11 (aturan 6.1/6.2).
+
 
 
 

@@ -67,6 +67,7 @@ fun RcTheme(
         LocalRcSpacing provides spacing,
         LocalRcShapes provides RcShapes(),
         LocalRcMotion provides RcMotion(),
+        LocalRcDark provides darkTheme,
     ) {
         MaterialTheme(
             colorScheme = rcColorScheme(colors, darkTheme),

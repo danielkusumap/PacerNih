@@ -41,6 +41,7 @@ fun SettingsScreen(
     onOpenBatteryGuide: () -> Unit,
     onOpenData: () -> Unit,
     onOpenSimulator: () -> Unit,
+    onOpenCatalog: () -> Unit = {},
     onSelectTab: (MainTab) -> Unit,
 ) {
     val context = LocalContext.current
@@ -132,6 +133,7 @@ fun SettingsScreen(
                 if (debugBuild) {
                     Section(stringResource(R.string.s12_dev)) {
                         TextButton(onClick = onOpenSimulator) { Text(stringResource(R.string.home_simulator)) }
+                        TextButton(onClick = onOpenCatalog) { Text(stringResource(R.string.rc_catalog)) }
                     }
                 }
             }

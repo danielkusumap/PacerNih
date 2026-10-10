@@ -319,3 +319,10 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
   ikon + label (DESIGN 3.3, 3.4 "status tidak hanya warna").
 - Tombol destruktif terisi memakai token baru `onFail` (dark: teks gelap di atas merah terang; light: putih)
   karena putih di atas `#FF5D5D` (dark) hanya 3,01:1.
+
+## D-047 U1: komponen
+- Semua komponen membaca `LocalRc*`; tidak ada hex di komponen. Nilai dp di dalam komponen adalah definisi ukuran
+  dari DESIGN bagian 6 (bukan "kode layar"), jadi boleh literal di sana; layar tetap dilarang literal.
+- `RcTextField` memakai label bertumpuk (label kecil di atas input) sebagai bentuk sederhana "label mengambang";
+  fokus/error tetap border aksen/`fail`.
+- Grafik belum dirombak di U1; akan dikerjakan bersama S08/S09/S11 di U2 sesuai 6.1/6.2.
