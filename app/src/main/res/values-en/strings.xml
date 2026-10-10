@@ -29,6 +29,11 @@
     <string name="battery_intro">So the system does not kill the session while the screen is off, follow these steps and exempt the app from battery optimization.</string>
     <string name="battery_exempt_yes">Battery optimization: already exempted.</string>
     <string name="battery_exempt_no">Battery optimization: not exempted yet.</string>
+    <string name="battery_label_xiaomi">Xiaomi</string>
+    <string name="battery_label_oppo">Oppo/Realme</string>
+    <string name="battery_label_vivo">Vivo</string>
+    <string name="battery_label_samsung">Samsung</string>
+    <string name="battery_label_other">Other</string>
     <string name="battery_action_open_battery">Open battery settings</string>
     <string name="battery_brand_xiaomi">Xiaomi: Settings &gt; Apps &gt; RunCoach &gt; Battery &gt; No restrictions; enable Autostart.</string>
     <string name="battery_brand_oppo">OPPO/Realme: Settings &gt; Battery &gt; Optimization &gt; RunCoach &gt; Don\'t optimize.</string>

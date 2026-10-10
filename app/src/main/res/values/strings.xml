@@ -29,8 +29,12 @@
     <string name="battery_intro">Agar sesi tidak dimatikan sistem saat layar mati, ikuti langkah berikut lalu kecualikan aplikasi dari optimasi baterai.</string>
     <string name="battery_exempt_yes">Optimasi baterai: sudah dikecualikan.</string>
     <string name="battery_exempt_no">Optimasi baterai: belum dikecualikan.</string>
-    <string name="battery_action_open_battery">Buka pengaturan baterai</string>
-    <string name="battery_brand_xiaomi">Xiaomi: Pengaturan &gt; Aplikasi &gt; RunCoach &gt; Baterai &gt; Tanpa batasan; aktifkan Autostart.</string>
+    <string name="battery_label_xiaomi">Xiaomi</string>
+    <string name="battery_label_oppo">Oppo/Realme</string>
+    <string name="battery_label_vivo">Vivo</string>
+    <string name="battery_label_samsung">Samsung</string>
+    <string name="battery_label_other">Lainnya</string>
+    <string name="battery_action_open_battery">Buka pengaturan baterai</string>    <string name="battery_brand_xiaomi">Xiaomi: Pengaturan &gt; Aplikasi &gt; RunCoach &gt; Baterai &gt; Tanpa batasan; aktifkan Autostart.</string>
     <string name="battery_brand_oppo">OPPO/Realme: Pengaturan &gt; Baterai &gt; Optimasi &gt; RunCoach &gt; Jangan optimalkan.</string>
     <string name="battery_brand_vivo">Vivo: Pengaturan &gt; Baterai &gt; Konsumsi latar belakang tinggi &gt; RunCoach.</string>
     <string name="battery_brand_samsung">Samsung: Pengaturan &gt; Perangkat &gt; Baterai &gt; Batas penggunaan latar belakang &gt; RunCoach.</string>

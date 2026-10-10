@@ -1,5 +1,9 @@
 package com.daniel.runcoach.ui.debug
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,11 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,12 +33,16 @@ import com.daniel.runcoach.engine.model.Segment
 import com.daniel.runcoach.engine.model.SegmentKind
 import com.daniel.runcoach.engine.model.Workout
 import com.daniel.runcoach.engine.sim.SimScenario
+import com.daniel.runcoach.ui.components.RcButton
+import com.daniel.runcoach.ui.components.RcCard
+import com.daniel.runcoach.ui.components.SegmentedControl
+import com.daniel.runcoach.ui.components.TopBar
+import com.daniel.runcoach.ui.theme.LocalRcColors
+import com.daniel.runcoach.ui.theme.LocalRcSpacing
+import com.daniel.runcoach.ui.theme.LocalRcTypography
 import kotlinx.coroutines.launch
 
-/**
- * S15 Debug / Simulator (plan P1.6). Debug builds only: pick a scenario and a playback speed and run the
- * interval workout on a synthetic track. The summary mirrors the golden-test format so they can be compared.
- */
+/** S15 Debug / Simulator (DESIGN.md section 8). Debug builds only; same tokens and components. */
 @Composable
 fun SimulatorScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
@@ -45,31 +50,39 @@ fun SimulatorScreen(onBack: () -> Unit) {
     var scale by remember { mutableIntStateOf(60) }
     var running by remember { mutableStateOf(false) }
     var summary by remember { mutableStateOf<String?>(null) }
+    val colors = LocalRcColors.current
+    val spacing = LocalRcSpacing.current
+    val type = LocalRcTypography.current
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Column(modifier = Modifier.fillMaxSize().background(colors.bg)) {
+        TopBar(title = stringResource(R.string.debug_title), onBack = onBack)
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = spacing.screenH),
+            verticalArrangement = Arrangement.spacedBy(spacing.cardGap),
         ) {
-            Text(stringResource(R.string.debug_title), style = MaterialTheme.typography.headlineSmall)
-
-            Text("Scenario: $scenario", style = MaterialTheme.typography.titleMedium)
-            OutlinedButton(onClick = {
-                val values = SimScenario.entries
-                scenario = values[(values.indexOf(scenario) + 1) % values.size]
-            }) { Text(SimScenario.entries[(SimScenario.entries.indexOf(scenario) + 1) % SimScenario.entries.size].name) }
-
-            Text(stringResource(R.string.debug_speed), style = MaterialTheme.typography.titleMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(1, 10, 60).forEach { value ->
-                    OutlinedButton(onClick = { scale = value }, enabled = scale != value) { Text("${value}x") }
+            Text("Workout: ${intervalWorkout().name}", style = type.titleS, color = colors.textPrimary)
+            Text("Scenario", style = type.label, color = colors.textSecondary)
+            Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+                SimScenario.entries.forEach { value ->
+                    val active = value == scenario
+                    Text(
+                        value.name,
+                        style = type.titleS,
+                        color = if (active) colors.onAccent else colors.textSecondary,
+                        modifier = Modifier
+                            .background(if (active) colors.accent else colors.surfaceRaised, RoundedCornerShape(spacing.s5))
+                            .border(1.dp, colors.outlineStrong, RoundedCornerShape(spacing.s5))
+                            .clickable { scenario = value }
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                    )
                 }
             }
 
-            Button(
+            Text(stringResource(R.string.debug_speed), style = type.label, color = colors.textSecondary)
+            SegmentedControl(listOf(1, 10, 60).map { it to "${it}x" }, scale, { scale = it })
+
+            RcButton(
+                text = if (running) stringResource(R.string.debug_running) else stringResource(R.string.action_run),
                 onClick = {
                     scope.launch {
                         running = true
@@ -83,16 +96,16 @@ fun SimulatorScreen(onBack: () -> Unit) {
                     }
                 },
                 enabled = !running,
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text(if (running) stringResource(R.string.debug_running) else stringResource(R.string.action_run)) }
+                loading = running,
+                fillWidth = true,
+            )
 
             summary?.let { text ->
-                Text(text.trimEnd(), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+                RcCard {
+                    Text(text.trimEnd(), style = type.caption, color = colors.textPrimary, fontFamily = FontFamily.Monospace)
+                }
             }
-
-            OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.action_back))
-            }
+            androidx.compose.foundation.layout.Spacer(Modifier.padding(bottom = spacing.s4))
         }
     }
 }
