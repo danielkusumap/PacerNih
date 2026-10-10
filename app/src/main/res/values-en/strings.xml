@@ -125,6 +125,41 @@
     <string name="s09_empty">No training this week</string>
     <string name="beranda_week">This week: %1$s · %2$d sessions</string>
 
+    <!-- S12 Settings -->
+    <string name="tab_settings">Settings</string>
+    <string name="s12_title">Settings</string>
+    <string name="s12_display">Display</string>
+    <string name="s12_theme">Theme</string>
+    <string name="s12_theme_system">Follow system</string>
+    <string name="s12_theme_light">Light</string>
+    <string name="s12_theme_dark">Dark</string>
+    <string name="s12_keep_screen">Keep screen on while running</string>
+    <string name="s12_voice">Voice</string>
+    <string name="s12_voice_language">Voice language</string>
+    <string name="s12_test_voice">Test voice</string>
+    <string name="s12_voice_pack">Voice pack: %1$s</string>
+    <string name="s12_available">available</string>
+    <string name="s12_missing">not available</string>
+    <string name="s12_km_marker">Km marker</string>
+    <string name="s12_pace_alerts">Too fast/slow alerts</string>
+    <string name="s12_countdown">Countdown</string>
+    <string name="s12_countdown_start">Start (s)</string>
+    <string name="s12_countdown_segment">Time segment (s)</string>
+    <string name="s12_cue_distance">Distance cue for distance segments (m)</string>
+    <string name="s12_countdown_style">Countdown style</string>
+    <string name="s12_style_beep">Beep</string>
+    <string name="s12_style_voice">Spoken numbers</string>
+    <string name="s12_alert">Alerts</string>
+    <string name="s12_fast_margin">Default too-fast margin (seconds)</string>
+    <string name="s12_vibrate">Vibrate</string>
+    <string name="s12_tracking">Tracking</string>
+    <string name="s12_auto_pause">Auto-pause</string>
+    <string name="s12_data">Data &amp; backup (S13)</string>
+    <string name="s12_help">Help</string>
+    <string name="s12_version">App version: %1$s</string>
+    <string name="s12_dev">Developer</string>
+    <string name="s12_off">Off</string>
+
     <!-- S07 History -->
     <string name="s07_title">History</string>
     <string name="s07_search">Search by name</string>

@@ -246,3 +246,9 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - S09 memakai data sesi dari `SessionRepository`; kartu Beranda memakai agregator yang sama.
 - Hindari API 34 (`LocalDate.ofInstant`) demi API 30: pakai `Instant.atZone().toLocalDate()`.
 - "Rekor minggu ini" di S09 belum ditampilkan.
+
+## D-036 P2.11: pengaturan (DataStore) + wiring
+- Setelan di DataStore (`SettingsRepository`); tema mengalir ke `RunCoachTheme` → berubah langsung tanpa restart dan persist.
+- Wiring penuh baru untuk: tema, layar menyala (S05), bahasa voice + countdown awal (S04/service). Setelan lain dipersistensi
+  dan akan disalurkan saat task terkait (auto-pause P3.3; cue/margin/vibrate/kmMarker/paceAlerts menyusul).
+- S13 (Data) & S14 (baterai) direferensikan; S13 masih placeholder (P3.5).

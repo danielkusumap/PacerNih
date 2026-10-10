@@ -20,6 +20,8 @@ import com.daniel.runcoach.ui.home.BerandaScreen
 import com.daniel.runcoach.ui.onboarding.OnboardingScreen
 import com.daniel.runcoach.ui.prestart.PraStartScreen
 import com.daniel.runcoach.ui.run.RunRoute
+import com.daniel.runcoach.ui.settings.DataScreen
+import com.daniel.runcoach.ui.settings.SettingsScreen
 import com.daniel.runcoach.ui.stats.RecordDetailScreen
 import com.daniel.runcoach.ui.stats.StatsScreen
 
@@ -30,6 +32,8 @@ object Routes {
     const val HOME = "home"
     const val HISTORY = "history"
     const val STATS = "stats"
+    const val SETTINGS = "settings"
+    const val DATA = "data"
     const val RECORD = "record/{key}"
     const val DETAIL = "detail/{sessionId}"
     const val PRESTART = "prestart"
@@ -77,6 +81,7 @@ fun AppNavHost() {
                     when (tab) {
                         MainTab.HISTORY -> navController.navigate(Routes.HISTORY)
                         MainTab.STATS -> navController.navigate(Routes.STATS)
+                        MainTab.SETTINGS -> navController.navigate(Routes.SETTINGS)
                         else -> {}
                     }
                 },
@@ -89,6 +94,7 @@ fun AppNavHost() {
                     when (tab) {
                         MainTab.WORKOUT -> navController.popBackStack(Routes.HOME, false)
                         MainTab.STATS -> navController.navigate(Routes.STATS)
+                        MainTab.SETTINGS -> navController.navigate(Routes.SETTINGS)
                         else -> {}
                     }
                 },
@@ -102,10 +108,30 @@ fun AppNavHost() {
                     when (tab) {
                         MainTab.WORKOUT -> navController.popBackStack(Routes.HOME, false)
                         MainTab.HISTORY -> navController.navigate(Routes.HISTORY)
+                        MainTab.SETTINGS -> navController.navigate(Routes.SETTINGS)
                         else -> {}
                     }
                 },
             )
+        }
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
+                debugBuild = debugBuild,
+                onOpenBatteryGuide = { navController.navigate(Routes.BATTERY) },
+                onOpenData = { navController.navigate(Routes.DATA) },
+                onOpenSimulator = { navController.navigate(Routes.DEBUG) },
+                onSelectTab = { tab ->
+                    when (tab) {
+                        MainTab.WORKOUT -> navController.popBackStack(Routes.HOME, false)
+                        MainTab.HISTORY -> navController.navigate(Routes.HISTORY)
+                        MainTab.STATS -> navController.navigate(Routes.STATS)
+                        else -> {}
+                    }
+                },
+            )
+        }
+        composable(Routes.DATA) {
+            DataScreen(onBack = { navController.popBackStack() })
         }
         composable(
             route = Routes.RECORD,

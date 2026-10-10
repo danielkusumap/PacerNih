@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.datastore.preferences)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.navigation.compose)

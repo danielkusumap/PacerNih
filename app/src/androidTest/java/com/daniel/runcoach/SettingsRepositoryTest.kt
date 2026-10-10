@@ -1,0 +1,40 @@
+package com.daniel.runcoach
+
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.daniel.runcoach.data.AppTheme
+import com.daniel.runcoach.data.SettingsRepository
+import com.daniel.runcoach.engine.voice.VoiceLanguage
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/** P2.11 AC: settings persist (theme, voice language, countdown, cue distance). */
+@RunWith(AndroidJUnit4::class)
+class SettingsRepositoryTest {
+
+    @Test
+    fun settingsPersistAndReload() {
+        runBlocking {
+            val repository = SettingsRepository(InstrumentationRegistry.getInstrumentation().targetContext)
+            repository.setTheme(AppTheme.DARK)
+            repository.setVoiceLanguage(VoiceLanguage.EN)
+            repository.setCueDistance(30)
+            repository.setStartCountdown(10)
+
+            val loaded = repository.settings.first()
+            assertEquals(AppTheme.DARK, loaded.theme)
+            assertEquals(VoiceLanguage.EN, loaded.voiceLanguage)
+            assertEquals(30, loaded.cueDistanceM)
+            assertEquals(10, loaded.startCountdownSec)
+
+            // Restore defaults so other tests are unaffected.
+            repository.setTheme(AppTheme.SYSTEM)
+            repository.setVoiceLanguage(VoiceLanguage.ID)
+            repository.setCueDistance(20)
+            repository.setStartCountdown(5)
+        }
+    }
+}

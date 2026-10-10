@@ -7,8 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.daniel.runcoach.R
 
-/** Bottom tabs built so far (plan section 8.1). Pengaturan arrives in a later task. */
-enum class MainTab { WORKOUT, HISTORY, STATS }
+/** Bottom tabs (plan section 8.1). */
+enum class MainTab { WORKOUT, HISTORY, STATS, SETTINGS }
 
 @Composable
 fun MainBottomBar(selected: MainTab, onSelect: (MainTab) -> Unit) {
@@ -30,6 +30,12 @@ fun MainBottomBar(selected: MainTab, onSelect: (MainTab) -> Unit) {
             onClick = { onSelect(MainTab.STATS) },
             icon = { Text("∑") },
             label = { Text(stringResource(R.string.tab_stats)) },
+        )
+        NavigationBarItem(
+            selected = selected == MainTab.SETTINGS,
+            onClick = { onSelect(MainTab.SETTINGS) },
+            icon = { Text("⚙") },
+            label = { Text(stringResource(R.string.tab_settings)) },
         )
     }
 }

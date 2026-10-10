@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P2 step by step — P2.1–P2.10 selesai; selanjutnya P2.11 (Pengaturan S12).
+- **Berikutnya:** FASE P2 SELESAI (P2.1–P2.11). FASE P3 step by step (peta/export/penyempurnaan).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -377,6 +377,23 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
 - **Kartu ringkasan minggu ini** di Beranda (tap → S09).
 - Perbaikan kompatibilitas: `Instant.atZone().toLocalDate()` menggantikan `LocalDate.ofInstant` (API 34) agar jalan di API 30.
 - Gap: daftar "rekor minggu ini" di S09 belum ditampilkan.
+
+## P2.11 Pengaturan (S12) — selesai (2026-10-11)
+- DataStore `SettingsRepository`: tema, bahasa voice, countdown (awal/segmen/cue/gaya), margin terlalu cepat, getar,
+  auto-pause, layar menyala, km marker, alert pace.
+- S12: Tampilan (tema + layar menyala), Voice (bahasa, **uji suara**, **status paket suara**, km marker, alert pace),
+  Countdown (awal/segmen/cue/gaya), Alert (margin, getar), Tracking (auto-pause), Data→S13, Bantuan (baterai→S14, versi),
+  Pengembang→S15 (debug).
+- Wiring: **tema → `RunCoachTheme`** (langsung tanpa restart, persist), **layar menyala → S05**, **bahasa voice + countdown
+  awal → S04/service**. Tab **Pengaturan** (bottom bar 4 tab).
+- Test: `SettingsRepositoryTest` (persist) + `SettingsUiTest` (render + status paket suara). **Instrumented 20/20 hijau**.
+- Gap: sebagian setelan dipersistensi tapi wiring fungsional menyusul (auto-pause = P3.3; cue/margin/vibrate/kmMarker/
+  paceAlerts belum disalurkan ke engine/service).
+
+## Status P2 — SELESAI (2026-10-11)
+- P2.1–P2.11 selesai. **Instrumented 20/20 hijau; engine 181; app lokal 2.**
+- Berikutnya: FASE P3 (peta, export GPX, auto-pause, backup, kalibrasi, pengingat).
+
 
 
 

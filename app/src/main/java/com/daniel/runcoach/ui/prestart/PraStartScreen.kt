@@ -40,6 +40,8 @@ import com.daniel.runcoach.service.RunForegroundService
 import com.daniel.runcoach.service.location.LocationSourceFactory
 import com.daniel.runcoach.ui.Formatters
 import com.daniel.runcoach.ui.onboarding.hasLocationPermission
+import com.daniel.runcoach.data.SettingsRepository
+import kotlinx.coroutines.flow.first
 
 /**
  * S04 Pre-start (plan section 8): workout segment summary, live GPS readiness, permission status, quick
@@ -56,6 +58,10 @@ fun PraStartScreen(workout: Workout, onStarted: () -> Unit, onBack: () -> Unit) 
     val quality = gpsFixQuality(accuracy)
 
     LaunchedEffect(Unit) {
+        val settingsRepository = SettingsRepository(context)
+        val stored = settingsRepository.settings.first()
+        voiceLanguage = stored.voiceLanguage
+        countdownSec = stored.startCountdownSec
         val source = LocationSourceFactory.create(context)
         runCatching { source.samples().collect { accuracy = it.accuracyM } }
     }

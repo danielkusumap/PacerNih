@@ -40,6 +40,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.collectAsState
+import com.daniel.runcoach.data.AppSettings
+import com.daniel.runcoach.data.SettingsRepository
 import com.daniel.runcoach.R
 import com.daniel.runcoach.engine.alert.CorrectionState
 import com.daniel.runcoach.engine.model.Limit

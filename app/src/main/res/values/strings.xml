@@ -125,6 +125,41 @@
     <string name="s09_empty">Belum ada latihan di minggu ini</string>
     <string name="beranda_week">Minggu ini: %1$s · %2$d sesi</string>
 
+    <!-- S12 Pengaturan -->
+    <string name="tab_settings">Pengaturan</string>
+    <string name="s12_title">Pengaturan</string>
+    <string name="s12_display">Tampilan</string>
+    <string name="s12_theme">Tema</string>
+    <string name="s12_theme_system">Ikuti sistem</string>
+    <string name="s12_theme_light">Terang</string>
+    <string name="s12_theme_dark">Gelap</string>
+    <string name="s12_keep_screen">Layar tetap menyala saat lari</string>
+    <string name="s12_voice">Voice</string>
+    <string name="s12_voice_language">Bahasa voice</string>
+    <string name="s12_test_voice">Uji suara</string>
+    <string name="s12_voice_pack">Paket suara: %1$s</string>
+    <string name="s12_available">tersedia</string>
+    <string name="s12_missing">tidak tersedia</string>
+    <string name="s12_km_marker">Km marker</string>
+    <string name="s12_pace_alerts">Alert terlalu cepat/lambat</string>
+    <string name="s12_countdown">Countdown</string>
+    <string name="s12_countdown_start">Awal (dtk)</string>
+    <string name="s12_countdown_segment">Segmen waktu (dtk)</string>
+    <string name="s12_cue_distance">Jarak cue segmen jarak (m)</string>
+    <string name="s12_countdown_style">Gaya countdown</string>
+    <string name="s12_style_beep">Beep</string>
+    <string name="s12_style_voice">Suara angka</string>
+    <string name="s12_alert">Alert</string>
+    <string name="s12_fast_margin">Margin terlalu cepat default (detik)</string>
+    <string name="s12_vibrate">Getar</string>
+    <string name="s12_tracking">Tracking</string>
+    <string name="s12_auto_pause">Auto-pause</string>
+    <string name="s12_data">Data &amp; Cadangan (S13)</string>
+    <string name="s12_help">Bantuan</string>
+    <string name="s12_version">Versi app: %1$s</string>
+    <string name="s12_dev">Pengembang</string>
+    <string name="s12_off">Mati</string>
+
     <!-- S07 Riwayat -->
     <string name="s07_title">Riwayat</string>
     <string name="s07_search">Cari nama</string>
