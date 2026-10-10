@@ -20,6 +20,8 @@ import com.daniel.runcoach.ui.home.BerandaScreen
 import com.daniel.runcoach.ui.onboarding.OnboardingScreen
 import com.daniel.runcoach.ui.prestart.PraStartScreen
 import com.daniel.runcoach.ui.run.RunRoute
+import com.daniel.runcoach.ui.stats.RecordDetailScreen
+import com.daniel.runcoach.ui.stats.StatsScreen
 
 /** Navigation routes. More screens arrive in later tasks. */
 object Routes {
@@ -27,6 +29,8 @@ object Routes {
     const val BATTERY = "battery"
     const val HOME = "home"
     const val HISTORY = "history"
+    const val STATS = "stats"
+    const val RECORD = "record/{key}"
     const val DETAIL = "detail/{sessionId}"
     const val PRESTART = "prestart"
     const val RUN = "run"
@@ -68,13 +72,47 @@ fun AppNavHost() {
                     navController.navigate(Routes.EDITOR)
                 },
                 onOpenSimulator = { navController.navigate(Routes.DEBUG) },
-                onSelectTab = { tab -> if (tab == MainTab.HISTORY) navController.navigate(Routes.HISTORY) },
+                onSelectTab = { tab ->
+                    when (tab) {
+                        MainTab.HISTORY -> navController.navigate(Routes.HISTORY)
+                        MainTab.STATS -> navController.navigate(Routes.STATS)
+                        else -> {}
+                    }
+                },
             )
         }
         composable(Routes.HISTORY) {
             HistoryScreen(
                 onOpenSession = { sessionId -> navController.navigate("detail/$sessionId") },
-                onSelectTab = { tab -> if (tab == MainTab.WORKOUT) navController.popBackStack(Routes.HOME, false) },
+                onSelectTab = { tab ->
+                    when (tab) {
+                        MainTab.WORKOUT -> navController.popBackStack(Routes.HOME, false)
+                        MainTab.STATS -> navController.navigate(Routes.STATS)
+                        else -> {}
+                    }
+                },
+            )
+        }
+        composable(Routes.STATS) {
+            StatsScreen(
+                onOpenRecord = { key -> navController.navigate("record/$key") },
+                onSelectTab = { tab ->
+                    when (tab) {
+                        MainTab.WORKOUT -> navController.popBackStack(Routes.HOME, false)
+                        MainTab.HISTORY -> navController.navigate(Routes.HISTORY)
+                        else -> {}
+                    }
+                },
+            )
+        }
+        composable(
+            route = Routes.RECORD,
+            arguments = listOf(navArgument("key") { type = NavType.StringType }),
+        ) { entry ->
+            RecordDetailScreen(
+                keyName = entry.arguments?.getString("key").orEmpty(),
+                onOpenSession = { sessionId -> navController.navigate("detail/$sessionId") },
+                onBack = { navController.popBackStack() },
             )
         }
         composable(

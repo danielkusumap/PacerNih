@@ -234,3 +234,9 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - S08 memuat hasil dari tabel (`SegmentResult`/`KmSplit`), bukan menghitung ulang.
 - **Gap dicatat:** DILEWATI belum dipersistensi; lencana rekor di daftar S07 belum ada; tab Peta menunggu P3.1.
 - P2.6-P2.8 di-commit bersama karena berbagi file (AppNavHost/Beranda/strings).
+
+## D-034 P2.9: rekor dari tabel BestEffort
+- Rekor dihitung dari tabel `BestEffort` (min per jarak, JOIN sesi non-excluded), jadi hapus sesi cukup menurunkan
+  rekor ke baris berikutnya tanpa memindai ulang track.
+- Progresi rekor dari `RecordProgression` (pure). Tab Statistik ditambahkan (sub-tab Mingguan placeholder → P2.10).
+- Grafik S11 memakai `LineChart` yang sama; toggle waktu/pace.

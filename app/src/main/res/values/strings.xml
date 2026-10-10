@@ -93,6 +93,21 @@
     <!-- Tabs -->
     <string name="tab_workout">Latihan</string>
     <string name="tab_history">Riwayat</string>
+    <string name="tab_stats">Statistik</string>
+
+    <!-- S10/S11 Rekor -->
+    <string name="s10_title">Rekor Pribadi</string>
+    <string name="s10_recent">Rekor terbaru</string>
+    <string name="s10_none">Belum ada</string>
+    <string name="s10_note">Dihitung dari bagian tercepat dalam sesi, bukan hanya dari awal.</string>
+    <string name="s11_title">Detail Rekor</string>
+    <string name="s11_current">Rekor saat ini</string>
+    <string name="s11_from">dari km %1$s</string>
+    <string name="s11_top10">Top 10</string>
+    <string name="s11_by_time">Waktu</string>
+    <string name="s11_by_pace">Pace</string>
+    <string name="sub_weekly">Mingguan</string>
+    <string name="sub_records">Rekor</string>
 
     <!-- S07 Riwayat -->
     <string name="s07_title">Riwayat</string>

@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P2 step by step — P2.1–P2.8 selesai; selanjutnya P2.9 (Rekor Pribadi S10/S11).
+- **Berikutnya:** FASE P2 step by step — P2.1–P2.9 selesai; selanjutnya P2.10 (Ringkasan Mingguan S09).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -356,6 +356,16 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
 - Selesai: P2.1, P2.2, P2.3, P2.4, P2.5, P2.6, P2.7, P2.8.
 - Berikutnya: P2.9 (Rekor S10/S11) → P2.10 (Ringkasan Mingguan S09) → P2.11 (Pengaturan S12).
 - Instrumented **16/16 hijau**; engine 173; app lokal 2.
+
+## P2.9 Rekor Pribadi (S10, S11) — selesai (2026-10-11)
+- Engine `RecordProgression` (F22) + test (progresi waktu, sesi dikecualikan, hapus pemegang rekor menurunkan ke
+  berikutnya, recent 5). Engine **177 test** hijau.
+- App `RecordRepository`: `currentRecords` (min per jarak, join sesi non-excluded), `topN`, `recentRecords`, `series`.
+- Tab **Statistik** (bottom bar 3 tab) sub-tab **Mingguan** (placeholder) & **Rekor (S10)**; **S11** detail rekor
+  (rekor saat ini + posisi awal, grafik best effort per sesi, Top 10, toggle waktu/pace).
+- Test: `RecordRepositoryTest` 2/2 (hapus menurunkan rekor; excluded diabaikan; jarak belum ditempuh → null).
+- **Instrumented 18/18 hijau**.
+- Gap: lencana rekor di daftar S07 belum ada (di S06 sudah).
 
 
 

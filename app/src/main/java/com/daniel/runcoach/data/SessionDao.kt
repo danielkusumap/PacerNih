@@ -49,6 +49,27 @@ interface SessionDao {
     @Query("SELECT MIN(BestEffort.durationMs) FROM BestEffort JOIN Session ON Session.id = BestEffort.sessionId WHERE BestEffort.distanceKey = :key AND Session.excludeFromRecords = 0 AND BestEffort.sessionId != :excludeSessionId")
     suspend fun bestDurationExcluding(key: String, excludeSessionId: String): Long?
 
+    @Query(
+        "SELECT * FROM BestEffort WHERE distanceKey = :key AND sessionId IN " +
+            "(SELECT id FROM Session WHERE excludeFromRecords = 0) ORDER BY durationMs ASC LIMIT 1",
+    )
+    suspend fun bestEffort(key: String): BestEffortEntity?
+
+    @Query(
+        "SELECT * FROM BestEffort WHERE distanceKey = :key AND sessionId IN " +
+            "(SELECT id FROM Session WHERE excludeFromRecords = 0) ORDER BY durationMs ASC LIMIT :limit",
+    )
+    suspend fun topEfforts(key: String, limit: Int): List<BestEffortEntity>
+
+    @Query(
+        "SELECT BestEffort.sessionId AS sessionId, BestEffort.distanceKey AS distanceKey, " +
+            "BestEffort.durationMs AS durationMs, BestEffort.startOffsetM AS startOffsetM, " +
+            "Session.startedAtEpochMs AS startedAtEpochMs, Session.name AS sessionName " +
+            "FROM BestEffort JOIN Session ON Session.id = BestEffort.sessionId " +
+            "WHERE Session.excludeFromRecords = 0 ORDER BY Session.startedAtEpochMs ASC",
+    )
+    suspend fun allEfforts(): List<EffortWithSession>
+
     @Query("DELETE FROM Session WHERE id = :id")
     suspend fun deleteSession(id: String)
 
