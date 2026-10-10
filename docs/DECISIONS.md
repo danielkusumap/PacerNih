@@ -107,3 +107,11 @@ filter, lalu menerapkan `calibrationFactor` (F4, clamp 0.95–1.05). `BoundaryCr
 - Coverage memakai **plugin `jacoco` bawaan Gradle** (bukan dependency pihak ketiga), jadi tidak ada
   penambahan dependency di luar whitelist. Gate: LINE >= 85% pada task `jacocoTestCoverageVerification`;
   hasil 93.5%. `:engine:test` < 30 detik.
+
+## D-017 P1.1: S01/S14, izin, dan navigasi
+- `:app` memakai Navigation Compose; start = S01 onboarding; S14 panduan baterai; `home` placeholder (P1.7).
+- Izin runtime: `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `POST_NOTIFICATIONS` (API 33+).
+  **Tidak** meminta `ACCESS_BACKGROUND_LOCATION` (sesuai bagian 4).
+- Deep link baterai memakai `ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS` (tanpa izin khusus), bukan
+  `ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` yang menuntut izin `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`.
+- Teks UI di `strings.xml` (values = ID, values-en = EN); tiap layar punya `@Preview` light & dark (aturan #12/#13).

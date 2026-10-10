@@ -1,0 +1,38 @@
+<resources>
+    <string name="app_name">RunCoach</string>
+
+    <!-- S01 Onboarding & permissions -->
+    <string name="onboarding_title">Welcome to RunCoach</string>
+    <string name="onboarding_intro">This app records runs using GPS. Allow precise location and notifications so tracking stays reliable.</string>
+    <string name="permission_location_title">Precise location permission</string>
+    <string name="permission_location_desc">Used to record route, distance, and pace.</string>
+    <string name="permission_location_required">Location permission is required to start.</string>
+    <string name="permission_notification_title">Notification permission</string>
+    <string name="permission_notification_desc">Keeps run status visible with the screen off.</string>
+    <string name="gps_title">Device GPS status</string>
+    <string name="gps_desc">GPS must be on while you run.</string>
+    <string name="status_granted">Granted</string>
+    <string name="status_denied">Denied / not granted</string>
+    <string name="action_grant_location">Grant location permission</string>
+    <string name="action_grant_notification">Grant notification permission</string>
+    <string name="action_skip_notification">Skip the notification step</string>
+    <string name="action_open_location_settings">Open location settings</string>
+    <string name="action_open_settings">Open app settings</string>
+    <string name="action_battery_guide">Battery guide</string>
+    <string name="action_start">Start</string>
+    <string name="action_back">Back</string>
+
+    <!-- S14 Battery guide -->
+    <string name="battery_title">Battery guide</string>
+    <string name="battery_intro">So the system does not kill the session while the screen is off, follow these steps and exempt the app from battery optimization.</string>
+    <string name="battery_exempt_yes">Battery optimization: already exempted.</string>
+    <string name="battery_exempt_no">Battery optimization: not exempted yet.</string>
+    <string name="battery_action_open_battery">Open battery settings</string>
+    <string name="battery_brand_xiaomi">Xiaomi: Settings &gt; Apps &gt; RunCoach &gt; Battery &gt; No restrictions; enable Autostart.</string>
+    <string name="battery_brand_oppo">OPPO/Realme: Settings &gt; Battery &gt; Optimization &gt; RunCoach &gt; Don\'t optimize.</string>
+    <string name="battery_brand_vivo">Vivo: Settings &gt; Battery &gt; High background power consumption &gt; RunCoach.</string>
+    <string name="battery_brand_samsung">Samsung: Settings &gt; Device care &gt; Battery &gt; Background usage limits &gt; RunCoach.</string>
+    <string name="battery_brand_other">Others: Settings &gt; Apps &gt; RunCoach &gt; Battery &gt; Unrestricted.</string>
+
+    <string name="home_placeholder">Home screen (P1.7)</string>
+</resources>

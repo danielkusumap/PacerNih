@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P1 (P1.1 izin & onboarding).
+- **Berikutnya:** FASE P1 — P1.2 (`LocationSource`); P1.1 sudah selesai (lihat bawah).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -166,4 +166,15 @@ Bug diketahui: (seperti P0.8) F7 & KmMarker live (D-013).
 Semua task P0 selesai dan AC hijau; boleh lanjut ke FASE P1. Sisa yang sifatnya lintas-fase:
 - Pemisahan jarak proporsional F7 (batas waktu) & `KmMarker` live non-interpolasi (D-013).
 - Antrean suara TTS (flush Countdown, buang alert basi >5 dtk) & tick countdown >700 ms → service P1.4.
+
+## P1.1 Izin, Onboarding (S01), Panduan Baterai (S14) — selesai (2026-10-10)
+- `:app` kini memakai Navigation Compose; start = S01, plus S14 dan placeholder `home` (P1.7).
+- **S01**: status izin lokasi & notifikasi (diberikan/ditolak) + status GPS perangkat, penjelasan singkat tiap izin,
+  aksi beri izin / buka pengaturan sistem / buka pengaturan lokasi, tombol **Mulai** hanya aktif bila lokasi diberikan.
+- **S14**: langkah per merek (Xiaomi/OPPO/Vivo/Samsung/lainnya) + tombol ke pengaturan baterai & aplikasi,
+  menampilkan status pengecualian optimasi baterai bila bisa dideteksi.
+- Izin runtime: `ACCESS_FINE/COARSE_LOCATION` + `POST_NOTIFICATIONS` (API 33+). **Tidak** meminta
+  `ACCESS_BACKGROUND_LOCATION`. Teks UI di `strings.xml` (values=ID, values-en=EN), `@Preview` light & dark.
+- AC P1.1 terpenuhi (perilaku izin; tidak ada jalur crash karena denial). Detail: `DECISIONS.md` D-017.
+- Verifikasi: `:app:assembleDebug` sukses.
 
