@@ -99,3 +99,11 @@ filter, lalu menerapkan `calibrationFactor` (F4, clamp 0.95–1.05). `BoundaryCr
   dan pembuangan tick countdown >700 ms dilakukan di lapisan pemutaran (service P1.4), belum di engine.
 - Vektor yang belum hijau: V1 (format tampilan "5:33", ada di `Formatters.kt` :app, P1.7), V16–V17 (statistik
   mingguan, P2.10), V18 (nama default sesi, P2.5), V19 (kalibrasi jarak, P3.7). V2–V15, V20–V22 sudah hijau.
+
+## D-016 P0.9: TrackSimulator, golden, dan coverage
+- `TrackSimulator` deterministik (seeded `Random` hanya untuk `NOISY`); jadi sumber golden test yang stabil.
+- Golden disimpan sebagai resource teks (`engine/src/test/resources/golden/`); diregenerasi dengan env
+  `RC_UPDATE_GOLDEN=1`, dibandingkan byte demi baris pada run normal.
+- Coverage memakai **plugin `jacoco` bawaan Gradle** (bukan dependency pihak ketiga), jadi tidak ada
+  penambahan dependency di luar whitelist. Gate: LINE >= 85% pada task `jacocoTestCoverageVerification`;
+  hasil 93.5%. `:engine:test` < 30 detik.

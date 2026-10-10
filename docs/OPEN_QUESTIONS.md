@@ -13,14 +13,6 @@ Sinkronisasi terakhir: `RUNCOACH_PLAN.md` **Lampiran C** (2026-10-10).
   keystore, atau rahasia lain. Plan tidak mewajibkan remote.
 - **Dibutuhkan:** keputusan pemilik proyek apakah/bagaimana repo di-push.
 
-## Q-008 P0.11 (audit V1–V22) bergantung pada task P2/P3
-- Sebagian vektor 6.14.2 bergantung pada task setelah P0: **V1** (format tampilan `5:33`) di `Formatters.kt`
-  (:app, P1.7), **V16–V17** (statistik mingguan, P2.10), **V18** (nama default sesi, P2.5), **V19** (kalibrasi
-  jarak, P3.7). Karena itu audit "semua V1–V22 punya test" belum bisa hijau di dalam FASE P0.
-- Vektor yang sudah hijau: V2–V15, V20–V22 (FormulaVectorsTest, PhraseBuilderTest, WorkoutRunnerTest).
-- **Keputusan yang diminta:** (a) audit P0.11 ditunda sampai task terkait selesai, atau (b) auditnya dibatasi
-  ke vektor yang memang milik P0 (V2–V15, V20–V22) dan sisanya menyusul. Usulan: (b).
-
 ---
 
 # Selesai
@@ -48,7 +40,7 @@ Sinkronisasi terakhir: `RUNCOACH_PLAN.md` **Lampiran C** (2026-10-10).
 - **Tindak lanjut:** penerapan di `EngineConfig` adalah bagian dari task **P0.4b** (bukan lagi pertanyaan terbuka).
 
 ## Q-004 Inisialisasi Git — SELESAI (2026-10-10)
-- `git init -b main` dijalankan. Commit: P0.1, P0.2, P0.3, P0.4, P0.10.
+- `git init -b main` dijalankan. Commit P0.1, P0.2, P0.3, P0.4, P0.10 (dan seterusnya).
 - `.gitignore` diperbaiki: `build/` (semua modul), `.kotlin/`, `local.properties`, `.gradle/` tidak ikut terlacak.
 
 ## Q-005 Tugas P0 yang ditunda — SELESAI (2026-10-10)
@@ -59,3 +51,9 @@ Sinkronisasi terakhir: `RUNCOACH_PLAN.md` **Lampiran C** (2026-10-10).
 
 ## Q-006 Normalisasi line ending (CRLF) — SELESAI (2026-10-10)
 - Keputusan (Lampiran C): **ya**. `.gitattributes` berisi `* text=auto eol=lf` ditambahkan pada commit terpisah.
+
+## Q-008 P0.11 (audit V1–V22) — SELESAI / DIPUTUSKAN (2026-10-10)
+- **Keputusan pemilik (opsi b):** audit P0.11 dibatasi dulu ke vektor yang memang milik P0:
+  **V2–V15, V20–V22** (sudah hijau). Vektor sisanya menyusul saat task-nya dikerjakan:
+  V1 (format tampilan `5:33`, `Formatters.kt` :app, P1.7), V16–V17 (statistik mingguan, P2.10),
+  V18 (nama default sesi, P2.5), V19 (kalibrasi jarak, P3.7). Tidak perlu menunggu task-task itu untuk P0.

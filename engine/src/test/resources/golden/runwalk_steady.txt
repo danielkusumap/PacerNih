@@ -1,0 +1,14 @@
+workout=runwalk
+scenario=STEADY seconds=2400
+totalDistanceM=6669
+movingMs=2399000
+planCompleted=true
+goalReached=true
+event.Countdown=21
+event.GoalDistanceReached=1
+event.KmMarker=6
+event.PreSegmentWarning=7
+event.SegmentEnd=7
+event.SegmentStart=7
+event.WorkoutPlanCompleted=1
+event.WorkoutStarted=1

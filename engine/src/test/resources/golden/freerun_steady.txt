@@ -1,0 +1,9 @@
+workout=free
+scenario=STEADY seconds=600
+totalDistanceM=1665
+movingMs=599000
+planCompleted=false
+goalReached=false
+event.KmMarker=1
+event.SegmentStart=1
+event.WorkoutStarted=1

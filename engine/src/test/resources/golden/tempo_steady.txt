@@ -1,0 +1,12 @@
+workout=tempo
+scenario=STEADY seconds=2000
+totalDistanceM=5557
+movingMs=1999000
+planCompleted=true
+goalReached=false
+event.DistanceCue=4
+event.KmMarker=5
+event.SegmentEnd=5
+event.SegmentStart=5
+event.WorkoutPlanCompleted=1
+event.WorkoutStarted=1

@@ -1,0 +1,12 @@
+workout=interval
+scenario=INTERVALS seconds=2000
+totalDistanceM=6375
+movingMs=1999000
+planCompleted=true
+goalReached=false
+event.DistanceCue=7
+event.KmMarker=6
+event.SegmentEnd=8
+event.SegmentStart=8
+event.WorkoutPlanCompleted=1
+event.WorkoutStarted=1

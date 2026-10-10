@@ -1,0 +1,9 @@
+workout=stable5k
+scenario=STOP_AND_GO seconds=2000
+totalDistanceM=3722
+movingMs=1999000
+planCompleted=false
+goalReached=false
+event.KmMarker=3
+event.SegmentStart=1
+event.WorkoutStarted=1

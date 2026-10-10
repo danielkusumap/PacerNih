@@ -3,14 +3,14 @@
 Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diketahui.
 
 ## Status P0 (diperbarui 2026-10-10, sinkron dengan Lampiran C)
-- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.4b, P0.5, P0.6, P0.7, P0.8, P0.10.
-- **Tersedia sekarang:** 6.14 (Katalog Rumus + V1–V22) dan 8.3 (Info Segmen). Q-001/Q-002/Q-003/Q-005 ditutup.
+- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.4b, P0.5, P0.6, P0.7, P0.8, P0.9, P0.10.
+- **Tersedia sekarang:** 6.14 (Katalog Rumus + V1–V22) dan 8.3 (Info Segmen). Q-001/Q-002/Q-003/Q-005/Q-008 ditutup.
 - **Urutan yang disarankan (Lampiran C):** P0.4b -> P0.5 -> P0.6 -> P0.8 -> P0.7 -> P0.9 -> P0.11.
-- **Belum:** P0.9, P0.11.
+- **Belum:** P0.11.
 - **Gerbang P0 belum tercapai**, jadi P1 (runtime Android) belum dimulai.
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack kini menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya dicatat di `DECISIONS.md` D-010.
-- **Test:** `:engine` 137 unit test hijau; `:app:assembleDebug` sukses.
+- **Test:** `:engine` 158 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -142,4 +142,17 @@ Bug diketahui: pemisahan jarak proporsional F7 (batas waktu) & KmMarker live mas
 
 Belum: P0.9 dst.
 Bug diketahui: (seperti P0.8) F7 & KmMarker live (D-013); antrean suara TTS di service P1.4.
+
+## P0.9 TrackSimulator dan golden test — selesai (2026-10-10)
+- `TrackSimulator` (P0.9): generator track sintetis deterministik (seed tetap, 1 Hz) untuk 8 skenario
+  (`STEADY`, `SLOW_DOWN`, `SPEED_UP`, `INTERVALS`, `GPS_JUMP`, `STOP_AND_GO`, `TUNNEL_GAP`, `NOISY`).
+- **14 golden test** (`GoldenTest`): workout x skenario -> ringkasan event tersimpan di
+  `engine/src/test/resources/golden/*.txt`. Regenerasi lewat env `RC_UPDATE_GOLDEN=1`.
+- Coverage diukur dengan plugin `jacoco` bawaan Gradle (tanpa dependency eksternal); gate **LINE >= 85%**,
+  hasil saat ini **93.5%** (976/1044 baris). `:engine:test` ~10 detik (< 30 detik).
+- Test: **158 hijau**.
+- Keputusan teknis: lihat `DECISIONS.md` D-016.
+
+Belum: P0.11 dst.
+Bug diketahui: (seperti P0.8) F7 & KmMarker live (D-013).
 
