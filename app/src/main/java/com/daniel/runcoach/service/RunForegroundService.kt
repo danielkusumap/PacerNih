@@ -100,6 +100,11 @@ class RunForegroundService : Service() {
                 if (target != null) resumeRun(target) else stopSelf()
                 return START_NOT_STICKY
             }
+
+            ACTION_CANCEL_COUNTDOWN -> {
+                runner?.onCancelCountdown()
+                return START_NOT_STICKY
+            }
         }
         val workoutJson = intent?.getStringExtra(EXTRA_WORKOUT)
         val workout = workoutJson?.let { runCatching { WorkoutJson.decode(it) }.getOrNull() } ?: freeRun()
@@ -367,6 +372,7 @@ class RunForegroundService : Service() {
         private const val FLUSH_INTERVAL_MS = 5000L
         const val ACTION_STOP = "com.daniel.runcoach.action.STOP_RUN"
         const val ACTION_RESUME = "com.daniel.runcoach.action.RESUME_RUN"
+        const val ACTION_CANCEL_COUNTDOWN = "com.daniel.runcoach.action.CANCEL_COUNTDOWN"
         const val EXTRA_WORKOUT = "workout_json"
         const val EXTRA_SESSION_ID = "session_id"
 
@@ -385,6 +391,10 @@ class RunForegroundService : Service() {
 
         fun stop(context: Context) {
             context.startService(Intent(context, RunForegroundService::class.java).setAction(ACTION_STOP))
+        }
+
+        fun cancelCountdown(context: Context) {
+            context.startService(Intent(context, RunForegroundService::class.java).setAction(ACTION_CANCEL_COUNTDOWN))
         }
     }
 }

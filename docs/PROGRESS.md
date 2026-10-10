@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P1 — P1.8 (Countdown UI S05); P1.1–P1.7 selesai (lihat bawah).
+- **Berikutnya:** FASE P1 — P1.9 (kontrol & sheet layar lari); P1.1–P1.8 selesai (lihat bawah).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -243,4 +243,14 @@ Semua task P0 selesai dan AC hijau; boleh lanjut ke FASE P1. Sisa yang sifatnya 
   (`keepScreenOn`, default mati sampai S12/P2.11).
 - **Uji device**: mulai sesi → S05 tampil & update (header, segmen 1/1, `--:--`, total, Next, Stop), tanpa crash.
 - Catatan: `elapsedScope` untuk projected/required masih didekati dari waktu segmen penuh (bukan per-km) — lihat D-025.
+
+## P1.8 Countdown UI (S05) — selesai (2026-10-11)
+- Sinyal ke UI ditambahkan ke `RunnerState`: `segmentCountdownSec` (banner 3-2-1 segmen waktu),
+  `distanceCueActive` + `distanceCueNextKind` (banner "Siap-siap") — dihitung deterministik dari state.
+- S05: **overlay countdown awal** (nama workout, angka besar, tombol **Batal**) saat phase `COUNTDOWN`;
+  **banner** "Ganti ke X dalam N" (segmen waktu) dan "Siap-siap: ganti ke X" (cue jarak) yang tidak menutupi pace.
+- Service: aksi `ACTION_CANCEL_COUNTDOWN` (`RunForegroundService.cancelCountdown`) → `runner.onCancelCountdown()`.
+- `@Preview` countdown ditambahkan. **Uji device**: mulai sesi → overlay tampil (`Lari Bebas`, `3`, `Cancel`) lalu
+  transisi ke RUNNING setelah 5 dtk; Stop menghentikan service.
+- Catatan: karena S04 belum ada (P2.4), **Batal** mengembalikan ke phase WAITING_GPS (belum menavigasi keluar).
 

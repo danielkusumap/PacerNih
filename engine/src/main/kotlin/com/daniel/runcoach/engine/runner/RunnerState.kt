@@ -1,6 +1,7 @@
 package com.daniel.runcoach.engine.runner
 
 import com.daniel.runcoach.engine.model.Segment
+import com.daniel.runcoach.engine.model.SegmentKind
 
 /** Phase of the run state machine (plan 6.5). */
 enum class RunnerPhase { IDLE, WAITING_GPS, COUNTDOWN, RUNNING, PAUSED_MANUAL, PAUSED_AUTO, STOPPED }
@@ -22,6 +23,9 @@ data class RunnerState(
     val pausedMs: Long = 0L,
     val paceLiveSecPerKm: Double? = null,
     val countdownSec: Int? = null,
+    val segmentCountdownSec: Int? = null,
+    val distanceCueActive: Boolean = false,
+    val distanceCueNextKind: SegmentKind? = null,
     val planCompleted: Boolean = false,
     val goalReached: Boolean = false,
     val gpsLost: Boolean = false,

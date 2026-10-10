@@ -311,8 +311,29 @@ class WorkoutRunner(
         }
     }
 
-    private fun movingMsAt(nowMs: Long): Long {
-        val start = tStartRunningMs ?: return 0L
+    private fun segmentCountdownSec(segment: Segment?, remainingMs: Long): Int? {
+        val limit = segment?.limit
+        if (limit !is Limit.Duration) return null
+        if (config.segmentCountdownSec <= 0) return null
+        if (limit.seconds * 1000L < config.minSegmentSecForCountdown * 1000L) return null
+        if (planCompleted || cursor.peek(tracker.totalDistanceM) == null) return null
+        return (1..config.segmentCountdownSec).firstOrNull { remainingMs <= it * 1000L }
+    }
+
+    private fun distanceCue(segment: Segment?): Pair<Boolean, SegmentKind?> {
+        val limit = segment?.limit
+        if (limit !is Limit.Distance) return false to null
+        val cue = config.cueDistanceM
+        if (cue <= 0 || planCompleted) return false to null
+        val limitM = limit.meters + extendedLimitM
+        if (limitM < 2.0 * cue) return false to null
+        val next = cursor.peek(tracker.totalDistanceM) ?: return false to null
+        val doneM = tracker.totalDistanceM - segmentStartTotalM
+        if (limitM - doneM > cue) return false to null
+        return true to next.kind
+    }
+
+    private fun movingMsAt(nowMs: Long): Long {        val start = tStartRunningMs ?: return 0L
         return nowMs - start - pausedMsTotal
     }
 
@@ -340,6 +361,7 @@ class WorkoutRunner(
         } else {
             null
         }
+        val (cueActive, cueKind) = distanceCue(segment)
         _state.value = RunnerState(
             phase = phase,
             stepIndex = stepIndex,
@@ -356,6 +378,9 @@ class WorkoutRunner(
             pausedMs = pausedMsTotal,
             paceLiveSecPerKm = if (phase == RunnerPhase.RUNNING) livePace.livePaceSecPerKm() else null,
             countdownSec = countdownSec,
+            segmentCountdownSec = segmentCountdownSec(segment, remainingMs),
+            distanceCueActive = cueActive,
+            distanceCueNextKind = cueKind,
             planCompleted = planCompleted,
             goalReached = goalReached,
             gpsLost = gpsLost,

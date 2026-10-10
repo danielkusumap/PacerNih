@@ -177,3 +177,11 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
   jarak memakai ETA `remainingM/1000 × paceLive`. Cukup untuk gate/status, bisa diperhalus nanti bila ada kebutuhan.
 - `RunScreen` dibuat stateless (menerima `RunUiState`) agar setiap state bisa di-`@Preview` light & dark.
 - `keepScreenOn` default `false`; digerakkan dari pengaturan pada P2.11.
+
+## D-026 P1.8: sinyal countdown/cue di state + overlay S05
+- `RunnerState` menambah `segmentCountdownSec`, `distanceCueActive`, `distanceCueNextKind`, dihitung di
+  `updateState` (bukan field mutable baru) agar deterministik dan ikut pause.
+- Overlay countdown awal memakai `phase == COUNTDOWN` + `countdownSec`; tombol Batal lewat aksi service
+  `ACTION_CANCEL_COUNTDOWN`. Karena S04 belum ada (P2.4), Batal mengembalikan ke `WAITING_GPS` (tetap di S05).
+- Catatan: uji device menutup countdown awal & cue; banner countdown segmen waktu diverifikasi lewat preview
+  (engine sudah diuji di P0.6).

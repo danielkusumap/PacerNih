@@ -68,6 +68,9 @@
     <string name="kind_walk">Jalan</string>
     <string name="kind_recovery">Pemulihan</string>
     <string name="kind_cooldown">Pendinginan</string>
+    <string name="run_countdown_cancel">Batal</string>
+    <string name="run_change_in">Ganti ke %1$s dalam %2$d</string>
+    <string name="run_get_ready">Siap-siap: ganti ke %1$s</string>
 
     <!-- Foreground service notification -->
     <string name="notification_channel_run">Sesi lari</string>
