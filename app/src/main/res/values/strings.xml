@@ -280,6 +280,7 @@
     <string name="s08_col_delta">Selisih</string>
     <string name="s08_chart_per_km">Pace per km</string>
     <string name="s08_chart_over_distance">Pace sepanjang jarak</string>
+    <string name="chart_faster">lebih cepat</string>
     <string name="result_pass">Lulus</string>
     <string name="result_fail">Gagal</string>
     <string name="result_borderline">Borderline</string>

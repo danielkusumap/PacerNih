@@ -281,6 +281,7 @@
     <string name="s08_col_delta">Delta</string>
     <string name="s08_chart_per_km">Pace per km</string>
     <string name="s08_chart_over_distance">Pace over distance</string>
+    <string name="chart_faster">faster</string>
     <string name="result_pass">Passed</string>
     <string name="result_fail">Failed</string>
     <string name="result_borderline">Borderline</string>

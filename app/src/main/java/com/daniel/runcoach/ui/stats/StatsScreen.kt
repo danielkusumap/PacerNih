@@ -205,6 +205,7 @@ fun RecordDetailScreen(keyName: String, onOpenSession: (String) -> Unit, onBack:
                     points = points,
                     steps = prSteps,
                     reversedPace = pace,
+                    fasterLabel = if (pace) stringResource(R.string.chart_faster) else null,
                     valueFormatter = { value -> if (pace) Formatters.pace(value) else Formatters.duration((value * 1000).toLong()) },
                 )
             } else {

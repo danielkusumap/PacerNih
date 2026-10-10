@@ -130,7 +130,7 @@ fun WeeklyScreen(onOpenSession: (String) -> Unit) {
             SectionHeader(stringResource(R.string.s09_pace_weekly))
             val pacePoints = weeks.mapIndexed { i, w -> LinePoint(i.toDouble(), w.avgPaceSecPerKm) }
             if (pacePoints.count { it.y != null } >= 2) {
-                ChartLine(points = pacePoints, valueFormatter = { Formatters.pace(it) })
+                ChartLine(points = pacePoints, fasterLabel = stringResource(R.string.chart_faster), valueFormatter = { Formatters.pace(it) })
             } else {
                 Text(stringResource(R.string.s09_more_data), style = type.caption, color = colors.textTertiary)
             }

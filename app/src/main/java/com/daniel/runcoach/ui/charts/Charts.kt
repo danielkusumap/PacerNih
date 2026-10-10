@@ -1,10 +1,15 @@
 package com.daniel.runcoach.ui.charts
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,6 +26,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
@@ -33,6 +41,8 @@ import com.daniel.runcoach.ui.components.RcStatus
 import com.daniel.runcoach.ui.components.onColor
 import com.daniel.runcoach.ui.theme.LocalRcColors
 import com.daniel.runcoach.ui.theme.LocalRcTypography
+import com.daniel.runcoach.ui.theme.RcColors
+import com.daniel.runcoach.ui.theme.RcTypography
 import kotlin.math.ceil
 import kotlin.math.max
 
@@ -54,13 +64,34 @@ data class TargetStep(val startX: Double, val endX: Double, val target: Double)
 
 private val PlotLeft = 36.dp
 private val PlotBottom = 24.dp
-private val PlotTop = 8.dp
+private val PlotTop = 12.dp
 private val PlotRight = 8.dp
 
-/**
- * Generic bar chart (DESIGN 6.1): transparent background, up to 4 horizontal guides, 60% slots with rounded
- * tops, accent for the highlighted bar and accent at 35% for the rest, a thin outline line for zero values.
- */
+@Composable
+private fun rememberReduceMotion(): Boolean {
+    val context = LocalContext.current
+    return remember {
+        runCatching {
+            android.provider.Settings.Global.getFloat(
+                context.contentResolver,
+                android.provider.Settings.Global.ANIMATOR_DURATION_SCALE,
+            ) == 0f
+        }.getOrDefault(false)
+    }
+}
+
+/** Entry reveal 0..1 once on first display (DESIGN 6.2); instant when reduce-motion is on. */
+@Composable
+private fun rememberReveal(): Float {
+    val reduce = rememberReduceMotion()
+    val anim = remember { Animatable(if (reduce) 1f else 0f) }
+    LaunchedEffect(Unit) {
+        if (!reduce) anim.animateTo(1f, tween(300, easing = LinearEasing))
+    }
+    return anim.value
+}
+
+/** Generic bar chart (DESIGN 6.1/CH3/CH4). */
 @Composable
 fun ChartBar(
     bars: List<Bar>,
@@ -70,6 +101,7 @@ fun ChartBar(
     minMax: Double = 1.0,
     valueFormatter: (Double) -> String = { "%.1f".format(it) },
     showValues: Boolean = true,
+    contentDescription: String? = null,
     onTap: (Int) -> Unit = {},
 ) {
     val colors = LocalRcColors.current
@@ -77,20 +109,24 @@ fun ChartBar(
     val measurer = rememberTextMeasurer()
     var selected by remember { mutableStateOf(highlightIndex) }
     val statusOn = RcStatus.entries.associateWith { it.onColor() }
+    val reveal = rememberReveal()
 
     Canvas(
         modifier = modifier
             .fillMaxWidth()
             .height(height)
+            .semantics { if (contentDescription != null) this.contentDescription = contentDescription }
             .pointerInput(bars) {
-                detectTapGestures { offset ->
-                    if (bars.isEmpty()) return@detectTapGestures
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    if (bars.isEmpty()) return@awaitEachGesture
                     val left = PlotLeft.toPx()
                     val right = size.width - PlotRight.toPx()
                     val slot = (right - left) / bars.size
-                    val index = ((offset.x - left) / slot).toInt().coerceIn(0, bars.size - 1)
-                    selected = index
-                    onTap(index)
+                    val idx = ((down.position.x - left) / slot).toInt().coerceIn(0, bars.size - 1)
+                    selected = idx
+                    onTap(idx)
+                    down.consume()
                 }
             },
     ) {
@@ -98,7 +134,10 @@ fun ChartBar(
         val bottom = size.height - PlotBottom.toPx()
         val top = PlotTop.toPx()
         val right = size.width - PlotRight.toPx()
-        if (bars.isEmpty() || right <= left) return@Canvas
+        if (bars.isEmpty() || right <= left) {
+            drawEmpty(measurer, colors, type, left, right, top, bottom)
+            return@Canvas
+        }
 
         val rawMax = (bars.mapNotNull { it.value } + bars.mapNotNull { it.target }).maxOrNull() ?: minMax
         val scaleMax = niceMax(max(rawMax, minMax))
@@ -117,7 +156,8 @@ fun ChartBar(
             if (value == null || value == 0.0) {
                 drawLine(colors.outline, Offset(cx - barWidth / 2f, bottom), Offset(cx + barWidth / 2f, bottom), strokeWidth = 2f)
             } else {
-                val h = (value / scaleMax * (bottom - top)).toFloat()
+                val full = (value / scaleMax * (bottom - top)).toFloat()
+                val h = full * reveal
                 val active = index == selected
                 val color = bar.status?.let { s -> statusOn.getValue(s).let { if (active) it else it.copy(alpha = 0.7f) } }
                     ?: (if (active) colors.accent else colors.accent.copy(alpha = 0.35f))
@@ -127,21 +167,25 @@ fun ChartBar(
                     size = Size(barWidth, h),
                     cornerRadius = CornerRadius(4.dp.toPx()),
                 )
-                if (showValues) {
+                if (showValues && reveal > 0.9f) {
                     val label = valueFormatter(value)
                     val layout = measurer.measure(label, captionStyle(colors.textTertiary, type))
-                    drawText(layout, topLeft = Offset(cx - layout.size.width / 2f, bottom - h - layout.size.height - 2f))
+                    drawText(layout, topLeft = Offset(cx - layout.size.width / 2f, bottom - full - layout.size.height - 2f))
                 }
             }
             drawText(measurer, bar.label, cx - 8f, bottom + 4f, colors.textTertiary, type)
         }
+
+        selected?.let { index ->
+            bars.getOrNull(index)?.value?.let { v ->
+                val cx = left + slot * index + slot / 2f
+                drawTooltip(measurer, colors, type, "${bars[index].label} · ${valueFormatter(v)}", cx, py = bottom - (v / scaleMax * (bottom - top)).toFloat(), top = top)
+            }
+        }
     }
 }
 
-/**
- * Pace-per-km bar chart (CH2). Bar height is proportional to speed (1/pace), so taller is faster; the Y axis
- * is hidden and each bar carries its pace label. Failed km are red, borderline amber.
- */
+/** Pace-per-km bar chart (CH2): height ∝ speed (1/pace), taller = faster. */
 @Composable
 fun ChartBarPace(
     bars: List<Bar>,
@@ -149,6 +193,7 @@ fun ChartBarPace(
     height: Dp = 160.dp,
     highlightIndex: Int? = null,
     valueFormatter: (Double) -> String = { "" },
+    contentDescription: String? = null,
     onTap: (Int) -> Unit = {},
 ) {
     val colors = LocalRcColors.current
@@ -156,20 +201,24 @@ fun ChartBarPace(
     val measurer = rememberTextMeasurer()
     var selected by remember { mutableStateOf(highlightIndex) }
     val statusOn = RcStatus.entries.associateWith { it.onColor() }
+    val reveal = rememberReveal()
 
     Canvas(
         modifier = modifier
             .fillMaxWidth()
             .height(height)
+            .semantics { if (contentDescription != null) this.contentDescription = contentDescription }
             .pointerInput(bars) {
-                detectTapGestures { offset ->
-                    if (bars.isEmpty()) return@detectTapGestures
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    if (bars.isEmpty()) return@awaitEachGesture
                     val left = PlotLeft.toPx()
-                    val right = size.width - PlotRight.toPx()
+                    val right = size.width.toFloat() - PlotRight.toPx()
                     val slot = (right - left) / bars.size
-                    val index = ((offset.x - left) / slot).toInt().coerceIn(0, bars.size - 1)
-                    selected = index
-                    onTap(index)
+                    val idx = ((down.position.x - left) / slot).toInt().coerceIn(0, bars.size - 1)
+                    selected = idx
+                    onTap(idx)
+                    down.consume()
                 }
             },
     ) {
@@ -177,7 +226,10 @@ fun ChartBarPace(
         val bottom = size.height - PlotBottom.toPx()
         val top = PlotTop.toPx()
         val right = size.width - PlotRight.toPx()
-        if (bars.isEmpty() || right <= left) return@Canvas
+        if (bars.isEmpty() || right <= left) {
+            drawEmpty(measurer, colors, type, left, right, top, bottom)
+            return@Canvas
+        }
 
         val speeds = bars.mapNotNull { it.value?.takeIf { v -> v > 0 } }.map { 1.0 / it }
         val maxSpeed = speeds.maxOrNull() ?: 1.0
@@ -190,28 +242,27 @@ fun ChartBarPace(
             val cx = cursor + w / 2f
             val pace = bar.value
             if (pace != null && pace > 0) {
-                val h = ((1.0 / pace) / maxSpeed * (bottom - top)).toFloat()
+                val full = ((1.0 / pace) / maxSpeed * (bottom - top)).toFloat()
+                val h = full * reveal
                 val active = index == selected
                 val base = bar.status?.let { statusOn.getValue(it) } ?: colors.accent
-                val color = if (bar.partial) colors.accent.copy(alpha = 0.35f) else if (active || bar.status != null) base else colors.accent
-                drawRoundRect(
-                    color = color,
-                    topLeft = Offset(cursor + (w - w * 0.6f) / 2f, bottom - h),
-                    size = Size(w * 0.6f, h),
-                    cornerRadius = CornerRadius(4.dp.toPx()),
-                )
+                val color = if (bar.partial) colors.accent.copy(alpha = 0.35f) else if (active || bar.status != null) base else colors.accent.copy(alpha = 0.85f)
+                val barLeft = cursor + (w - w * 0.6f) / 2f
+                drawRoundRect(color = color, topLeft = Offset(barLeft, bottom - h), size = Size(w * 0.6f, h), cornerRadius = CornerRadius(4.dp.toPx()))
                 if (bar.partial) {
                     drawRoundRect(
                         color = colors.accent,
-                        topLeft = Offset(cursor + (w - w * 0.6f) / 2f, bottom - h),
+                        topLeft = Offset(barLeft, bottom - h),
                         size = Size(w * 0.6f, h),
                         cornerRadius = CornerRadius(4.dp.toPx()),
                         style = Stroke(width = 1.5f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f))),
                     )
                 }
-                val label = valueFormatter(pace)
-                val layout = measurer.measure(label, captionStyle(colors.textSecondary, type))
-                drawText(layout, topLeft = Offset(cx - layout.size.width / 2f, bottom - h - layout.size.height - 2f))
+                if (reveal > 0.9f) {
+                    val label = valueFormatter(pace)
+                    val layout = measurer.measure(label, captionStyle(colors.textSecondary, type))
+                    drawText(layout, topLeft = Offset(cx - layout.size.width / 2f, bottom - full - layout.size.height - 2f))
+                }
             }
             val xLabel = measurer.measure(bar.label, captionStyle(colors.textTertiary, type))
             drawText(xLabel, topLeft = Offset(cx - xLabel.size.width / 2f, bottom + 4f))
@@ -220,10 +271,7 @@ fun ChartBarPace(
     }
 }
 
-/**
- * Line chart (CH1/CH5/CH6) with a reversed pace axis (faster up), gradient area, dashed stair-step targets and
- * dashed segment boundaries. Null y-values break the line. A tooltip card appears at the touched point.
- */
+/** Line chart (CH1/CH5/CH6) with reversed pace axis, drag indicator and tooltip. */
 @Composable
 fun ChartLine(
     points: List<LinePoint>,
@@ -232,30 +280,43 @@ fun ChartLine(
     steps: List<TargetStep> = emptyList(),
     boundaries: List<Double> = emptyList(),
     reversedPace: Boolean = true,
+    fasterLabel: String? = null,
     valueFormatter: (Double) -> String = { "" },
+    contentDescription: String? = null,
     onTap: (LinePoint) -> Unit = {},
 ) {
     val colors = LocalRcColors.current
     val type = LocalRcTypography.current
     val measurer = rememberTextMeasurer()
     var tapped by remember { mutableStateOf<LinePoint?>(null) }
+    val reveal = rememberReveal()
+    val real = points.filter { it.y != null }
 
     Canvas(
         modifier = modifier
             .fillMaxWidth()
             .height(height)
+            .semantics { if (contentDescription != null) this.contentDescription = contentDescription }
             .pointerInput(points) {
-                detectTapGestures { offset ->
-                    if (points.isEmpty()) return@detectTapGestures
-                    val minX = points.first().x
-                    val maxX = points.last().x
-                    val left = PlotLeft.toPx()
-                    val right = size.width - PlotRight.toPx()
-                    val x = minX + ((offset.x - left) / (right - left)).coerceIn(0f, 1f) * (maxX - minX)
-                    val nearest = points.filter { it.y != null }.minByOrNull { kotlin.math.abs(it.x - x) }
-                    if (nearest != null) {
-                        tapped = nearest
-                        onTap(nearest)
+                if (points.isEmpty()) return@pointerInput
+                val minX = points.first().x
+                val maxX = points.last().x
+                val left = PlotLeft.toPx()
+                val right = size.width.toFloat() - PlotRight.toPx()
+                fun pick(x: Float): LinePoint? {
+                    val dataX = minX + ((x - left) / (right - left)).coerceIn(0f, 1f) * (maxX - minX)
+                    return real.minByOrNull { kotlin.math.abs(it.x - dataX) }
+                }
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    pick(down.position.x)?.let { tapped = it; onTap(it) }
+                    down.consume()
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                        if (!change.pressed) break
+                        pick(change.position.x)?.let { tapped = it }
+                        change.consume()
                     }
                 }
             },
@@ -264,21 +325,23 @@ fun ChartLine(
         val bottom = size.height - PlotBottom.toPx()
         val top = PlotTop.toPx()
         val right = size.width - PlotRight.toPx()
-        if (points.isEmpty() || right <= left) return@Canvas
+        if (real.isEmpty() || right <= left) {
+            drawEmpty(measurer, colors, type, left, right, top, bottom)
+            return@Canvas
+        }
 
-        val values = (points.mapNotNull { it.y } + steps.map { it.target })
+        val values = (real.mapNotNull { it.y } + steps.map { it.target })
         val (minV, maxV) = if (reversedPace) {
             ChartMath.paceAxisBounds(values)
         } else {
-            val lo = (values.minOrNull() ?: 0.0)
-            val hi = (values.maxOrNull() ?: 1.0)
+            val lo = values.minOrNull() ?: 0.0
+            val hi = values.maxOrNull() ?: 1.0
             lo to (if (hi - lo < 1e-6) lo + 1.0 else hi)
         }
         val minX = points.first().x
         val maxX = points.last().x
         val spanX = (maxX - minX).takeIf { kotlin.math.abs(it) > 1e-9 } ?: 1.0
-
-        fun px(x: Double) = (left + ((x - minX) / spanX).toFloat() * (right - left))
+        fun px(x: Double) = left + ((x - minX) / spanX).toFloat() * (right - left)
         fun py(v: Double) = if (reversedPace) {
             bottom - (ChartMath.invertPaceFraction(v, minV, maxV).toFloat() * (bottom - top))
         } else {
@@ -291,16 +354,10 @@ fun ChartLine(
             drawLine(colors.outline, Offset(left, y), Offset(right, y), strokeWidth = 1f)
             drawText(measurer, formatTick(tick), 0f, y - 8f, colors.textTertiary, type)
         }
-        drawText(measurer, "lebih cepat", left, top - 6f, colors.textTertiary, type)
+        if (fasterLabel != null) drawText(measurer, fasterLabel, left, top - 10f, colors.textTertiary, type)
 
         boundaries.forEach { x ->
-            drawLine(
-                color = colors.outlineStrong,
-                start = Offset(px(x), top),
-                end = Offset(px(x), bottom),
-                strokeWidth = 1f,
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f)),
-            )
+            drawLine(colors.outlineStrong, Offset(px(x), top), Offset(px(x), bottom), strokeWidth = 1f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f)))
         }
         steps.forEach { step ->
             drawLine(
@@ -312,12 +369,13 @@ fun ChartLine(
             )
         }
 
+        val revealX = minX + reveal * spanX
         val line = Path()
         val area = Path()
         var started = false
         points.forEach { point ->
             val y = point.y
-            if (y == null) {
+            if (y == null || point.x > revealX) {
                 started = false
             } else {
                 val x = px(point.x)
@@ -333,16 +391,25 @@ fun ChartLine(
                 }
             }
         }
-        area.lineTo(px(maxX), bottom)
+        area.lineTo(px(revealX.coerceAtMost(maxX)), bottom)
         area.close()
         drawPath(area, brush = Brush.verticalGradient(listOf(colors.accent.copy(alpha = 0.18f), Color.Transparent)))
         drawPath(line, color = colors.accent, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round))
+
+        // Single point: show it even without a line.
+        if (real.size == 1) {
+            val p = real.first()
+            p.y?.let { y ->
+                drawCircle(colors.accent, radius = 4.dp.toPx(), center = Offset(px(p.x), py(y)))
+            }
+        }
 
         tapped?.let { point ->
             point.y?.let { y ->
                 val cx = px(point.x)
                 val cy = py(y)
-                drawCircle(colors.bg, radius = 5.dp.toPx() + 2.dp.toPx(), center = Offset(cx, cy))
+                drawLine(colors.outlineStrong, Offset(cx, top), Offset(cx, bottom), strokeWidth = 1f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f)))
+                drawCircle(colors.bg, radius = 7.dp.toPx(), center = Offset(cx, cy))
                 drawCircle(colors.accent, radius = 5.dp.toPx(), center = Offset(cx, cy))
                 drawTooltip(measurer, colors, type, "${point.x.toInt()} m · ${valueFormatter(y)}", cx, cy, top)
             }
@@ -350,13 +417,28 @@ fun ChartLine(
     }
 }
 
+private fun DrawScope.drawEmpty(
+    measurer: TextMeasurer,
+    colors: RcColors,
+    type: RcTypography,
+    left: Float,
+    right: Float,
+    top: Float,
+    bottom: Float,
+) {
+    drawLine(colors.outline, Offset(left, bottom), Offset(right, bottom), strokeWidth = 1f)
+    drawLine(colors.outline, Offset(left, top), Offset(left, bottom), strokeWidth = 1f)
+    val layout = measurer.measure("Belum ada data", captionStyle(colors.textTertiary, type))
+    drawText(layout, topLeft = Offset((left + right) / 2f - layout.size.width / 2f, (top + bottom) / 2f - layout.size.height / 2f))
+}
+
 private fun DrawScope.drawTooltip(
     measurer: TextMeasurer,
-    colors: com.daniel.runcoach.ui.theme.RcColors,
-    type: com.daniel.runcoach.ui.theme.RcTypography,
+    colors: RcColors,
+    type: RcTypography,
     text: String,
     cx: Float,
-    cy: Float,
+    py: Float,
     top: Float,
 ) {
     val layout = measurer.measure(text, captionStyle(colors.textPrimary, type))
@@ -365,7 +447,7 @@ private fun DrawScope.drawTooltip(
     val w = layout.size.width + padX * 2
     val h = layout.size.height + padY * 2
     val x = (cx - w / 2).coerceIn(0f, size.width - w)
-    val y = (cy - h - 8.dp.toPx()).coerceAtLeast(top)
+    val y = (py - h - 10.dp.toPx()).coerceAtLeast(top)
     drawRoundRect(color = colors.surfaceRaised, topLeft = Offset(x, y), size = Size(w, h), cornerRadius = CornerRadius(12.dp.toPx()))
     drawText(layout, topLeft = Offset(x + padX, y + padY))
 }
@@ -385,8 +467,7 @@ private fun niceMax(value: Double): Double {
 private fun formatTick(value: Double): String =
     if (value >= 100) value.toInt().toString() else "%.1f".format(value)
 
-private fun captionStyle(color: Color, type: com.daniel.runcoach.ui.theme.RcTypography): TextStyle =
-    type.caption.copy(color = color)
+private fun captionStyle(color: Color, type: RcTypography): TextStyle = type.caption.copy(color = color)
 
 private fun DrawScope.drawText(
     measurer: TextMeasurer,
@@ -394,7 +475,7 @@ private fun DrawScope.drawText(
     x: Float,
     y: Float,
     color: Color,
-    type: com.daniel.runcoach.ui.theme.RcTypography,
+    type: RcTypography,
 ) {
     val layout: TextLayoutResult = measurer.measure(text, captionStyle(color, type))
     drawText(layout, topLeft = Offset(x, y))
@@ -460,6 +541,7 @@ private fun ChartLineLightPreview() = com.daniel.runcoach.ui.theme.RcTheme(darkT
         points = (0..50).map { LinePoint(it * 100.0, 360.0 + (it % 7) * 5.0) },
         steps = listOf(TargetStep(0.0, 2500.0, 400.0), TargetStep(2500.0, 5000.0, 360.0)),
         boundaries = listOf(2500.0),
+        fasterLabel = "lebih cepat",
         valueFormatter = { "%d:%02d".format(it.toInt() / 60, it.toInt() % 60) },
     )
 }

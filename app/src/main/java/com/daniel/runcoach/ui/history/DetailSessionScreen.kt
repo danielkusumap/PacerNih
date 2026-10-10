@@ -336,6 +336,7 @@ private fun ChartsTab(segments: List<SegmentResultEntity>, splits: List<KmSplitE
             points = buckets.map { LinePoint(it.startM + 50.0, it.paceSecPerKm) },
             steps = targetSteps(segments),
             boundaries = segments.runningFold(0.0) { acc, s -> acc + s.distanceM }.drop(1).dropLast(1),
+            fasterLabel = stringResource(R.string.chart_faster),
             valueFormatter = { Formatters.pace(it) },
         )
     }
