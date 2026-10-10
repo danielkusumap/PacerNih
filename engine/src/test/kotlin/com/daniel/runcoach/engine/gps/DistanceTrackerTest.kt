@@ -1,53 +1,36 @@
 package com.daniel.runcoach.engine.gps
 
-import com.daniel.runcoach.engine.model.LocationSample
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class DistanceTrackerTest {
 
-    private fun sample(timeSec: Double, metersNorth: Double) = LocationSample(
-        timeNanos = (timeSec * 1_000_000_000).toLong(),
-        lat = metersNorth / 111_195.0,
-        lon = 0.0,
-        accuracyM = 5.0,
-    )
-
-    private fun seconds(nanos: Long) = nanos / 1_000_000_000.0
+    private fun moving(stepM: Double) = FilteredSample(GpsOutcome.MOVING, stepM)
 
     @Test
-    fun `first sample adds no distance`() {
+    fun `first sample sets the time base without distance`() {
         val tracker = DistanceTracker()
-        assertEquals(0.0, tracker.add(sample(0.0, 0.0)).size.toDouble())
+        assertTrue(tracker.add(0L, moving(0.0)).isEmpty())
         assertEquals(0.0, tracker.totalDistanceM, 1e-9)
     }
 
     @Test
     fun `accumulates straight line distance`() {
         val tracker = DistanceTracker()
-        tracker.add(sample(0.0, 0.0))
-        tracker.add(sample(1.0, 111.19))
-        assertEquals(111.19, tracker.totalDistanceM, 0.5)
+        tracker.add(0L, moving(0.0))
+        tracker.add(1_000L, moving(3.0))
+        assertEquals(3.0, tracker.totalDistanceM, 1e-9)
     }
 
     @Test
-    fun `interpolates the time at 200 400 and 1000 metres`() {
+    fun `interpolates the time at a boundary`() {
         val tracker = DistanceTracker()
-        tracker.addBoundary(200.0)
-        tracker.addBoundary(400.0)
-        tracker.addBoundary(1000.0)
-
-        val crossings = mutableListOf<BoundaryCrossing>()
-        // 3 m/s, 1 Hz, covering a little over 1000 m.
-        for (i in 0..334) {
-            crossings += tracker.add(sample(i.toDouble(), i * 3.0))
-        }
-
-        assertEquals(listOf(200.0, 400.0, 1000.0), crossings.map { it.boundaryM })
-        assertEquals(200.0 / 3.0, seconds(crossings[0].timeNanos), 0.2)
-        assertEquals(400.0 / 3.0, seconds(crossings[1].timeNanos), 0.2)
-        assertEquals(1000.0 / 3.0, seconds(crossings[2].timeNanos), 0.2)
+        tracker.addBoundary(10.0)
+        tracker.add(0L, moving(0.0))
+        val crossings = tracker.add(3_000L, moving(30.0))
+        assertEquals(1, crossings.size)
+        assertEquals(1_000L, crossings[0].timeMs)
     }
 
     @Test
@@ -55,15 +38,11 @@ class DistanceTrackerTest {
         val tracker = DistanceTracker()
         tracker.addBoundary(10.0)
         tracker.addBoundary(20.0)
-
-        tracker.add(sample(0.0, 0.0))
-        val crossings = tracker.add(sample(3.0, 30.0))
-
-        assertEquals(2, crossings.size)
-        assertEquals(10.0, crossings[0].boundaryM)
-        assertEquals(20.0, crossings[1].boundaryM)
-        assertEquals(1.0, seconds(crossings[0].timeNanos), 0.05)
-        assertEquals(2.0, seconds(crossings[1].timeNanos), 0.05)
+        tracker.add(0L, moving(0.0))
+        val crossings = tracker.add(3_000L, moving(30.0))
+        assertEquals(listOf(10.0, 20.0), crossings.map { it.boundaryM })
+        assertEquals(1_000L, crossings[0].timeMs)
+        assertEquals(2_000L, crossings[1].timeMs)
     }
 
     @Test
@@ -71,59 +50,80 @@ class DistanceTrackerTest {
         val tracker = DistanceTracker()
         tracker.addBoundary(10.0)
         tracker.addBoundary(20.0)
-
-        tracker.add(sample(0.0, 0.0))
-        tracker.add(sample(5.0, 25.0))
-
-        // 25 m covered: 5 m past the last boundary is not discarded.
-        assertEquals(25.0, tracker.totalDistanceM, 0.05)
+        tracker.add(0L, moving(0.0))
+        tracker.add(5_000L, moving(25.0))
+        assertEquals(25.0, tracker.totalDistanceM, 1e-9)
     }
 
     @Test
     fun `no crossing is reported before its boundary`() {
         val tracker = DistanceTracker()
         tracker.addBoundary(1000.0)
-        tracker.add(sample(0.0, 0.0))
-        assertTrue(tracker.add(sample(1.0, 3.0)).isEmpty())
+        tracker.add(0L, moving(0.0))
+        assertTrue(tracker.add(1_000L, moving(3.0)).isEmpty())
     }
 
     @Test
     fun `a boundary is never reported twice`() {
         val tracker = DistanceTracker()
         tracker.addBoundary(10.0)
-        tracker.add(sample(0.0, 0.0))
-        assertEquals(1, tracker.add(sample(5.0, 12.0)).size)
-        assertTrue(tracker.add(sample(6.0, 15.0)).isEmpty())
+        tracker.add(0L, moving(0.0))
+        assertEquals(1, tracker.add(5_000L, moving(12.0)).size)
+        assertTrue(tracker.add(6_000L, moving(3.0)).isEmpty())
+    }
+
+    @Test
+    fun `calibration factor scales distance`() {
+        val tracker = DistanceTracker(calibrationFactor = 1.05)
+        tracker.add(0L, moving(0.0))
+        tracker.add(1_000L, moving(100.0))
+        assertEquals(105.0, tracker.totalDistanceM, 1e-9)
+    }
+
+    @Test
+    fun `calibration factor above the maximum is clamped`() {
+        val tracker = DistanceTracker(calibrationFactor = 2.0)
+        tracker.add(0L, moving(0.0))
+        tracker.add(1_000L, moving(100.0))
+        assertEquals(105.0, tracker.totalDistanceM, 1e-9)
+    }
+
+    @Test
+    fun `calibration factor below the minimum is clamped`() {
+        val tracker = DistanceTracker(calibrationFactor = 0.1)
+        tracker.add(0L, moving(0.0))
+        tracker.add(1_000L, moving(100.0))
+        assertEquals(95.0, tracker.totalDistanceM, 1e-9)
+    }
+
+    @Test
+    fun `a stationary sample adds no distance and does not move the time base`() {
+        val tracker = DistanceTracker()
+        tracker.addBoundary(10.0)
+        tracker.add(0L, moving(0.0))
+        assertTrue(tracker.add(1_000L, FilteredSample(GpsOutcome.STATIONARY, 0.0)).isEmpty())
+        // Interpolation still runs from mt=0, not mt=1000.
+        val crossings = tracker.add(3_000L, moving(30.0))
+        assertEquals(1_000L, crossings[0].timeMs)
+    }
+
+    @Test
+    fun `a rejected sample is ignored`() {
+        val tracker = DistanceTracker()
+        tracker.add(0L, moving(0.0))
+        assertTrue(tracker.add(1_000L, FilteredSample(GpsOutcome.REJECTED, 0.0)).isEmpty())
+        assertEquals(0.0, tracker.totalDistanceM, 1e-9)
     }
 
     @Test
     fun `reset clears distance and pending boundaries`() {
         val tracker = DistanceTracker()
         tracker.addBoundary(10.0)
-        tracker.add(sample(0.0, 0.0))
-        tracker.add(sample(5.0, 30.0))
+        tracker.add(0L, moving(0.0))
+        tracker.add(5_000L, moving(30.0))
         tracker.reset()
         assertEquals(0.0, tracker.totalDistanceM, 1e-9)
-        // Boundary is gone too: a fresh run from zero does not re-fire at 10 m.
-        tracker.add(sample(0.0, 0.0))
-        assertTrue(tracker.add(sample(5.0, 30.0)).isEmpty())
-    }
-
-    @Test
-    fun `a plausible gap across a tunnel is counted, an implausible jump is filtered out`() {
-        val filter = SampleFilter()
-        val tracker = DistanceTracker()
-
-        // Start, then a 15 s outage with 75 m of straight-line travel: 5 m/s, counted as a tunnel.
-        tracker.add(sample(0.0, 0.0).also { filter.accept(it) })
-        val tunnelOut = sample(15.0, 75.0)
-        assertTrue(filter.accept(tunnelOut))
-        tracker.add(tunnelOut)
-        assertEquals(75.0, tracker.totalDistanceM, 1.0)
-
-        // A 150 m jump in 15 s (10 m/s) is impossible: the filter drops it, distance does not move.
-        val impossible = sample(30.0, 225.0)
-        assertTrue(!filter.accept(impossible))
-        assertEquals(75.0, tracker.totalDistanceM, 1.0)
+        tracker.add(0L, moving(0.0))
+        assertTrue(tracker.add(5_000L, moving(30.0)).isEmpty())
     }
 }

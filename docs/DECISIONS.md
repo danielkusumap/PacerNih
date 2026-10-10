@@ -54,3 +54,11 @@ wajib dicatat di sini. Alasan saat ini: proyek di-generate oleh Android Studio *
 yang memasang AGP 9.5.0-alpha09, Gradle 9.6.0, compileSdk 37, dan toolchain daemon JDK 25. Menurunkan ke
 AGP stabil menuntut penyelarasan Gradle/JDK dan berisiko memecah template; ditunda. Build tetap
 reproducible lewat version catalog. Tindak lanjut: evaluasi naik ke AGP stabil sebelum rilis (mis. P4.3).
+
+## D-011 Perubahan API P0.4b (FilteredSample + moving clock)
+Sesuai Lampiran C.1 (D-007 boleh dipertahankan, tetapi aturan F3 wajib ada), `SampleFilter.accept` kini
+mengembalikan `FilteredSample(outcome, stepM)` dengan empat hasil: MOVING, STATIONARY (jitter, tanpa
+jarak, referensi tidak bergeser), RESET (referensi di-reset setelah 3 penolakan kecepatan), REJECTED.
+`DistanceTracker.add(mtMs, filtered)` menerima **moving clock** (F5) dari pemanggil dan jarak mentah dari
+filter, lalu menerapkan `calibrationFactor` (F4, clamp 0.95–1.05). `BoundaryCrossing` memakai `timeMs`
+(moving clock), bukan `timeNanos`. Test P0.3/P0.4 diperbarui ke API baru, bukan dihapus.

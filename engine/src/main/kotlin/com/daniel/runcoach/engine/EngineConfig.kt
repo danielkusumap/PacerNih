@@ -19,4 +19,14 @@ data class EngineConfig(
     val earthRadiusM: Double = 6_371_008.8,
     /** Best efforts faster than this pace are treated as GPS anomalies and discarded. */
     val recordMinValidPaceSecPerKm: Double = 150.0,
+    /** Below this speed (with displacement under [stationaryMaxDispM]) a sample is treated as jitter (F3.4). */
+    val stationarySpeedMps: Double = 0.3,
+    /** Max straight-line displacement still considered jitter while stationary (F3.4). */
+    val stationaryMaxDispM: Double = 5.0,
+    /** Consecutive speed rejections before the reference is reset instead of stalling (F3.7). */
+    val speedRejectResetCount: Int = 3,
+    /** Lower bound for the distance calibration factor (F4). */
+    val calibrationMin: Double = 0.95,
+    /** Upper bound for the distance calibration factor (F4). */
+    val calibrationMax: Double = 1.05,
 )

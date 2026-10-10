@@ -1,81 +1,82 @@
 package com.daniel.runcoach.engine.gps
 
 import com.daniel.runcoach.engine.EngineConfig
-import com.daniel.runcoach.engine.model.LocationSample
 
-/** A cumulative-distance threshold that was passed, with the time interpolated where it fell. */
+/** A cumulative-distance threshold that was passed, with the moving-clock time interpolated there. */
 data class BoundaryCrossing(
     val boundaryM: Double,
-    val timeNanos: Long,
+    val timeMs: Long,
 )
 
 /**
- * Accumulates distance from accepted samples and reports when configured cumulative-distance
- * boundaries are passed (plan 6.3).
+ * Accumulates calibrated distance from filtered samples and reports when configured cumulative-distance
+ * boundaries are passed (plan F4, F6).
  *
- * Boundaries are absolute distances from the run's origin. When a sample jumps past one or more of
- * them, each is emitted with the time interpolated linearly between the two samples:
- * `t = t1 + (boundary - d1) / (d2 - d1) * (t2 - t1)`. The distance overshoot is not lost: it stays
- * in [totalDistanceM], so the remainder naturally counts toward the next segment.
+ * The time axis is supplied by the caller as the **moving clock** `mt` (F5), so pause handling lives in
+ * the runner and the tracker stays dumb about it. Input is a [FilteredSample]; only MOVING/RESET advance
+ * the reference, and stationary/jitter samples earn no distance.
  *
- * GPS gaps need no special handling here: an implausible jump is rejected upstream by
- * [SampleFilter], while a plausible straight-line jump (a tunnel/short outage) is simply counted.
- *
- * Not thread safe. All time comes from sample timestamps; nothing reads the system clock.
+ * Each boundary `B` with `D0 < B <= D1` between two samples is emitted with the time interpolated
+ * linearly: `mtB = mt0 + (B - D0) / (D1 - D0) * (mt1 - mt0)`. Several boundaries in one sample are
+ * emitted in order. The overshoot stays in [totalDistanceM], so the runner can carry `D1 - B` into the
+ * next segment (F6).
  */
-class DistanceTracker(private val config: EngineConfig = EngineConfig()) {
+class DistanceTracker(
+    private val config: EngineConfig = EngineConfig(),
+    calibrationFactor: Double = 1.0,
+) {
 
-    /** Cumulative distance from the first accepted sample, in metres. */
+    private val calibration: Double = calibrationFactor.coerceIn(config.calibrationMin, config.calibrationMax)
+
+    /** Cumulative calibrated distance from the first accepted sample, in metres. */
     var totalDistanceM: Double = 0.0
         private set
 
-    private var lastSample: LocationSample? = null
+    private var lastMtMs: Long? = null
     private val pendingBoundaries = ArrayDeque<Double>()
 
-    /**
-     * Registers a boundary at [cumulativeDistanceM]. Boundaries must be added in non-decreasing
-     * order; the runner does this as segments and km markers advance.
-     */
+    /** Registers a boundary at [cumulativeDistanceM], added in non-decreasing order by the runner. */
     fun addBoundary(cumulativeDistanceM: Double) {
         pendingBoundaries.addLast(cumulativeDistanceM)
     }
 
     /**
-     * Feeds an already-filtered sample and returns the boundaries passed by the movement from the
-     * previous sample to this one, in order. Returns nothing for the first sample.
+     * Feeds a filtered sample with its moving-clock time in milliseconds and returns the boundaries
+     * passed since the previous reference. Rejected/stationary samples and zero-distance steps yield none.
      */
-    fun add(sample: LocationSample): List<BoundaryCrossing> {
-        val previous = lastSample
-        lastSample = sample
-        if (previous == null) return emptyList()
+    fun add(mtMs: Long, filtered: FilteredSample): List<BoundaryCrossing> {
+        if (filtered.outcome == GpsOutcome.REJECTED || filtered.outcome == GpsOutcome.STATIONARY) {
+            return emptyList()
+        }
+
+        val previousMtMs = lastMtMs
+        lastMtMs = mtMs
+
+        val stepM = filtered.stepM * calibration
+        if (stepM <= 0.0) return emptyList()
 
         val distanceBeforeM = totalDistanceM
-        val stepM = haversineM(
-            previous.lat, previous.lon, sample.lat, sample.lon, config.earthRadiusM,
-        )
         totalDistanceM += stepM
+        if (previousMtMs == null || pendingBoundaries.isEmpty()) return emptyList()
 
-        if (pendingBoundaries.isEmpty()) return emptyList()
-
+        val dtMs = mtMs - previousMtMs
         val crossings = mutableListOf<BoundaryCrossing>()
-        val dtNanos = sample.timeNanos - previous.timeNanos
         while (pendingBoundaries.isNotEmpty() && pendingBoundaries.first() <= totalDistanceM) {
             val boundary = pendingBoundaries.removeFirst()
-            // Already passed on an earlier sample: never emit it twice.
             if (boundary <= distanceBeforeM) continue
-            val fraction = if (stepM > 0.0) (boundary - distanceBeforeM) / stepM else 0.0
+            val fraction = (boundary - distanceBeforeM) / stepM
             crossings += BoundaryCrossing(
                 boundaryM = boundary,
-                timeNanos = previous.timeNanos + (fraction * dtNanos).toLong(),
+                timeMs = previousMtMs + (fraction * dtMs).toLong(),
             )
         }
         return crossings
     }
 
-    /** Clears accumulated distance, the last sample, and all pending boundaries. */
+    /** Clears accumulated distance, the reference time base, and all pending boundaries. */
     fun reset() {
         totalDistanceM = 0.0
-        lastSample = null
+        lastMtMs = null
         pendingBoundaries.clear()
     }
 }

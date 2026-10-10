@@ -3,14 +3,14 @@
 Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diketahui.
 
 ## Status P0 (diperbarui 2026-10-10, sinkron dengan Lampiran C)
-- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.10.
+- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.4b, P0.10.
 - **Tersedia sekarang:** 6.14 (Katalog Rumus + V1–V22) dan 8.3 (Info Segmen). Q-001/Q-002/Q-003/Q-005 ditutup.
 - **Urutan yang disarankan (Lampiran C):** P0.4b -> P0.5 -> P0.6 -> P0.8 -> P0.7 -> P0.9 -> P0.11.
-- **Belum:** P0.4b (retrofit 6.14), P0.5, P0.6, P0.7, P0.8, P0.9, P0.11.
+- **Belum:** P0.5, P0.6, P0.7, P0.8, P0.9, P0.11.
 - **Gerbang P0 belum tercapai**, jadi P1 (runtime Android) belum dimulai.
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack kini menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya dicatat di `DECISIONS.md` D-010.
-- **Test:** `:engine` 56 unit test hijau; `:app:assembleDebug` sukses.
+- **Test:** `:engine` 69 unit test hijau; `:app:assembleDebug` sukses.
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -69,16 +69,20 @@ Yang jadi:
 Belum: dilanjutkan sesuai urutan P0.4b -> P0.5 -> P0.6 -> P0.8 -> P0.7 -> P0.9 -> P0.11 (6.14 & 8.3 kini tersedia).
 Bug diketahui: -
 
-## P0.4b Retrofit kode ke 6.14 — berikutnya (belum)
-Sesuai Lampiran C dan task P0.4b. 6.14 kini tersedia:
-- `SampleFilter` (F3): jitter diam (F3.4), referensi pertama/setelah resume (F3.6), reset referensi
-  setelah 3 penolakan kecepatan berturut-turut (F3.7), gap > 10 dtk tetap dihitung garis lurus (F3.8).
-  Keputusan filter harus membedakan tiga hasil: **bergerak**, **diam** (tidak menambah jarak, referensi
-  tidak bergeser), **ditolak**. D-007 (filter & tracker terpisah) dipertahankan, tetapi aturan F3 wajib ada.
-- `DistanceTracker`: parameter `calibrationFactor` (F4); sumbu waktu dipasok pemanggil sebagai **moving
-  clock `mt`** (F5/F6), sehingga tracker tidak perlu tahu soal pause; sisa jarak segmen = `D1 - B` (F6).
-- `haversineM` memakai `R = 6371008.8` (F2) — sudah dipakai; verifikasi vektor V2 (11.12 m, toleransi 0.01).
-- `EngineConfig` disesuaikan dengan Lampiran C.2 (lihat `OPEN_QUESTIONS.md` Q-003).
-- AC: V2, V3, V4 hijau + test jitter diam, reset referensi, dan gap; test lama tetap hijau atau diperbarui
-  dengan catatan di `DECISIONS.md`. Dikerjakan sebagai **commit baru**.
+## P0.4b Retrofit kode ke 6.14 — selesai (2026-10-10)
+- `SampleFilter` (F3) kini mengembalikan `FilteredSample(outcome, stepM)` dengan empat hasil: **MOVING**,
+  **STATIONARY** (jitter: speed < 0.3 dan d < 5 m → tanpa jarak, referensi tidak bergeser), **RESET**
+  (referensi di-reset setelah 3 penolakan kecepatan berturut-turut, F3.7), **REJECTED**. Sample pertama
+  jadi referensi tanpa jarak (F3.6); gap wajar > 10 dtk tetap dihitung garis lurus (F3.8).
+- `DistanceTracker`: `add(mtMs, filtered)` menerima **moving clock** dari pemanggil (F5/F6) dan jarak
+  mentah dari filter, menerapkan `calibrationFactor` (F4, clamp 0.95–1.05). Sisa jarak = `D1 - B` (F6).
+- `haversineM` memakai `R = 6371008.8` (F2) — diverifikasi vektor V2.
+- `EngineConfig` (C.2): tambah `stationarySpeedMps`, `stationaryMaxDispM`, `speedRejectResetCount`,
+  `calibrationMin`/`_MAX`.
+- Test: **69 hijau**. Vektor V2, V3, V4 masuk `FormulaVectorsTest`; test jitter diam, reset referensi,
+  gap, dan kalibrasi ditambahkan. Test P0.3/P0.4 lama diperbarui ke API baru (lihat `DECISIONS.md` D-011).
+- D-007 (filter & tracker terpisah) dipertahankan.
+
+Belum: P0.5 dst.
+Bug diketahui: -
 
