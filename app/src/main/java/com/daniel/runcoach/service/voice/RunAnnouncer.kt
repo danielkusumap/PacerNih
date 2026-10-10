@@ -97,6 +97,8 @@ class RunAnnouncer(
             AlertEvent.WorkoutPlanCompleted -> tts.speak(PhraseBuilder.workoutPlanCompleted(language), flush = false)
             AlertEvent.AutoPaused -> tts.speak(PhraseBuilder.autoPaused(language), flush = false)
             AlertEvent.AutoResumed -> tts.speak(PhraseBuilder.autoResumed(language), flush = false)
+            AlertEvent.GpsLost -> tts.speak(PhraseBuilder.gpsLost(language), flush = false)
+            AlertEvent.GpsRecovered -> tts.speak(PhraseBuilder.gpsRecovered(language), flush = false)
             else -> Unit
         }
     }

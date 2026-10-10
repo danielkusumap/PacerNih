@@ -276,3 +276,8 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - `RunDatabase.close()` mereset singleton (bukan `RoomDatabase.close()` biasa) supaya DB bisa dibuka ulang setelah backup.
 - DAO di repository dibuat *lazy* (diambil tiap panggilan) agar tidak memakai instance DB yang sudah ditutup saat backup.
 - Hapus semua data = `clearAllTables()` + `reset()` setelan; konfirmasi dua langkah (ketik HAPUS).
+
+## D-041 P3.6: ketahanan GPS
+- Deteksi hilang/pulih sudah ada di runner (berbasis `GPS_LOST_TIMEOUT_SEC`); P3.6 menambah test eksplisit, bukan logika baru.
+- `droppedSampleCount` diekspos lewat `RunnerState` (dari `SampleFilter`) lalu disimpan per sesi; tidak dihitung ulang saat replay.
+- Suara GPS memakai `PhraseBuilder` (ID/EN) dan diumumkan seperti alert lain (queue, bukan flush).

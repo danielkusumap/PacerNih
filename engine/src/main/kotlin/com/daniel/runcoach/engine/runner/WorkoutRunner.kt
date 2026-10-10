@@ -429,6 +429,7 @@ class WorkoutRunner(
             planCompleted = planCompleted,
             goalReached = goalReached,
             gpsLost = gpsLost,
+            droppedSampleCount = filter.droppedCount,
         )
     }
 }

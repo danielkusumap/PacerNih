@@ -29,4 +29,5 @@ data class RunnerState(
     val planCompleted: Boolean = false,
     val goalReached: Boolean = false,
     val gpsLost: Boolean = false,
+    val droppedSampleCount: Int = 0,
 )

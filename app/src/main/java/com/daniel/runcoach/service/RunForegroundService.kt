@@ -426,7 +426,7 @@ class RunForegroundService : Service() {
             planCompleted = state?.planCompleted ?: false,
             goalReached = state?.goalReached ?: false,
             distanceCalibrationFactorUsed = 1.0,
-            droppedSampleCount = 0,
+            droppedSampleCount = state?.droppedSampleCount ?: 0,
             updatedAt = now,
         )
         runCatching { SessionRepository(this@RunForegroundService).saveSession(entity, results) }

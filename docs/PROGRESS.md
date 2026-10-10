@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P3 step by step — P3.1–P3.5 selesai; selanjutnya P3.6 (Ketahanan GPS).
+- **Berikutnya:** FASE P3 step by step — P3.1–P3.6 selesai; selanjutnya P3.7 (Kalibrasi jarak).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -431,6 +431,13 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
 - `RunDatabase.close()` (reset singleton) + DAO repository dibuat *lazy* agar aman setelah DB di-close saat backup.
 - Test: device `BackupRestoreTest` (backup → wipe → restore memulihkan sesi/template/setelan; file rusak ditolak).
   Engine **185**, unit app **2**, **instrumented 24/24 hijau**.
+
+## P3.6 Ketahanan GPS — selesai (2026-10-11)
+- Engine sudah punya deteksi `GpsLost`/`GpsRecovered` (golden `tunnelgap` = 1/1); ditambah test khusus
+  `GpsResilienceTest`: `tunnelGap` memicu keduanya **tepat sekali**; loncatan 80 m dihitung sebagai sample dibuang.
+- `RunnerState.droppedSampleCount` (dari `SampleFilter.droppedCount`) → disimpan ke `SessionEntity.droppedSampleCount`.
+- Suara "Sinyal GPS hilang"/"pulih" (`PhraseBuilder.gpsLost/gpsRecovered`) + diumumkan `RunAnnouncer`.
+- Banner "Sinyal GPS hilang" sudah tampil di S05. Engine **188**, **instrumented 24/24 hijau**.
 
 
 

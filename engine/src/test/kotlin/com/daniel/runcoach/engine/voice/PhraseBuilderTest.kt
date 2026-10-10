@@ -122,4 +122,12 @@ class PhraseBuilderTest {
         assertEquals("jalan", PhraseBuilder.segmentKind(SegmentKind.WALK, VoiceLanguage.ID))
         assertEquals("cool down", PhraseBuilder.segmentKind(SegmentKind.COOLDOWN, VoiceLanguage.EN))
     }
+
+    @Test
+    fun `gps lost and recovered phrases`() {
+        assertEquals("Sinyal GPS hilang.", PhraseBuilder.gpsLost(VoiceLanguage.ID))
+        assertEquals("GPS signal lost.", PhraseBuilder.gpsLost(VoiceLanguage.EN))
+        assertEquals("Sinyal GPS pulih.", PhraseBuilder.gpsRecovered(VoiceLanguage.ID))
+        assertEquals("GPS signal recovered.", PhraseBuilder.gpsRecovered(VoiceLanguage.EN))
+    }
 }

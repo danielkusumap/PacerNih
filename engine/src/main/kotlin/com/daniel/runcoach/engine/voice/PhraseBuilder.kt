@@ -107,6 +107,12 @@ object PhraseBuilder {
     fun autoResumed(language: VoiceLanguage): String =
         if (language == VoiceLanguage.ID) "Dilanjutkan." else "Resumed."
 
+    fun gpsLost(language: VoiceLanguage): String =
+        if (language == VoiceLanguage.ID) "Sinyal GPS hilang." else "GPS signal lost."
+
+    fun gpsRecovered(language: VoiceLanguage): String =
+        if (language == VoiceLanguage.ID) "Sinyal GPS pulih." else "GPS signal recovered."
+
     fun countdownWord(n: Int, language: VoiceLanguage): String {
         val id = listOf("nol", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh")
         val en = listOf("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
