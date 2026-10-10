@@ -44,7 +44,7 @@ import java.util.Locale
 
 /** Tab 3 Statistik (plan 8.1): sub-tabs Weekly (P2.10) and Records (P2.9). */
 @Composable
-fun StatsScreen(onOpenRecord: (String) -> Unit, onSelectTab: (MainTab) -> Unit) {
+fun StatsScreen(onOpenRecord: (String) -> Unit, onOpenSession: (String) -> Unit, onSelectTab: (MainTab) -> Unit) {
     var tab by remember { mutableIntStateOf(1) }
     Scaffold(bottomBar = { MainBottomBar(MainTab.STATS, onSelectTab) }) { padding ->
         Surface(modifier = Modifier.fillMaxSize().padding(padding), color = MaterialTheme.colorScheme.background) {
@@ -54,7 +54,7 @@ fun StatsScreen(onOpenRecord: (String) -> Unit, onSelectTab: (MainTab) -> Unit) 
                     Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.sub_records)) })
                 }
                 if (tab == 0) {
-                    Text(stringResource(R.string.sub_weekly) + " — P2.10")
+                    WeeklyScreen(onOpenSession)
                 } else {
                     RecordsScreen(onOpenRecord)
                 }

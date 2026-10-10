@@ -240,3 +240,9 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
   rekor ke baris berikutnya tanpa memindai ulang track.
 - Progresi rekor dari `RecordProgression` (pure). Tab Statistik ditambahkan (sub-tab Mingguan placeholder → P2.10).
 - Grafik S11 memakai `LineChart` yang sama; toggle waktu/pace.
+
+## D-035 P2.10: statistik mingguan
+- `WeeklyStatsAggregator` pure (F21); minggu mulai Senin; sesi < 100 m diabaikan; pace berbobot jarak (bukan rata-rata pace).
+- S09 memakai data sesi dari `SessionRepository`; kartu Beranda memakai agregator yang sama.
+- Hindari API 34 (`LocalDate.ofInstant`) demi API 30: pakai `Instant.atZone().toLocalDate()`.
+- "Rekor minggu ini" di S09 belum ditampilkan.

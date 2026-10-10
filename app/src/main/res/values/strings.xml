@@ -109,6 +109,22 @@
     <string name="sub_weekly">Mingguan</string>
     <string name="sub_records">Rekor</string>
 
+    <!-- S09 Ringkasan Mingguan -->
+    <string name="s09_title">Ringkasan Mingguan</string>
+    <string name="s09_this_week">Minggu ini</string>
+    <string name="s09_distance">Jarak</string>
+    <string name="s09_time">Waktu</string>
+    <string name="s09_sessions">Sesi</string>
+    <string name="s09_avg_pace">Pace rata-rata</string>
+    <string name="s09_longest">Sesi terpanjang</string>
+    <string name="s09_pass">Segmen lulus</string>
+    <string name="s09_vs_last">vs minggu lalu: %1$s</string>
+    <string name="s09_daily">Jarak per hari</string>
+    <string name="s09_weekly">Jarak per minggu (12)</string>
+    <string name="s09_pace_weekly">Pace per minggu (12)</string>
+    <string name="s09_empty">Belum ada latihan di minggu ini</string>
+    <string name="beranda_week">Minggu ini: %1$s · %2$d sesi</string>
+
     <!-- S07 Riwayat -->
     <string name="s07_title">Riwayat</string>
     <string name="s07_search">Cari nama</string>

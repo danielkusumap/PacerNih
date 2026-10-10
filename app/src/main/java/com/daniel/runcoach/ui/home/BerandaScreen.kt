@@ -1,5 +1,6 @@
 package com.daniel.runcoach.ui.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,8 +35,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.daniel.runcoach.R
 import com.daniel.runcoach.data.RunPersistence
 import com.daniel.runcoach.data.RunSnapshot
+import com.daniel.runcoach.data.SessionRepository
 import com.daniel.runcoach.data.WorkoutTemplate
 import com.daniel.runcoach.data.WorkoutTemplateRepository
+import com.daniel.runcoach.engine.stats.WeeklySession
+import com.daniel.runcoach.engine.stats.WeeklyStatsAggregator
 import com.daniel.runcoach.engine.model.Limit
 import com.daniel.runcoach.engine.model.Segment
 import com.daniel.runcoach.engine.model.Workout
@@ -47,6 +51,7 @@ import com.daniel.runcoach.ui.Formatters
 import com.daniel.runcoach.ui.MainBottomBar
 import com.daniel.runcoach.ui.MainTab
 import java.text.SimpleDateFormat
+import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.launch
@@ -62,19 +67,32 @@ fun BerandaScreen(
     onResumeRun: () -> Unit,
     onOpenEditor: (Workout?) -> Unit,
     onOpenSimulator: () -> Unit,
+    onOpenStats: () -> Unit,
     onSelectTab: (MainTab) -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val repository = remember(context) { WorkoutTemplateRepository(context) }
+    val sessionRepository = remember(context) { SessionRepository(context) }
     val persistence = remember(context) { RunPersistence(context) }
     val templates by repository.templates.collectAsStateWithLifecycle(initialValue = emptyList())
     var snapshot by remember { mutableStateOf<RunSnapshot?>(null) }
     var pendingDelete by remember { mutableStateOf<WorkoutTemplate?>(null) }
+    var weekDistanceM by remember { mutableStateOf(0.0) }
+    var weekSessions by remember { mutableStateOf(0) }
+    var weekDeltaM by remember { mutableStateOf<Double?>(null) }
 
     LaunchedEffect(Unit) {
         repository.ensureBuiltIn()
         snapshot = persistence.loadSnapshot()
+        val sessions = sessionRepository.allSessions()
+        val weekly = sessions.map {
+            WeeklySession(it.startedAtEpochMs, it.zoneId, it.totalDistanceM, it.movingMs / 1000.0)
+        }
+        val week = WeeklyStatsAggregator.lastWeeks(weekly, System.currentTimeMillis(), ZoneId.systemDefault().id, 12).lastOrNull()
+        weekDistanceM = week?.totalDistanceM ?: 0.0
+        weekSessions = week?.sessionCount ?: 0
+        weekDeltaM = week?.deltaM
     }
 
     val freeRun = templates.firstOrNull { it.id == WorkoutTemplateRepository.FREE_RUN_ID }
@@ -115,6 +133,14 @@ fun BerandaScreen(
                                 }) { Text(stringResource(R.string.action_discard)) }
                             }
                         }
+                    }
+                }
+
+                // Weekly summary card (tap -> S09)
+                Card(modifier = Modifier.fillMaxWidth().clickable { onOpenStats() }) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(stringResource(R.string.beranda_week, Formatters.distanceKm(weekDistanceM), weekSessions))
+                        weekDeltaM?.let { Text(stringResource(R.string.s09_vs_last, Formatters.distanceKm(it)), style = MaterialTheme.typography.bodySmall) }
                     }
                 }
 

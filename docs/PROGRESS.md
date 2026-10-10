@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P2 step by step — P2.1–P2.9 selesai; selanjutnya P2.10 (Ringkasan Mingguan S09).
+- **Berikutnya:** FASE P2 step by step — P2.1–P2.10 selesai; selanjutnya P2.11 (Pengaturan S12).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -366,6 +366,17 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
 - Test: `RecordRepositoryTest` 2/2 (hapus menurunkan rekor; excluded diabaikan; jarak belum ditempuh → null).
 - **Instrumented 18/18 hijau**.
 - Gap: lencana rekor di daftar S07 belum ada (di S06 sudah).
+
+## P2.10 Ringkasan Mingguan (S09) + kartu Beranda — selesai (2026-10-11)
+- Engine `WeeklyStatsAggregator` (F21) + test: **V16** pace rata-rata berbobot jarak (5100/15=340), **V17** batas
+  minggu Minggu 23:30 vs Senin 00:30 (zona Jakarta), minggu kosong (nol, pace null, 7 hari), delta vs minggu lalu.
+  Engine **181 test** hijau.
+- Sub-tab **Mingguan (S09)**: navigator minggu (< / > / Minggu ini), kartu angka (jarak, waktu, sesi, pace rata-rata,
+  sesi terpanjang, % segmen lulus, selisih vs minggu lalu), 3 grafik (harian, 12 minggu, pace mingguan dgn garis putus),
+  dan daftar sesi minggu itu (tap → S08).
+- **Kartu ringkasan minggu ini** di Beranda (tap → S09).
+- Perbaikan kompatibilitas: `Instant.atZone().toLocalDate()` menggantikan `LocalDate.ofInstant` (API 34) agar jalan di API 30.
+- Gap: daftar "rekor minggu ini" di S09 belum ditampilkan.
 
 
 

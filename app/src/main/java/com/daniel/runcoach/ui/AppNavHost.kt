@@ -72,6 +72,7 @@ fun AppNavHost() {
                     navController.navigate(Routes.EDITOR)
                 },
                 onOpenSimulator = { navController.navigate(Routes.DEBUG) },
+                onOpenStats = { navController.navigate(Routes.STATS) },
                 onSelectTab = { tab ->
                     when (tab) {
                         MainTab.HISTORY -> navController.navigate(Routes.HISTORY)
@@ -96,6 +97,7 @@ fun AppNavHost() {
         composable(Routes.STATS) {
             StatsScreen(
                 onOpenRecord = { key -> navController.navigate("record/$key") },
+                onOpenSession = { sessionId -> navController.navigate("detail/$sessionId") },
                 onSelectTab = { tab ->
                     when (tab) {
                         MainTab.WORKOUT -> navController.popBackStack(Routes.HOME, false)

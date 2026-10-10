@@ -109,6 +109,22 @@
     <string name="sub_weekly">Weekly</string>
     <string name="sub_records">Records</string>
 
+    <!-- S09 Weekly summary -->
+    <string name="s09_title">Weekly summary</string>
+    <string name="s09_this_week">This week</string>
+    <string name="s09_distance">Distance</string>
+    <string name="s09_time">Time</string>
+    <string name="s09_sessions">Sessions</string>
+    <string name="s09_avg_pace">Average pace</string>
+    <string name="s09_longest">Longest session</string>
+    <string name="s09_pass">Segments passed</string>
+    <string name="s09_vs_last">vs last week: %1$s</string>
+    <string name="s09_daily">Distance per day</string>
+    <string name="s09_weekly">Distance per week (12)</string>
+    <string name="s09_pace_weekly">Pace per week (12)</string>
+    <string name="s09_empty">No training this week</string>
+    <string name="beranda_week">This week: %1$s · %2$d sessions</string>
+
     <!-- S07 History -->
     <string name="s07_title">History</string>
     <string name="s07_search">Search by name</string>
