@@ -37,4 +37,18 @@ data class EngineConfig(
     val liveFallbackMinSec: Int = 8,
     /** Minimum distance before an average pace is reported (F9). */
     val minPaceDistanceM: Double = 50.0,
+    /** No valid sample for this long means "GPS signal lost" (6.1). */
+    val gpsLostTimeoutSec: Int = 10,
+    /** Seconds of initial countdown before the workout starts (6.1); 0 disables. */
+    val startCountdownSec: Int = 5,
+    /** Seconds of 3-2-1 countdown before a time-based segment ends (6.1); 0 disables. */
+    val segmentCountdownSec: Int = 3,
+    /** Time-based segments shorter than this get no countdown (6.1). */
+    val minSegmentSecForCountdown: Int = 8,
+    /** "Get ready" warning lead time before a time-based segment change (6.1). */
+    val preSegmentWarningSec: Int = 10,
+    /** Time-based segments shorter than this get no pre-warning (6.1). */
+    val preSegmentWarningMinSegmentSec: Int = 30,
+    /** Distance cue lead for distance-based segments (6.1); 0 disables. */
+    val cueDistanceM: Int = 20,
 )

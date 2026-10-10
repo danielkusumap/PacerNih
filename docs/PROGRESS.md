@@ -3,14 +3,14 @@
 Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diketahui.
 
 ## Status P0 (diperbarui 2026-10-10, sinkron dengan Lampiran C)
-- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.4b, P0.5, P0.10.
+- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.4b, P0.5, P0.6, P0.10.
 - **Tersedia sekarang:** 6.14 (Katalog Rumus + V1–V22) dan 8.3 (Info Segmen). Q-001/Q-002/Q-003/Q-005 ditutup.
 - **Urutan yang disarankan (Lampiran C):** P0.4b -> P0.5 -> P0.6 -> P0.8 -> P0.7 -> P0.9 -> P0.11.
-- **Belum:** P0.6, P0.7, P0.8, P0.9, P0.11.
+- **Belum:** P0.7, P0.8, P0.9, P0.11.
 - **Gerbang P0 belum tercapai**, jadi P1 (runtime Android) belum dimulai.
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack kini menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya dicatat di `DECISIONS.md` D-010.
-- **Test:** `:engine` 85 unit test hijau; `:app:assembleDebug` sukses.
+- **Test:** `:engine` 101 unit test hijau; `:app:assembleDebug` sukses.
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -98,4 +98,22 @@ Bug diketahui: -
 
 Belum: P0.6 dst.
 Bug diketahui: -
+
+## P0.6 WorkoutRunner (state machine) + countdown — selesai (2026-10-10)
+- `RunnerPhase` (IDLE..STOPPED) + `RunnerState`; keluaran `StateFlow<RunnerState>` + `Flow<AlertEvent>`
+  (plus daftar `emittedEvents` untuk tes/log S15).
+- State machine 6.5: IDLE -> WAITING_GPS -> COUNTDOWN -> RUNNING <-> PAUSED -> STOPPED. **Tidak pernah
+  berhenti otomatis**; setelah rencana selesai masuk segmen `Open` sampai Stop.
+- `StepCursor` (F27): repeat `times` + `untilTotalDistanceM` (cek setelah tiap child), plus `peek`/`hasNext`.
+- Transisi segmen jarak via interpolasi (F6) dan waktu via tick; moving clock (F5) dipasok ke `DistanceTracker`;
+  pause/resume (waktu tidak jalan), skip, extend, stop. Sisa jarak (`D1-B`) terbawa ke segmen berikutnya.
+- Countdown & cue (F15): countdown awal N..1, pre-warning (>=30 dtk), countdown 3-2-1 segmen waktu, cue jarak
+  tepat sekali; tidak ada cue untuk segmen < 2xC atau tanpa segmen berikutnya.
+- `GoalDistanceReached` sekali; `WorkoutPlanCompleted` lalu segmen Open; GPS lost/recovered; KmMarker.
+- Test: **101 hijau**. Vektor V21, V22 hijau (WorkoutRunnerTest).
+- Penyimpangan sementara yang dicatat: pemisahan jarak proporsional F7 pada batas waktu dan waktu KmMarker live
+  (non-interpolasi) — lihat `DECISIONS.md` D-013.
+
+Belum: P0.8 dst.
+Bug diketahui: pemisahan jarak proporsional F7 (batas waktu) belum diimplementasikan (D-013).
 

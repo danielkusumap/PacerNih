@@ -13,4 +13,5 @@ data class LocationSample(
     val lon: Double,
     val accuracyM: Double,
     val speedMps: Double? = null,
+    val speedAccuracyMps: Double? = null,
 )

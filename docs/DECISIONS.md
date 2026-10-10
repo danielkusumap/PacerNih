@@ -70,3 +70,15 @@ filter, lalu menerapkan `calibrationFactor` (F4, clamp 0.95–1.05). `BoundaryCr
 - `LivePaceEstimator` memberi bobot waktu tiap sample secara trapesium (sample tengah = setengah jarak ke
   kedua tetangga), sehingga lima sample 1 Hz berbobot sama dan menghasilkan v̄ = 3.04 persis (vektor V5).
   Ini konsisten dengan F8 walau F8 menulis "Δt ke sample sebelumnya".
+
+## D-013 P0.6: desain runner + penyimpangan sementara (F7, KmMarker)
+- Keluaran runner: `StateFlow<RunnerState>` + `Flow<AlertEvent>` (`MutableSharedFlow`) dan daftar
+  `emittedEvents` untuk tes/log S15.
+- Moving clock (F5) dipasok pemanggil: `onTick(nowMs)` untuk waktu, timestamp sample untuk jarak; engine
+  tetap tidak membaca jam sistem.
+- `SegmentEnd` sementara membawa (index, segment) tanpa hasil evaluasi; hasil ditambahkan di P0.8.
+- **Penyimpangan sementara (perlu diselaraskan):**
+  - Batas **waktu** (F7) belum membagi jarak sample secara proporsional; jarak sample yang melintasi batas
+    waktu seluruhnya masuk segmen lama, dan segmen berikutnya mulai dari total saat itu.
+  - `KmMarker` live memakai waktu sample, bukan hasil interpolasi (F6).
+  Keduanya belum diuji AC P0.6 dan akan diselaraskan saat P0.8 (split/interpolasi) atau saat ada vektor terkait.
