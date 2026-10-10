@@ -163,3 +163,9 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - **Batasan:** moving time saat resume ikut menghitung jeda ketika proses mati (jam dihitung dari start asli).
   Jarak & progres segmen tetap benar. Presisi waktu bisa diperbaiki nanti bila diperlukan.
 - D04 sementara ditempatkan di layar Home (placeholder); akan dipindah ke alur "app dibuka" saat S02 ada (P2.3).
+
+## D-024 P1.6: simulator in-app
+- `SimulatedLocationSource` mengimplementasi `LocationSource` dari `TrackSimulator`; `SimulationController`
+  memutar workout pada clock sintetis (`delay(1000/scale)`) sehingga 1x/10x/60x.
+- S15 hanya bisa diakses di build debug (dicek via `ApplicationInfo.FLAG_DEBUGGABLE`); tombolnya di Home placeholder.
+- Ringkasan S15 memakai format golden agar mudah dibandingkan; sudah diverifikasi identik di device (60x).

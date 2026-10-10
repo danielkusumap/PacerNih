@@ -1,5 +1,6 @@
 package com.daniel.runcoach.ui
 
+import android.content.pm.ApplicationInfo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,6 +36,7 @@ import com.daniel.runcoach.engine.model.SegmentKind
 import com.daniel.runcoach.engine.model.Workout
 import com.daniel.runcoach.service.RunForegroundService
 import com.daniel.runcoach.ui.battery.BatteryGuideScreen
+import com.daniel.runcoach.ui.debug.SimulatorScreen
 import com.daniel.runcoach.ui.onboarding.OnboardingScreen
 import kotlinx.coroutines.launch
 
@@ -43,6 +45,7 @@ object Routes {
     const val ONBOARDING = "onboarding"
     const val BATTERY = "battery"
     const val HOME = "home"
+    const val DEBUG = "debug"
 }
 
 @Composable
@@ -63,7 +66,10 @@ fun AppNavHost() {
             BatteryGuideScreen(onBack = { navController.popBackStack() })
         }
         composable(Routes.HOME) {
-            HomePlaceholder()
+            HomePlaceholder(onOpenSimulator = { navController.navigate(Routes.DEBUG) })
+        }
+        composable(Routes.DEBUG) {
+            SimulatorScreen(onBack = { navController.popBackStack() })
         }
     }
 }
@@ -74,8 +80,9 @@ fun AppNavHost() {
  * Replaced by S02 (Beranda) in P2.3.
  */
 @Composable
-private fun HomePlaceholder() {
+private fun HomePlaceholder(onOpenSimulator: () -> Unit) {
     val context = LocalContext.current
+    val debugBuild = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
     val scope = rememberCoroutineScope()
     val persistence = remember(context) { RunPersistence(context) }
     var pendingSnapshot by remember { mutableStateOf<RunSnapshot?>(null) }
@@ -118,6 +125,11 @@ private fun HomePlaceholder() {
             }
             OutlinedButton(onClick = { RunForegroundService.stop(context) }) {
                 Text(stringResource(R.string.action_stop_run))
+            }
+            if (debugBuild) {
+                OutlinedButton(onClick = onOpenSimulator) {
+                    Text(stringResource(R.string.home_simulator))
+                }
             }
         }
     }

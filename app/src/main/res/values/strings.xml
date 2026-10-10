@@ -40,6 +40,11 @@
     <string name="dialog_resume_message">Ada sesi lari yang belum selesai. Lanjutkan atau buang?</string>
     <string name="action_resume">Lanjutkan</string>
     <string name="action_discard">Buang</string>
+    <string name="home_simulator">Simulator (debug)</string>
+    <string name="debug_title">Debug / Simulator</string>
+    <string name="debug_speed">Kecepatan</string>
+    <string name="debug_running">Menjalankan…</string>
+    <string name="action_run">Jalankan</string>
 
     <!-- Foreground service notification -->
     <string name="notification_channel_run">Sesi lari</string>

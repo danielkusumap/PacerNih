@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P1 — P1.6 (simulator in-app S15); P1.1–P1.5 sudah selesai (lihat bawah).
+- **Berikutnya:** FASE P1 — P1.7 (Layar Lari S05); P1.1–P1.6 sudah selesai (lihat bawah).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -223,4 +223,12 @@ Semua task P0 selesai dan AC hijau; boleh lanjut ke FASE P1. Sisa yang sifatnya 
 - **Uji device**: jalan → **kill proses** → buka lagi → D04 muncul → Resume → service foreground, notifikasi
   lanjut (`00:06` → `00:36`, jarak terbawa), tanpa crash.
 - Catatan: moving time saat resume ikut menghitung jeda proses mati (batas metode replay, D-023).
+
+## P1.6 Simulator in-app (S15) — selesai (2026-10-11)
+- `SimulatedLocationSource` (implementasi `LocationSource`) memakai `TrackSimulator` engine.
+- `SimulationController` menjalankan `WorkoutRunner` pada **clock sintetis**, kecepatan 1x/10x/60x.
+- Layar **S15** (hanya build debug): pilih skenario & kecepatan, jalankan workout interval, tampilkan
+  ringkasan berformat sama dengan golden test. Tombol masuk hanya muncul di build debug.
+- **Uji device**: INTERVALS di **60x** → ringkasan sama persis dengan `golden/interval_intervals.txt`
+  (`totalDistanceM=6375`, `movingMs=1999000`, `planCompleted=true`, hitungan event identik). **AC P1.6 terpenuhi.**
 

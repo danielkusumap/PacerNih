@@ -40,6 +40,11 @@
     <string name="dialog_resume_message">There is an unfinished run. Resume it or discard?</string>
     <string name="action_resume">Resume</string>
     <string name="action_discard">Discard</string>
+    <string name="home_simulator">Simulator (debug)</string>
+    <string name="debug_title">Debug / Simulator</string>
+    <string name="debug_speed">Speed</string>
+    <string name="debug_running">Running…</string>
+    <string name="action_run">Run</string>
 
     <!-- Foreground service notification -->
     <string name="notification_channel_run">Run session</string>
