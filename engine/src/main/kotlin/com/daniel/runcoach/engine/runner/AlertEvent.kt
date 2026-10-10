@@ -21,4 +21,7 @@ sealed interface AlertEvent {
     data object GpsRecovered : AlertEvent
     data object AutoPaused : AlertEvent
     data object AutoResumed : AlertEvent
+    data class TooSlow(val paceLiveSecPerKm: Double, val targetSecPerKm: Int, val requiredSecPerKm: Double?) : AlertEvent
+    data class TooFast(val paceLiveSecPerKm: Double, val targetSecPerKm: Int) : AlertEvent
+    data object BackToStable : AlertEvent
 }

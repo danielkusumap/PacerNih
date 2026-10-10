@@ -55,4 +55,22 @@ data class EngineConfig(
     val paceErrorAssumedM: Double = 6.0,
     /** Upper bound for the BORDERLINE margin in seconds per km (F17). */
     val paceMarginCapSec: Double = 15.0,
+    /** How long a candidate correction state must persist before it applies (F13). */
+    val alertHoldSec: Int = 5,
+    /** Repeat the same correction alert while the state persists, this often (F13). */
+    val alertRepeatCooldownSec: Int = 25,
+    /** No correction alerts within this many seconds of the segment end (F14). */
+    val noAlertLastSec: Int = 15,
+    /** Margin to leave a correction state, seconds per km (F13). */
+    val hysteresisSecPerKm: Int = 3,
+    /** Alert gate: minimum distance into the segment before correction alerts (F14). */
+    val minSegmentDistForAlertM: Double = 100.0,
+    /** Alert gate: minimum time into the segment before correction alerts, seconds (F14). */
+    val minSegmentTimeForAlertSec: Int = 20,
+    /** Distance-based segments shorter than this get no correction alerts (F14). */
+    val noCorrectionBelowSegmentM: Double = 400.0,
+    /** Time-based segments shorter than this get no correction alerts, seconds (F14). */
+    val noCorrectionBelowSegmentSec: Int = 60,
+    /** A countdown tick later than this is dropped instead of played late (6.1). */
+    val countdownTickMaxLateMs: Int = 700,
 )

@@ -3,14 +3,14 @@
 Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diketahui.
 
 ## Status P0 (diperbarui 2026-10-10, sinkron dengan Lampiran C)
-- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.4b, P0.5, P0.6, P0.8, P0.10.
+- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.4b, P0.5, P0.6, P0.7, P0.8, P0.10.
 - **Tersedia sekarang:** 6.14 (Katalog Rumus + V1–V22) dan 8.3 (Info Segmen). Q-001/Q-002/Q-003/Q-005 ditutup.
 - **Urutan yang disarankan (Lampiran C):** P0.4b -> P0.5 -> P0.6 -> P0.8 -> P0.7 -> P0.9 -> P0.11.
-- **Belum:** P0.7, P0.9, P0.11.
+- **Belum:** P0.9, P0.11.
 - **Gerbang P0 belum tercapai**, jadi P1 (runtime Android) belum dimulai.
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack kini menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya dicatat di `DECISIONS.md` D-010.
-- **Test:** `:engine` 116 unit test hijau; `:app:assembleDebug` sukses.
+- **Test:** `:engine` 137 unit test hijau; `:app:assembleDebug` sukses.
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -129,4 +129,17 @@ Bug diketahui: pemisahan jarak proporsional F7 (batas waktu) belum diimplementas
 
 Belum: P0.7 dst.
 Bug diketahui: pemisahan jarak proporsional F7 (batas waktu) & KmMarker live masih non-interpolasi (D-013).
+
+## P0.7 AlertEngine dan PhraseBuilder — selesai (2026-10-10)
+- `PhraseBuilder` (6.7, F20): teks ID & EN untuk semua jenis event; satuan pace/waktu/jarak mengikuti F20
+  (F20 menang atas tabel ilustrasi 6.7). Termasuk V20.
+- `AlertEngine` (6.7, F13/F14): status STABLE/TOO_SLOW/TOO_FAST dengan gerbang F14, hysteresis 3 dtk/km,
+  hold 5 dtk, cooldown ulang 25 dtk, dan BackToStable sekali. `AlertPriority` memberi urutan prioritas 6.7
+  (Countdown tertinggi; SegmentEnd mengalahkan TooSlow).
+- Test: **137 hijau**. Vektor V13, V14, V15 (best effort) juga ditambahkan. AlertEngineTest menutup skenario
+  (a)-(h) AC.
+- Cakupan & sisa vektor: lihat `DECISIONS.md` D-015 dan `OPEN_QUESTIONS.md` Q-008.
+
+Belum: P0.9 dst.
+Bug diketahui: (seperti P0.8) F7 & KmMarker live (D-013); antrean suara TTS di service P1.4.
 

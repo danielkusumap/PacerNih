@@ -91,3 +91,11 @@ filter, lalu menerapkan `calibrationFactor` (F4, clamp 0.95–1.05). `BoundaryCr
   segmen bertarget (F18); selain itu status kosong.
 - Catatan: F7 (pemisahan jarak proporsional pada batas waktu) dan interpolasi `KmMarker` live tetap belum
   dikerjakan — keduanya urusan runner (D-013), bukan evaluator.
+
+## D-015 P0.7: PhraseBuilder & AlertEngine (cakupan)
+- `PhraseBuilder` mengikuti F20 (aturan menang atas tabel ilustrasi 6.7), mis. EN memakai "minutes/seconds".
+- `AlertEngine` menaikkan TooSlow/TooFast/BackToStable dengan gerbang F14, hysteresis, hold, dan cooldown ulang.
+- Antrean/prioritas suara diwakili `AlertPriority` (6.7). Pemotongan Countdown (flush), pembuangan alert basi >5 dtk,
+  dan pembuangan tick countdown >700 ms dilakukan di lapisan pemutaran (service P1.4), belum di engine.
+- Vektor yang belum hijau: V1 (format tampilan "5:33", ada di `Formatters.kt` :app, P1.7), V16–V17 (statistik
+  mingguan, P2.10), V18 (nama default sesi, P2.5), V19 (kalibrasi jarak, P3.7). V2–V15, V20–V22 sudah hijau.

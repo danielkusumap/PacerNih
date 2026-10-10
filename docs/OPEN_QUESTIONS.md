@@ -13,6 +13,14 @@ Sinkronisasi terakhir: `RUNCOACH_PLAN.md` **Lampiran C** (2026-10-10).
   keystore, atau rahasia lain. Plan tidak mewajibkan remote.
 - **Dibutuhkan:** keputusan pemilik proyek apakah/bagaimana repo di-push.
 
+## Q-008 P0.11 (audit V1–V22) bergantung pada task P2/P3
+- Sebagian vektor 6.14.2 bergantung pada task setelah P0: **V1** (format tampilan `5:33`) di `Formatters.kt`
+  (:app, P1.7), **V16–V17** (statistik mingguan, P2.10), **V18** (nama default sesi, P2.5), **V19** (kalibrasi
+  jarak, P3.7). Karena itu audit "semua V1–V22 punya test" belum bisa hijau di dalam FASE P0.
+- Vektor yang sudah hijau: V2–V15, V20–V22 (FormulaVectorsTest, PhraseBuilderTest, WorkoutRunnerTest).
+- **Keputusan yang diminta:** (a) audit P0.11 ditunda sampai task terkait selesai, atau (b) auditnya dibatasi
+  ke vektor yang memang milik P0 (V2–V15, V20–V22) dan sisanya menyusul. Usulan: (b).
+
 ---
 
 # Selesai
