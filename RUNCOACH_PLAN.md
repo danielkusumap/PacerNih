@@ -15,6 +15,7 @@
 10. Strategi Pengujian
 11. Risiko dan Mitigasi
 12. Asumsi
+Lampiran: A (v1 ke v2), B (v2.1), C (sinkronisasi dengan DECISIONS / OPEN_QUESTIONS / PROGRESS milik agent)
 
 ---
 
@@ -103,7 +104,7 @@ Alur data saat lari:
 | UI | Jetpack Compose + Material 3 | |
 | Navigasi | Navigation Compose | Bottom bar 4 tab |
 | Min SDK / Target | 26 / latest stable | |
-| Build | Gradle Kotlin DSL, version catalog | |
+| Build | Gradle Kotlin DSL, version catalog | Pakai versi **stabil**. Alpha/beta hanya bila terpaksa, wajib dicatat alasannya di `docs/DECISIONS.md` |
 | Lokasi | `play-services-location` (FusedLocationProviderClient) | Gratis, tanpa API key. Fallback `LocationManager.GPS_PROVIDER` bila Play Services tidak ada |
 | DB | Room (SQLite), `exportSchema = true`, migrasi eksplisit | Sesi, track point, hasil, template |
 | Settings | DataStore Preferences | Tema, bahasa voice, dll. |
@@ -328,6 +329,280 @@ Bahasa mengikuti bahasa UI saat sesi disimpan. Nama yang tersimpan adalah **teks
 - Selisih terhadap target: tanda eksplisit dan satuan detik (`+0:12`, `-0:05`).
 - Tanggal: format lokal pendek; jam 24 jam.
 - Angka bergaya tabular (monospaced digits) pada pace/waktu agar tidak bergeser.
+
+### 6.14 Katalog Rumus dan Algoritma Detail (WAJIB diikuti persis)
+
+#### 6.14.0 Konvensi (berlaku untuk semua rumus)
+- **Tipe**: jarak `Double` meter; waktu `Long` milidetik pada **moving clock** (lihat F5); pace `Double` detik per km. Semua perhitungan memakai `Double`. Pembulatan hanya di tempat yang tertulis.
+- `roundHalfUp(x) = floor(x + 0.5)`.
+- **Pace bulat**: `paceR = roundHalfUp(paceSecPerKm)`. **Pass/fail dan status segmen/km memakai `paceR`** (sama dengan yang tampil). Ambang alert dan hysteresis memakai nilai **tanpa** pembulatan, kecuali tertulis lain.
+- **Tampilan waktu**: jam berjalan (waktu total, sisa waktu) dipotong ke bawah (`floor`) ke detik; durasi hasil (split, segmen, rekor) memakai `roundHalfUp`.
+- **Null**: pace `null` ditampilkan `--:--`, tidak memicu alert, dan tidak dipakai di perhitungan turunan.
+- Dilarang membandingkan `Double` dengan `==`. Dilarang mengambil rata-rata dari pace (selalu bagi total waktu dengan total jarak).
+
+#### F1 Konversi kecepatan dan pace
+```
+paceSecPerKm = 1000 / speedMps            (speedMps > 0)
+speedMps     = 1000 / paceSecPerKm
+```
+Format `m:ss`: `m = paceR div 60`, `ss = paceR mod 60` (dua digit). Pace lebih lambat dari `MAX_PACE_DISPLAY_SEC` (1800) atau `null` tampil `--:--`.
+
+#### F2 Jarak antar dua titik (Haversine)
+```
+φ = lat dalam radian, λ = lon dalam radian
+a = sin²(Δφ/2) + cos(φ1)·cos(φ2)·sin²(Δλ/2)
+d = 2 · R · asin(√a)            R = 6371008.8 m
+```
+Engine tidak boleh memakai API Android untuk ini.
+
+#### F3 Penerimaan sample dan jitter saat diam
+Untuk sample baru `s2` terhadap referensi terakhir `s1` (sample yang jaraknya terakhir dihitung):
+1. `Δt = (s2.nanos - s1.nanos) / 1e9` detik.
+2. **Tolak** jika `s2.accuracyM > 20`, atau `Δt <= 0`.
+3. `d = Haversine(s1, s2)`; `v = d / Δt`. **Tolak** jika `v > 9.0` m/s.
+4. **Jitter diam**: jika `s2.hasSpeed` dan `s2.speedMps < 0.3` dan `d < 5.0`: sample diterima untuk kesiapan GPS dan pace live, tetapi **tidak** menambah jarak dan **referensi tidak digeser**.
+5. Selain itu: jarak `d` ditambahkan dan referensi = `s2`.
+6. Sample pertama (atau pertama setelah resume): diterima bila akurasi lolos, menjadi referensi, **tanpa** jarak.
+7. **Reset referensi**: jika 3 sample berturut-turut ditolak **karena kecepatan** (langkah 3), referensi di-reset ke sample terbaru tanpa menambah jarak (mencegah macet selamanya setelah lompatan GPS yang nyata).
+8. **Gap/terowongan**: jika `Δt > 10` dan `v <= 9.0`, jarak garis lurus `d` tetap ditambahkan.
+
+#### F4 Akumulasi jarak dan kalibrasi
+```
+dEff = d × calibrationFactor            (default 1.0, batas 0.95 sampai 1.05)
+Dw  += dEff      (jarak kumulatif workout)
+Ds  += dEff      (jarak kumulatif segmen aktif)
+```
+Pause (manual/auto): sample tidak menambah jarak. Sample pertama setelah resume menjadi referensi baru tanpa jarak.
+
+#### F5 Moving clock dan definisi waktu
+```
+mt(t)     = t - tStartRunning - totalPausedUpTo(t)
+elapsedMs = tEnd - tStartRunning
+pausedMs  = Σ durasi pause (manual + auto)
+movingMs  = elapsedMs - pausedMs
+```
+`tStartRunning` = saat countdown awal selesai. Countdown tidak dihitung. Semua batas segmen, split, dan best effort memakai `mt`.
+
+#### F6 Batas jarak dengan interpolasi (segmen, km split, target jarak)
+Antara dua sample dengan kumulatif `D0 -> D1` (setelah `dEff` ditambahkan, `D1 > D0`) dan `mt0 -> mt1`, batas `B` dengan `D0 < B <= D1` jatuh di:
+```
+mtB = mt0 + (B - D0) / (D1 - D0) × (mt1 - mt0)
+```
+- Beberapa batas dalam satu sample diproses **berurutan naik** (loop), masing-masing dengan rumus yang sama.
+- Setelah batas segmen `B`, sisa `D1 - B` menjadi jarak awal segmen berikutnya (`Ds = D1 - B`).
+- Batas segmen yang dipakai untuk jarak adalah `Ds = limitM` (jarak segmen), bukan `Dw`.
+
+#### F7 Batas waktu segmen
+- Segmen berbasis waktu berakhir saat `segMovingMs >= limitMs`, dicek tiap `tick` (disarankan 250 ms). Waktu batas yang dicatat = `segStartMt + limitMs` persis, bukan waktu tick.
+- Jarak sample yang melintasi batas waktu dibagi **proporsional waktu**: bagian sebelum batas masuk segmen lama, sisanya segmen baru:
+```
+fracBefore = (mtB - mt0) / (mt1 - mt0)
+dBefore    = dEff × fracBefore;   dAfter = dEff - dBefore
+```
+
+#### F8 Pace live
+Jendela `LIVE_WINDOW_SEC = 15` detik **moving time** terakhir (waktu pause tidak masuk jendela).
+- **Metode A (Doppler)**: ambil sample dalam jendela yang `hasSpeed` dan (`speedAccuracyMps` tidak ada atau <= 1.0). Syarat: minimal `LIVE_MIN_SAMPLES` (5) sample.
+```
+v̄ = Σ(speed_i × Δt_i) / Σ(Δt_i)        (rata-rata berbobot waktu, Δt_i = jarak waktu ke sample sebelumnya)
+```
+- **Metode B (fallback)** bila A tidak memenuhi syarat: `v̄ = (Dw_now - Dw_(now-15s)) / 15`, dengan `Dw_(now-15s)` diinterpolasi (F6). Syarat: data minimal `LIVE_FALLBACK_MIN_SEC` (8) detik.
+- Jika `v̄ < 0.3` (berhenti) atau tidak ada metode yang memenuhi syarat: `paceLive = null`. Selain itu `paceLive = 1000 / v̄` (F1).
+
+#### F9 Pace rata-rata
+```
+paceSegmen  = segMovingSec / (Ds / 1000)           null jika Ds < 50 m (MIN_PACE_DISTANCE_M)
+paceWorkout = totalMovingSec / (Dw / 1000)         null jika Dw < 50 m
+```
+Segmen yang sudah selesai: `Ds` = jarak terukur di segmen itu (untuk segmen berbasis jarak sama dengan batasnya).
+
+#### F10 Lingkup evaluasi (scope)
+- Segmen berbasis jarak, bertarget, `perKmCheck` aktif (jarak >= 1000 m): lingkup = **km yang sedang berjalan di dalam segmen**, `k = floor(Ds / 1000)`. `scopeStartM = k × 1000`, `scopeDistM = min(1000, limitM - scopeStartM)` (km terakhir bisa parsial).
+- Selain itu (jarak < 1000 m, atau `perKmCheck` mati): lingkup = seluruh segmen, `scopeStartM = 0`, `scopeDistM = limitM`.
+- `doneM = Ds - scopeStartM`; `remainingM = scopeDistM - doneM`; `elapsedScope` = waktu moving sejak `scopeStartM` dicapai (diinterpolasi, F6).
+- Segmen berbasis waktu dengan target: tidak ada lingkup jarak; hanya pace live yang dipakai (F13).
+
+#### F11 Projected pace
+```
+projected = ( elapsedScope + (remainingM / 1000) × paceLive ) / ( scopeDistM / 1000 )
+```
+Syarat: `paceLive != null`, `remainingM > 0`. Hasil dalam detik/km.
+
+#### F12 Required pace
+```
+required = ( T × scopeKm - elapsedScope ) / remainingKm
+           T = target (detik/km), scopeKm = scopeDistM/1000, remainingKm = remainingM/1000
+```
+**Tidak realistis** (jangan tampil/ucapkan) jika: `remainingKm <= 0`, atau pembilang `<= 0`, atau `required < 150` (lebih cepat dari 2:30/km). Hanya ditampilkan saat status TERLALU LAMBAT.
+
+#### F13 Status dan alert koreksi
+Notasi: `T` target, `M = fastMarginSec`, `H = 3` (HYSTERESIS_SEC_PER_KM).
+- **Kandidat TooSlow**: (segmen jarak) `projected > T`; (segmen waktu bertarget) `paceLive > T`. Jika sudah TooSlow, tetap TooSlow sampai `projected <= T - H` (segmen waktu: `paceLive <= T - H`).
+- **Kandidat TooFast** (hanya jika `M != null`): `paceLive < T - M`. Jika sudah TooFast, tetap sampai `paceLive >= T - M + H`.
+- **TooSlow menekan TooFast** (pelari sedang mengejar, jangan dikoreksi).
+- **Kandidat STABIL** = bukan TooSlow dan bukan TooFast.
+- **Hold**: kandidat harus bertahan terus-menerus `ALERT_HOLD_SEC` (5 detik) sebelum diterapkan dan alert dikeluarkan.
+- **Ulang**: selama state sama, ulangi alert tiap `ALERT_REPEAT_COOLDOWN_SEC` (25 detik) dengan angka terbaru.
+- **BackToStable**: dikeluarkan sekali, hanya jika sebelumnya ada alert yang sempat diucapkan di state non-stabil.
+- Isi ucapan TooSlow: pace live (`paceR`), target, dan required **bila realistis**. TooFast: pace live dan target.
+- Selisih di badge layar: `delta = paceLiveR - T` ditulis dengan tanda (`+0:15` / `-0:22`); badge mengikuti state (setelah hold), angka selisih mengikuti nilai terkini.
+
+#### F14 Gerbang alert koreksi (semua syarat harus benar)
+1. Runner RUNNING (bukan pause, countdown, atau GPS hilang).
+2. Segmen punya target pace dan bukan `Open`.
+3. Panjang segmen: berbasis jarak >= `NO_CORRECTION_BELOW_SEGMENT_M` (400); berbasis waktu >= `NO_CORRECTION_BELOW_SEGMENT_SEC` (60).
+4. Progres dalam segmen: `Ds >= MIN_SEGMENT_DIST_FOR_ALERT_M` (100) **dan** waktu segmen >= 20 detik. (Hanya di awal segmen; awal km berikutnya dalam segmen tidak di-gate ulang.)
+5. Panjang lingkup (F10) >= 400 m (km parsial terakhir yang lebih pendek tidak dikoreksi).
+6. Sisa ke batas segmen > 15 detik: berbasis waktu = sisa waktu; berbasis jarak = `remainingSegM / v̄` (ETA).
+7. `paceLive != null`.
+
+#### F15 Countdown awal, countdown segmen waktu, cue segmen jarak
+- **Countdown awal** (`N = START_COUNTDOWN_SEC`, N > 0): saat Mulai, emit `Countdown(N)`, `Countdown(N-1)`, ... `Countdown(1)` tiap 1 detik (ukuran dari jam monotonik), lalu `WorkoutStarted`; `tStartRunning` = saat `WorkoutStarted`. Batal mengembalikan ke WAITING_GPS tanpa efek.
+- **Countdown segmen berbasis waktu** (`N = SEGMENT_COUNTDOWN_SEC`, N > 0, durasi >= 8 dtk, ada segmen berikutnya): untuk `k = N` turun ke 1, emit `Countdown(k)` pertama kali saat `remainingMs <= k × 1000` (sekali per k). `SegmentStart` berikutnya saat `remainingMs <= 0`. Contoh segmen 360 dtk, N=3: tick pada 357, 358, 359 detik; batas pada 360.
+- **Pre-warning** (hanya segmen berbasis waktu, durasi >= 30 dtk, ada segmen berikutnya): emit `PreSegmentWarning` saat `remainingMs <= 10 000`, sekali.
+- **Cue jarak** (`C = CUE_DISTANCE_M`, C > 0, segmen berbasis jarak, `limitM >= 2 × C`, ada segmen berikutnya): emit `DistanceCue` **tepat sekali** saat `limitM - Ds <= C` pertama kali. **Tidak** dikeluarkan jika sample yang sama sudah melewati batas segmen. Contoh: segmen 400 m, C=20: cue saat `Ds >= 380`. Segmen 30 m, C=20: tanpa cue.
+- **Ada segmen berikutnya**: ya jika masih ada langkah terencana setelah ini; untuk `Repeat` berbasis `untilTotalDistanceM`, ya selama jarak target belum tercapai.
+- Tick terlambat lebih dari 700 ms dibuang. Semua mengikuti pause.
+
+#### F16 Progres dan sisa segmen (UI)
+```
+berbasis jarak : progress = clamp(Ds / limitM, 0, 1);  sisa = max(0, limitM - Ds)  -> tampil meter, floor
+berbasis waktu : progress = clamp(segMovingMs / limitMs, 0, 1);  sisa = max(0, limitMs - segMovingMs) -> mm:ss, ceil ke detik
+Open           : tanpa progress bar; tampilkan jarak dan waktu berjalan segmen
+```
+
+#### F17 Evaluasi segmen (lulus/gagal)
+Untuk segmen bertarget `T` yang selesai normal:
+```
+avg      = segMovingSec / (Ds / 1000);   avgR = roundHalfUp(avg)
+deltaSec = avgR - T                      (negatif = lebih cepat dari target)
+excessAvg= max(0, avgR - T)
+```
+- Jika `perKmCheck` aktif: untuk tiap km **penuh** di dalam segmen (dari awal segmen, F6): `kmR_k = roundHalfUp(kmTimeSec_k)`, `excessKm_k = max(0, kmR_k - T)`.
+- `marginAvg = min( T × PACE_ERROR_ASSUMED_M / Ds , PACE_MARGIN_CAP_SEC )` dengan `PACE_ERROR_ASSUMED_M = 6`; `marginKm = min( T × 6 / 1000 , 15 )`.
+- **PASS**: `excessAvg == 0` dan semua `excessKm_k == 0`.
+- **BORDERLINE**: bukan PASS, dan setiap pelanggaran dalam margin: `excessAvg <= marginAvg` dan semua `excessKm_k <= marginKm`.
+- **FAIL**: selain itu.
+- **NO_TARGET**: tanpa target pace. **DATA KURANG** (`NO_DATA`): `Ds < 50 m`. **DILEWATI**: segmen di-skip pengguna (tanpa penilaian). Segmen yang diperpanjang dinilai terhadap batas baru dan diberi tanda `extended`.
+
+#### F18 Split km (riwayat)
+- Batas `k × 1000 m` pada `Dw` (jarak kumulatif workout), waktu diinterpolasi (F6): `t_k`, dengan `t_0 = 0`.
+```
+splitTimeSec_k = (t_k - t_(k-1))/1000;   pace_k = splitTimeSec_k      (karena jarak = 1 km)
+```
+- **Sisa**: `partialM = Dw - floor(Dw/1000) × 1000`. Tampil jika `partialM >= 10`. `pacePartial = partialTimeSec / (partialM/1000)`; jika `partialM < 50` pace tampil `--:--`.
+- **Status vs target**: hanya bila jendela km `[(k-1)×1000, k×1000]` pada `Dw` berada **sepenuhnya** di dalam satu segmen yang bertarget `T` (berdasarkan `Dw` awal/akhir segmen yang tercatat). `PASS` jika `roundHalfUp(pace_k) <= T`; `BORDERLINE` jika excess <= `min(T×6/1000, 15)`; selain itu `FAIL`. Selain kondisi itu: tanpa status.
+- Km tercepat (untuk sorotan) = `pace_k` terkecil di antara km **penuh**.
+
+#### F19 Rekor / best effort (sliding window)
+Input: array `cum[i]` (jarak kumulatif, tidak turun) dan `tm[i]` (moving ms), `i = 0..n-1`, `cum[0] = 0`. Untuk tiap `D` di `RECORD_DISTANCES_M`:
+```
+best = +∞
+i = 0
+untuk j = 0..n-1:
+    jika cum[j] < D: lanjut
+    X = cum[j] - D
+    selama i+1 <= j dan cum[i+1] <= X: i += 1
+    jika cum[i+1] > cum[i]:  tStart = tm[i] + (X - cum[i]) / (cum[i+1] - cum[i]) × (tm[i+1] - tm[i])
+    selain itu:              tStart = tm[i]
+    effortMs = tm[j] - tStart
+    jika effortMs / D < 150:  lanjut                    (window anomali dibuang; effortMs/D = detik per km)
+    jika effortMs < best - 1:  best = effortMs, startOffsetM = X        (selisih < 1 ms dianggap seri, pilih awal)
+```
+- `effortMs` dibulatkan `roundHalfUp`. Jika total jarak sesi < `D`: tidak ada rekor untuk `D`.
+- **Window valid** hanya jika `effortSec / (D/1000) >= 150` (2:30/km). Window yang lebih cepat dibuang **per-window**, bukan seluruh rekor jarak itu: window valid tercepat yang tersisa tetap dipakai. Jika tidak ada window valid, tidak ada rekor untuk `D` (mengadopsi keputusan agent D-008).
+- Pace rekor = `effortSec / (D/1000)`. Waktu rekor ditampilkan `h:mm:ss` bila >= 1 jam, selain itu `mm:ss`.
+- Sesi dengan `excludeFromRecords` atau `totalDistanceM < 100` dilewati.
+
+#### F20 Format ucapan (voice)
+Satuan ucapan memakai pembulatan `roundHalfUp` ke detik, lalu:
+- **Pace / durasi < 1 jam** (`m = s div 60`, `y = s mod 60`):
+  - ID: `y=0` -> "{m} menit pas"; `1..9` -> "{m} menit {y} detik"; `>=10` -> "{m} menit {y}". Contoh: 420 -> "7 menit pas"; 422 -> "7 menit 2 detik"; 390 -> "6 menit 30".
+  - EN: `y=0` -> "{m} minutes flat"; selain itu "{m} minutes {y} seconds".
+- **Durasi >= 1 jam** (KmMarker): ID "{h} jam {m} menit"; EN "{h} hours {m} minutes".
+- **Jarak segmen**: `< 1000 m` -> "{n} meter" / "{n} meters"; kelipatan 1000 -> "{k} kilometer(s)"; selain itu satu desimal, ID "1 koma 5 kilometer", EN "1 point 5 kilometers".
+- **Durasi segmen**: "{m} menit" / "{m} menit {y} detik" / "{y} detik" (EN: minutes/seconds).
+- **Kata tipe** (untuk "ganti ke ..."): ID pemanasan, lari, jalan, pemulihan, pendinginan; EN warm up, run, walk, recovery, cool down.
+- Tabel kalimat di 6.7 hanya ilustrasi. `PhraseBuilder` + snapshot test mengikuti aturan ini.
+
+#### F21 Statistik mingguan
+- Tanggal sesi = `startedAtEpochMs` pada `zoneId` yang tersimpan. `weekStart = tanggal.with(previousOrSame(MONDAY))`. Minggu: Senin sampai Minggu.
+- Sesi dengan `totalDistanceM < 100` tidak dihitung. Untuk minggu W:
+```
+totalDistanceM = Σ distanceM          totalMovingSec = Σ movingSec
+sessionCount   = jumlah sesi          longestM = max distanceM
+avgPace        = totalMovingSec / (totalDistanceM/1000)        (null jika totalDistanceM == 0)
+passRate%      = roundHalfUp( 100 × segPass / (segPass + segFail + segBorderline) )
+                 (null jika penyebut 0; NO_TARGET, DATA KURANG, DILEWATI tidak dihitung; borderline ditampilkan terpisah)
+dailyM[0..6]   = jarak per hari Senin..Minggu
+deltaM         = totalDistanceM(W) - totalDistanceM(W-1)
+deltaPct       = 100 × deltaM / totalDistanceM(W-1)           (null jika minggu lalu 0; tampil "Baru")
+```
+- Seri 12 minggu: dari `W-11` sampai `W`, minggu tanpa sesi: jarak 0, pace `null` (garis putus).
+
+#### F22 Progres rekor
+Urutkan sesi menurut `startedAtEpochMs` naik. Untuk tiap jarak `D`: `best = ∞`; untuk tiap sesi dengan effort valid `e` (ms): jika `e < best` (strict) -> catat **PR** (sessionId, e, tanggal), `best = e`. Rekor saat ini = effort minimum seluruh sesi (seri -> sesi paling awal). Lencana "PR saat itu" = sesi masuk daftar PR.
+
+#### F23 Nama default sesi
+`hour` = jam mulai pada `zoneId`: `4..10` Morning/Pagi, `11..14` Midday/Siang, `15..17` Afternoon/Sore, `18..20` Evening/Petang, selain itu (`21..23`, `0..3`) Night/Malam. Nama = "{kata} Run" (EN) / "Lari {kata}" (ID).
+
+#### F24 Estimasi di Editor Workout
+Setelah `Repeat` di-expand:
+```
+totalDistance = Σ limitM (segmen berbasis jarak)              (jika ada segmen berbasis waktu atau Open -> tampil dengan awalan "≥")
+totalDuration = Σ (limitM/1000 × T)   untuk segmen jarak bertarget
+              + Σ limitSec            untuk segmen waktu
+              (segmen jarak tanpa target tidak bisa diestimasi -> awalan "≥")
+```
+`Repeat` berbasis `untilTotalDistanceM`: estimasi jarak = nilai target itu, durasi "≥".
+
+#### F25 Kalibrasi jarak
+```
+rawM      = session.totalDistanceM / session.distanceCalibrationFactorUsed      (jarak mentah, tanpa kalibrasi)
+factorNew = clamp( actualKm × 1000 / rawM , 0.95, 1.05 )                        (TIDAK menumpuk dengan faktor lama)
+```
+Berlaku untuk sesi berikutnya; sesi lama tidak berubah.
+
+#### F26 Auto-pause
+Memakai `speedMps` sample (jika tidak ada: `d/Δt`).
+- **Pause otomatis**: `speed < 0.6` terus-menerus selama >= 3 detik. Tidak retroaktif (waktu 3 detik itu terhitung).
+- **Resume otomatis**: `speed >= 1.0` terus-menerus selama >= 2 detik.
+- Pause manual selalu menang; auto-resume tidak melanjutkan pause manual.
+
+#### F27 Repeat dan operasi segmen
+- `Repeat(times=n)`: children diulang `n` kali berurutan.
+- `Repeat(untilTotalDistanceM=G)`: setelah **setiap child selesai**, jika `Dw >= G` -> repeat berakhir (tidak ada iterasi baru). `GoalDistanceReached` dikeluarkan sekali saat `Dw` pertama kali `>= G` (bisa di tengah segmen). Segmen yang sedang berjalan diselesaikan dulu.
+- Setelah langkah terakhir: `WorkoutPlanCompleted`, lalu segmen `Open`.
+- **Skip**: segmen dicatat dengan jarak/waktu yang sudah terkumpul, status DILEWATI; segmen berikutnya mulai dengan `Ds = 0` saat itu juga.
+- **Extend**: `limit += amount` (jarak: meter, waktu: detik); hasil ditandai `extended`.
+
+#### 6.14.2 Vektor uji (tiap baris = satu unit test dengan nilai persis)
+
+| ID | Masukan | Hasil yang diharapkan |
+|---|---|---|
+| V1 | `speedMps = 3.0` | pace 333.33 dtk/km, `paceR = 333`, tampil `5:33` |
+| V2 | Titik (lat 0.0000, lon 0.0000) dan (lat 0.0001, lon 0.0000) | 11.12 m (toleransi 0.01) |
+| V3 | `D0=995, D1=1003, mt0=300.0 s, mt1=302.0 s`, batas 1000 | `mtB = 301.25 s` |
+| V4 | `D0=1008, D1=1024, mt0=100.0 s, mt1=104.0 s`, batas 1010 dan 1020 | `mt(1010)=100.5 s`, `mt(1020)=103.0 s`, sisa jarak ke segmen baru `4 m` |
+| V5 | Lima sample Doppler 3.2, 3.1, 3.0, 2.9, 3.0 m/s, tiap 1 detik | `v̄ = 3.04`, pace live 328.95, `paceR = 329`, `5:29` |
+| V6 | Lingkup 1000 m, `doneM=400`, `elapsedScope=170 s`, `paceLive=410` | `projected = 416`. `T=420`: tidak TooSlow. `T=390`: kandidat TooSlow |
+| V7 | `T=330`, lingkup 5 km, `elapsedScope=680`, `remainingKm=3` | `required = 323.33`, tampil `5:23` |
+| V8 | `T=330`, lingkup 5 km, `elapsedScope=1700`, `remainingKm=3` | pembilang `-50` -> **tidak realistis**, tidak tampil |
+| V9 | Segmen 1000 m, `T=420`, tanpa per-km: avg 420.4 / 420.5 / 423 | `420.4 -> avgR 420 -> PASS`; `420.5 -> 421 -> BORDERLINE` (excess 1 <= 2.52); `423 -> FAIL` (excess 3 > 2.52) |
+| V10 | Segmen 200 m, `T=390`: avg 398 / 405 | `marginAvg = 11.7`. 398 (excess 8) -> BORDERLINE; 405 (excess 15) -> FAIL |
+| V11 | Segmen 40 m, `T=420` | `marginAvg = 63` dibatasi **15** |
+| V12 | Lari 3.1 km; waktu di 1000/2000/3000 m = 400.0/800.0/1203.0 s; akhir 3100 m pada 1245.0 s | Baris: 6:40, 6:40, 6:43, dan sisa "0,10 km" waktu 42 dtk, pace 7:00 (4 baris) |
+| V13 | Track 2000 m kecepatan konstan 3 m/s, `D=1000` | effort 333.33 s (`5:33`), `startOffsetM = 0` |
+| V14 | Track 10 km: 0-4 km @360 dtk/km, 4-5 km @240 dtk/km, 5-10 km @360 | K1: 240.0 s, offset 4000 m. K5: 1680.0 s (toleransi 0.05), offset 0 (seri -> paling awal) |
+| V15 | Track tepat 1000 m ditempuh dalam 140 s (pace 2:20) | Satu-satunya window anomali dibuang -> **tidak ada rekor K1** (perilaku per-window, D-008) |
+| V16 | Sesi A 5 km/1800 s, sesi B 10 km/3300 s di minggu sama | `avgPace = 5100/15 = 340` -> `5:40` (bukan 5:45) |
+| V17 | Zona Asia/Jakarta: Minggu 2026-10-11 23:30 dan Senin 2026-10-12 00:30 | Minggu ke minggu mulai 2026-10-05; Senin ke minggu mulai 2026-10-12 |
+| V18 | Jam mulai 03:59, 04:00, 10:59, 11:00, 14:59, 15:00, 17:59, 18:00, 20:59, 21:00 (EN) | Night, Morning, Morning, Midday, Midday, Afternoon, Afternoon, Evening, Evening, Night (+ " Run") |
+| V19 | Sesi 2950 m, faktor dipakai 1.0, jarak sebenarnya 3.00 km; lalu sesi 3000 m dengan faktor dipakai 1.0169 dan jarak sebenarnya 3.00 km | Faktor baru 1.01695 (3000/2950). Kasus kedua: `rawM = 3000/1.0169 = 2950` -> faktor 1.01695 (tidak menumpuk) |
+| V20 | Pace 420, 422, 390 | ID: "7 menit pas", "7 menit 2 detik", "6 menit 30". EN: "7 minutes flat", "7 minutes 2 seconds", "6 minutes 30 seconds" |
+| V21 | Segmen waktu 360 dtk, `N=3`, ada segmen berikutnya | Pre-warning di sisa 10 dtk (350 dtk); `Countdown(3)`, `(2)`, `(1)` di 357, 358, 359 dtk; `SegmentStart` di 360 dtk |
+| V22 | Segmen jarak 400 m, `C=20` | Cue tepat sekali saat `Ds >= 380`. Sample 375 -> 405 (melewati batas): **tanpa cue**. Segmen 30 m: tanpa cue. `C=0`: tanpa cue |
+
 
 ---
 
@@ -654,6 +929,36 @@ Teks langkah demi langkah dan tombol langsung ke pengaturan baterai/aplikasi, de
 ### S15 Debug / Simulator (hanya build debug)
 Pilih workout, pilih skenario simulasi (steady, slowDown, speedUp, intervals, gpsJump, stopAndGo, tunnelGap, noisy), kecepatan putar 1x/10x/60x, tombol jalankan; menampilkan jumlah sample dibuang dan log event alert.
 
+### 8.3 Isi Info Segmen dan Istilah (D11)
+
+Cara membuka: ketuk ikon **ⓘ** di pilihan tipe segmen (D01), di tiap baris segmen (S03), di preset (D02), dan di label istilah. Sheet menampilkan satu topik dengan bagian: **Kegunaan**, **Kapan dipakai**, **Contoh pengaturan**, **Perilaku di aplikasi**, **Tips**. Teks statis, ID dan EN, di `strings.xml`, tanpa internet. Teks di bawah adalah isi acuan (versi ID); terjemahan EN mengikuti makna yang sama.
+
+> Catatan penting untuk semua tipe: **tipe segmen hanya memengaruhi nama, ikon, dan kata yang diucapkan voice**. Perilaku (alert, lulus/gagal) ditentukan oleh **batas** dan **target pace**. Interval dan tempo bukan tipe tersendiri: keduanya adalah segmen Lari dengan target berbeda.
+
+#### Tipe segmen
+
+| Topik | Kegunaan | Kapan dipakai | Contoh pengaturan | Perilaku di aplikasi | Tips |
+|---|---|---|---|---|---|
+| **Pemanasan** | Menyiapkan otot dan napas supaya bagian utama tidak terasa kaget dan mengurangi risiko cedera | Awal hampir semua workout, terutama interval dan tempo | 1,5 km, target <= 8:00; atau 10 menit tanpa target | Target (jika ada) adalah batas paling lambat. Terlalu cepat 20 detik atau lebih dari target diperingatkan. Dinilai lulus/gagal seperti segmen lain | Pasang target lebih lambat daripada pace bagian utama |
+| **Lari** | Bagian inti latihan: stable run, interval cepat, atau tempo | Setiap bagian yang ingin diukur dengan target | Stable: 5 km, <= 7:00. Interval: 400 m, <= 6:00 diulang 3x. Tempo progresif: 1 km <= 7:30, lalu 7:10, lalu 6:50 | Rata-rata segmen harus <= target agar lulus; untuk segmen >= 1 km tiap km penuh juga dicek. Alert terlalu lambat/cepat aktif, kecuali segmen pendek (< 400 m atau < 60 detik) yang hanya mendapat cue awal dan hasil | Segmen 200 m bisa BORDERLINE karena GPS punya error beberapa meter |
+| **Jalan** | Jeda jalan di antara lari, terutama pola run/walk untuk membangun daya tahan | Workout run/walk atau saat perlu mengatur napas | Jalan 2 menit setelah lari 6 menit, diulang sampai total 5 km | Biasanya tanpa target (bebas); boleh diberi target. Voice mengumumkan "jalan" dan "lari" saat ganti | Pakai batas durasi supaya ritmenya konsisten |
+| **Pemulihan** | Istirahat aktif setelah bagian berat supaya napas turun sebelum ulangan berikutnya | Di antara interval cepat | Jogging 200 m, target <= 9:00 | Perilaku sama dengan Jalan; bedanya nama dan kata di voice | Jangan memasang target terlalu ketat; tujuannya memulihkan diri |
+| **Pendinginan** | Menurunkan intensitas bertahap di akhir supaya tubuh pulih lebih nyaman | Setelah bagian utama selesai | 1 km, target <= 8:00; atau 5 menit jalan | Sama seperti Pemanasan. Setelah rencana habis, aplikasi **tidak berhenti sendiri**; kamu menekan Stop | Jangan langsung Stop; beberapa menit pendinginan terasa bedanya keesokan hari |
+| **Lari Bebas (tanpa batas)** | Merekam pace, jarak, dan waktu tanpa rencana; juga dipakai otomatis setelah rencana selesai | Lari santai tanpa target, atau lanjut setelah rencana | Template bawaan "Lari Bebas" | Hanya boleh jadi segmen terakhir dan tidak berakhir sampai Stop. Tanpa target, hasilnya "Tanpa target"; data dan split km tetap tercatat | Cocok untuk sekadar mengukur pace dan jarak |
+
+#### Istilah di editor
+
+| Topik | Penjelasan | Contoh dan tips |
+|---|---|---|
+| **Batas** | Menentukan kapan segmen selesai: **Jarak** (selesai tepat saat jarak tercapai), **Durasi** (selesai saat waktu habis), atau **Tanpa batas** (hanya segmen terakhir, berakhir saat Stop) | Segmen sangat pendek lebih tahan error GPS bila memakai durasi; batas jarak lebih intuitif tetapi bisa meleset beberapa meter |
+| **Target pace** | **Batas paling lambat** dalam menit per km. Lebih cepat boleh; lebih lambat dari target = tidak lulus. Kosong = bebas (tanpa alert pace dan tanpa lulus/gagal) | Target 7:00: rata-rata harus <= 7:00 |
+| **Margin "terlalu cepat"** | Jika pace live lebih cepat dari target sebesar margin ini, voice bilang "terlalu cepat". Default 20 detik; bisa dimatikan untuk segmen yang boleh ngebut | Target 7:00 dan margin 20: alert bila pace live lebih cepat dari 6:40. Tidak aktif di segmen pendek (tanpa alert koreksi) |
+| **Per-km check** | Untuk segmen >= 1 km bertarget: **setiap km penuh** di dalam segmen juga harus <= target, selain rata-rata segmen | Segmen 5 km, 7:00: gagal jika satu km 7:05 walau rata-rata 6:58. Matikan bila hanya rata-rata yang penting |
+| **Repeat** | Mengulang sekelompok segmen: **jumlah ulangan** (mis. 3x) atau **sampai total jarak** (mis. 5 km) | Interval: Repeat 3x [200 m cepat, 400 m cepat]. "Sampai total jarak": setelah jarak tercapai, segmen yang berjalan diselesaikan dulu, lalu repeat berakhir; aplikasi tidak berhenti sendiri |
+| **Cue sebelum ganti segmen** | Segmen berbasis waktu: hitung mundur 3-2-1 sebelum ganti. Segmen berbasis jarak: satu cue "siap-siap" saat sisa jarak tinggal beberapa meter (default 20 m) | Bisa diubah atau dimatikan di Pengaturan (waktu: mati/3/5 detik; jarak: mati/10/20/30/50 m) |
+
+Acceptance: setiap topik di atas membuka D11 dengan kelima bagian yang relevan (istilah memakai Penjelasan + Contoh/tips), tersedia ID dan EN, dan tidak ada teks hardcode.
+
 ---
 
 ## 9. Rencana Task (urut dari prioritas tertinggi)
@@ -662,6 +967,8 @@ Legenda: **AC** = Acceptance Criteria. Semua task engine wajib unit test.
 
 ### FASE P0: Fondasi dan Engine (PRIORITAS TERTINGGI)
 Tujuan: engine benar dan terbukti lewat simulasi sebelum ada UI.
+
+**Status per 2026-10-10 (dari catatan agent):** P0.1, P0.2, P0.3, P0.4, P0.10 sudah selesai dan ter-commit (56 test hijau). Bagian 6.14 dan 8.3 kini tersedia, jadi semua yang sebelumnya terblokir (Q-001, Q-005) terbuka. **Urutan yang disarankan sekarang: P0.4b -> P0.5 -> P0.6 -> P0.8 -> P0.7 -> P0.9 -> P0.11.** P0.10 yang lebih dulu dikerjakan (D-009) diterima.
 
 **P0.1 Setup proyek**
 - Project Android multi-modul: `:app` dan `:engine` (Kotlin JVM). Version catalog, Compose, Material 3, Navigation Compose.
@@ -678,6 +985,13 @@ Tujuan: engine benar dan terbukti lewat simulasi sebelum ada UI.
 **P0.4 DistanceTracker dan interpolasi batas**
 - Haversine, akumulasi jarak, lintasan batas dengan interpolasi, multi-batas dalam satu sample, pelimpahan sisa jarak, gap GPS.
 - AC: jalur lurus 1000 m kecepatan konstan: waktu di 200/400/1000 m error < 0,2 detik; satu sample 30 m melewati dua batas 10 m menghasilkan dua event benar; test terowongan.
+
+**P0.4b Retrofit kode yang sudah ada ke 6.14 (F3, F4, F6)**
+- `SampleFilter`: aturan jitter diam (F3.4), referensi pertama/setelah resume (F3.6), reset referensi setelah 3 penolakan kecepatan berturut-turut (F3.7), gap > 10 dtk tetap dihitung garis lurus (F3.8). Keputusan filter harus membedakan tiga hasil: diterima dan bergerak, diterima tetapi diam (tidak menambah jarak, referensi tidak bergeser), ditolak. Bentuk kode bebas, tetapi D-007 (filter dan tracker terpisah) tetap boleh dipertahankan.
+- `DistanceTracker`: parameter `calibrationFactor` (F4); sumbu waktu dipasok pemanggil, yaitu moving clock `mt` dari runner (F5, F6), jadi tracker tidak perlu tahu soal pause; sisa jarak setelah batas segmen = `D1 - B` (F6).
+- `haversineM` memakai `R = 6371008.8` (F2).
+- `EngineConfig` disesuaikan dengan Lampiran C.2.
+- AC: V2, V3, V4 hijau; test baru untuk jitter diam, reset referensi, dan gap; test lama tetap hijau atau diperbarui dengan catatan di `docs/DECISIONS.md`. Dikerjakan sebagai commit baru (P0.3/P0.4 sudah ter-commit).
 
 **P0.5 PaceCalculator**
 - Live pace (Doppler + fallback), avg segmen, avg workout, projected, required, penanganan "berhenti" dan "tidak realistis".
@@ -705,8 +1019,8 @@ Tujuan: engine benar dan terbukti lewat simulasi sebelum ada UI.
 - AC: pada track sintetis 10 km dengan segmen tercepat yang diketahui (disisipkan di tengah), best effort 1 km dan 5 km ditemukan dengan error < 1 detik dan `startOffsetM` benar; sesi 4,9 km tidak menghasilkan K5; waktu pause tidak ikut dihitung; pace < 2:30/km dibuang.
 
 **P0.11 Vektor uji rumus (6.14.2)**
-- Ubah setiap vektor uji V1-V20 di 6.14.2 menjadi unit test dengan nilai persis (toleransi hanya yang tertulis).
-- AC: seluruh V1-V20 hijau; satu file test `FormulaVectorsTest.kt`; tiap test menyebut ID vektornya.
+- Ubah setiap vektor uji V1-V22 di 6.14.2 menjadi unit test dengan nilai persis (toleransi hanya yang tertulis).
+- AC: seluruh V1-V22 hijau; tiap test menyebut ID vektornya di nama fungsi (mis. `v07_requiredPace`); ada satu test audit yang gagal bila ada ID V1-V22 yang belum punya test. Vektor boleh ditulis bersamaan dengan task terkait; P0.11 adalah audit akhir.
 
 > **Gerbang P0**: jangan lanjut ke P1 sebelum semua AC P0 hijau dan `PROGRESS.md` diperbarui.
 
@@ -842,7 +1156,7 @@ Tujuan: engine benar dan terbukti lewat simulasi sebelum ada UI.
 
 **P4.2 Kontrol layar kunci / media session** — Opsional: `MediaSession` agar tombol headset bisa pause/resume. AC: tombol headset berfungsi; tidak mengganggu pemutar musik.
 
-**P4.3 Polesan** — Ikon app, splash sederhana, haptic tuning, ukuran font besar. AC: tidak ada layar terpotong pada font scale 1,3x.
+**P4.3 Polesan** — Ikon app, splash sederhana, haptic tuning, ukuran font besar. AC: tidak ada layar terpotong pada font scale 1,3x. Hapus ketergantungan appcompat/Material Components (Views) bila sudah tidak dipakai (D-004).
 
 ---
 
@@ -916,12 +1230,6 @@ Tujuan: engine benar dan terbukti lewat simulasi sebelum ada UI.
 13. "Lari Bebas" (segmen tanpa batas dan tanpa target) ditambahkan sebagai template bawaan untuk sekadar mengukur pace/jarak/waktu.
 14. Kalibrasi jarak (P3.7) dan pengingat cadangan (P3.8) adalah prioritas rendah dan boleh dihapus dari plan bila tidak diinginkan.
 15. Pace rata-rata workout ditampilkan kecil di layar lari (baris Total), karena itu bagian dari kebutuhan awal.
-
----
-
-## Lampiran: Ringkasan Perubahan dari Versi 1
-- Ditambah: countdown awal dan antar segmen (6.6, S05, P0.6, P0.7, P1.4, P1.8); `Limit.Open` dan template Lari Bebas; rekor pribadi (6.10, S10, S11, P0.10, P2.9); statistik mingguan dengan grafik (6.11, S09, P2.10); nama default sesi dan form catatan (6.12, S06, P2.5); edit nama/catatan di riwayat (D03, P2.6); komponen chart (P2.7); kalibrasi jarak dan pengingat cadangan (P3.7, P3.8).
-- Diubah: skema data menjadi gaya log tanpa foreign key (bagian 7); spesifikasi lengkap semua halaman dan data per halaman (bagian 8); urutan task P2 disusun ulang sesuai halaman.
 16. Pass/fail dan status segmen memakai pace yang **dibulatkan ke detik terdekat (half-up)**, sama dengan yang tampil, supaya layar tidak menampilkan "7:00" tetapi berstatus GAGAL.
 17. Auto-pause **tidak retroaktif**: waktu diam sebelum terdeteksi (3 detik) ikut terhitung. Kompromi demi kesederhanaan dan keakuratan transisi segmen waktu.
 18. `Repeat` berbasis `untilTotalDistanceM`: setelah jarak tercapai, segmen yang sedang berjalan diselesaikan dulu, lalu repeat berakhir dan app masuk segmen bebas. Tidak berhenti otomatis.
@@ -930,6 +1238,45 @@ Tujuan: engine benar dan terbukti lewat simulasi sebelum ada UI.
 
 ---
 
+## Lampiran: Ringkasan Perubahan dari Versi 1
+- Ditambah: countdown awal dan antar segmen (6.6, S05, P0.6, P0.7, P1.4, P1.8); `Limit.Open` dan template Lari Bebas; rekor pribadi (6.10, S10, S11, P0.10, P2.9); statistik mingguan dengan grafik (6.11, S09, P2.10); nama default sesi dan form catatan (6.12, S06, P2.5); edit nama/catatan di riwayat (D03, P2.6); komponen chart (P2.7); kalibrasi jarak dan pengingat cadangan (P3.7, P3.8).
+- Diubah: skema data menjadi gaya log tanpa foreign key (bagian 7); spesifikasi lengkap semua halaman dan data per halaman (bagian 8); urutan task P2 disusun ulang sesuai halaman.
+
+---
+
 ## Lampiran B: Perubahan Versi 2.1
 - Ditambah: **6.14 Katalog Rumus** (semua perhitungan, pembulatan, kasus tepi, dan 20 vektor uji), **8.3 isi Info Segmen (D11)**, task P0.11 (vektor uji), aturan anti-slop no. 16.
 - Diubah: segmen berbasis jarak memakai satu cue "siap-siap" pada jarak yang bisa dikonfigurasi (default 20 m), bukan hitung mundur dan bukan peringatan 100 m; auto-pause hold 3 detik; D11 menambah jumlah sheet menjadi 11.
+
+---
+
+## Lampiran C: Sinkronisasi dengan Catatan Agent (2026-10-10)
+
+Sumber: `DECISIONS.md` (D-001 sampai D-009), `OPEN_QUESTIONS.md` (Q-001 sampai Q-007), `PROGRESS.md`. **Instruksi untuk agent:** baca ulang 6.14, 8.3, dan lampiran ini; perbarui `OPEN_QUESTIONS.md` (pindahkan Q-001, Q-002, Q-003, Q-005, Q-006 ke "Selesai"; Q-007 tetap Open karena keputusan pemilik proyek) dan `PROGRESS.md`.
+
+### C.1 Jawaban untuk tiap item
+
+| Item | Status | Tanggapan |
+|---|---|---|
+| Q-001 (6.14 belum ada) | **Ditutup** | 6.14 sekarang ada. Catatan: jumlah vektor uji adalah **V1-V22** (bukan V1-V20). Semua kode F yang agent sebutkan (F3, F8, F13, F15, F17, F20, F24, F26) sudah terdefinisi. |
+| Q-002 (8.3 belum ada) | **Ditutup** | 8.3 ada. Hanya relevan untuk P2.2. |
+| Q-003 (apakah 6.14 mengubah 6.1) | **Dijawab: ya, ada perubahan** | Lihat C.2. Nilai yang sudah dipakai kode (akurasi 20 m, kecepatan maksimum 9.0 m/s, pace rekor minimum 150, jarak rekor) **tidak berubah**. |
+| Q-005 (tunggu 6.14 atau lanjut) | **Ditutup** | Tidak perlu menunggu lagi. Lanjutkan sesuai urutan di awal FASE P0. P0.6 dan P0.8 dibangun mengikuti 6.14, bukan asumsi. |
+| Q-006 (CRLF) | **Ditutup (rekomendasi)** | Ya, tambahkan `.gitattributes` berisi `* text=auto eol=lf`, di commit terpisah. |
+| Q-007 (remote Git) | **Tetap Open** | Keputusan pemilik proyek. Rekomendasi: repo privat gratis sebagai cadangan. Jangan pernah commit `local.properties`, keystore, atau rahasia lain. Plan tidak mewajibkan remote. |
+| D-001, D-003, D-006, D-009 | Diterima | D-006 (`EngineConfig` sebagai data class) sejalan dengan aturan anti-slop no. 5. D-009 (P0.10 lebih dulu) diterima. |
+| D-002, D-005 (toolchain AGP/JDK) | Diterima dengan syarat | Pakai versi **stabil** (tech stack diperbarui). Jika versi alpha benar-benar diperlukan, alasannya tetap tercatat di DECISIONS dan build harus reproducible lewat version catalog. |
+| D-004 (Views/Material Components masih ada) | Diterima | Pembersihan dijadwalkan di P4.3. |
+| D-007 (filter dan tracker dipisah) | Diterima dengan syarat | Pemisahan boleh dipertahankan, tetapi aturan F3 (jitter diam, reset referensi, gap) wajib ada. Dikerjakan di **P0.4b**. |
+| D-008 (anomali dibuang per-window) | **Diadopsi** | F19 dan vektor V15 diperbarui mengikuti D-008. Sebelumnya plan menulis "hasil untuk D itu dibuang" yang bertentangan; yang berlaku sekarang per-window. |
+
+### C.2 Perubahan tabel 6.1 (`EngineConfig`) dibanding versi 2
+- **Dihapus:** `PRE_SEGMENT_WARNING_M` (peringatan "100 m lagi" dihapus), `COUNTDOWN_ETA_ABORT_SEC` (tidak ada lagi prediksi ETA untuk countdown).
+- **Diubah:** `AUTO_PAUSE_HOLD_SEC` 5 menjadi **3**. `PRE_SEGMENT_WARNING_SEC` kini hanya untuk segmen berbasis waktu dengan durasi >= 30 dtk. `MIN_SEGMENT_SEC_FOR_COUNTDOWN` kini hanya untuk segmen berbasis waktu.
+- **Ditambah:** `CUE_DISTANCE_M` (20; pilihan 0/10/20/30/50), `EARTH_RADIUS_M` (6371008.8), `STATIONARY_SPEED_MPS` (0.3), `STATIONARY_MAX_DISP_M` (5), `SPEED_REJECT_RESET_COUNT` (3), `LIVE_MIN_SAMPLES` (5), `LIVE_FALLBACK_MIN_SEC` (8), `MIN_PACE_DISTANCE_M` (50), `MAX_PACE_DISPLAY_SEC` (1800), `HYSTERESIS_SEC_PER_KM` (3), `NO_CORRECTION_BELOW_SEGMENT_SEC` (60), `PACE_MARGIN_CAP_SEC` (15), `CALIBRATION_MIN`/`CALIBRATION_MAX` (0.95/1.05), `MIN_STATS_SESSION_M` (100), `DISCARD_OFFER_SESSION_M` (10).
+
+### C.3 Catatan implementasi untuk kode yang sudah ada
+- Rumus Haversine di `haversineM` harus memakai `R = 6371008.8` agar V2 lulus (11.12 m, toleransi 0.01).
+- Interpolasi di `DistanceTracker` boleh tetap generik terhadap sumbu waktu. Runner yang akan memasok **moving clock** (`mt`, F5), supaya pause tidak memengaruhi interpolasi batas.
+- Sisa jarak setelah batas segmen: tracker mempertahankan `totalDistanceM`; runner menurunkan `Ds = D1 - B` saat pindah segmen (F6).
+- Aturan bahwa pass/fail memakai pace yang dibulatkan ke detik (6.14.0) berlaku untuk P0.8; jangan membandingkan pace mentah.
