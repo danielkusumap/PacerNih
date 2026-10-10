@@ -10,13 +10,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,7 +38,9 @@ import com.daniel.runcoach.data.KmSplitEntity
 import com.daniel.runcoach.data.SegmentResultEntity
 import com.daniel.runcoach.data.SessionEntity
 import com.daniel.runcoach.data.SessionRepository
+import com.daniel.runcoach.data.SettingsRepository
 import com.daniel.runcoach.data.TrackPointEntity
+import com.daniel.runcoach.engine.gps.CalibrationCalculator
 import com.daniel.runcoach.engine.gps.haversineM
 import com.daniel.runcoach.export.GpxExporter
 import com.daniel.runcoach.ui.Formatters
@@ -56,12 +61,14 @@ import kotlinx.coroutines.launch
 fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
     val context = LocalContext.current
     val repository = remember { SessionRepository(context) }
+    val settingsRepository = remember { SettingsRepository(context) }
     val scope = rememberCoroutineScope()
     var session by remember { mutableStateOf<SessionEntity?>(null) }
     var segments by remember { mutableStateOf<List<SegmentResultEntity>>(emptyList()) }
     var splits by remember { mutableStateOf<List<KmSplitEntity>>(emptyList()) }
     var trackPoints by remember { mutableStateOf<List<TrackPointEntity>>(emptyList()) }
     var tab by remember { mutableIntStateOf(0) }
+    var showCalibrate by remember { mutableStateOf(false) }
 
     LaunchedEffect(sessionId) {
         var loaded = repository.get(sessionId)
@@ -142,9 +149,61 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
                 ) { Text(stringResource(R.string.s08_export_gpx)) }
             }
 
+            OutlinedButton(onClick = { showCalibrate = true }, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.s08_calibrate))
+            }
+
             OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_back)) }
         }
     }
+
+    if (showCalibrate) {
+        session?.let { current ->
+            CalibrateDialog(
+                session = current,
+                onDismiss = { showCalibrate = false },
+                onApply = { factor ->
+                    scope.launch { settingsRepository.setCalibrationFactor(factor) }
+                    showCalibrate = false
+                },
+            )
+        }
+    }
+}
+
+/** D08: works out the correction factor for the next session from the real distance (F25). */
+@Composable
+private fun CalibrateDialog(session: SessionEntity, onDismiss: () -> Unit, onApply: (Double) -> Unit) {
+    var text by remember { mutableStateOf("") }
+    val actualKm = text.trim().replace(',', '.').toDoubleOrNull()
+    val factor = actualKm?.let {
+        CalibrationCalculator.factorFor(it * 1000.0, session.totalDistanceM, session.distanceCalibrationFactorUsed)
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.s08_calibrate)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.s08_calibrate_measured, Formatters.distanceKm(session.totalDistanceM)))
+                Text(stringResource(R.string.s08_calibrate_factor_used, "%.4f".format(session.distanceCalibrationFactorUsed)))
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    label = { Text(stringResource(R.string.s08_calibrate_actual)) },
+                )
+                when {
+                    factor != null -> Text(stringResource(R.string.s08_calibrate_new, "%.4f".format(factor)))
+                    text.isNotBlank() -> Text(stringResource(R.string.s08_calibrate_invalid), color = MaterialTheme.colorScheme.error)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = factor != null, onClick = { factor?.let(onApply) }) {
+                Text(stringResource(R.string.s08_calibrate_apply))
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.editor_discard_keep)) } },
+    )
 }
 
 @Composable

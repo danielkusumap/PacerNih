@@ -159,6 +159,8 @@
     <string name="s12_version">App version: %1$s</string>
     <string name="s12_dev">Developer</string>
     <string name="s12_off">Off</string>
+    <string name="s12_calibration_value">Distance calibration (factor): %1$s</string>
+    <string name="s12_calibration_reset">Reset to 1.0</string>
 
     <!-- S13 Backup & data -->
     <string name="s13_title">Backup &amp; data</string>
@@ -203,6 +205,13 @@
     <string name="s08_tab_charts">Charts</string>
     <string name="s08_tab_map">Map</string>
     <string name="s08_export_gpx">Export GPX</string>
+    <string name="s08_calibrate">Calibrate distance</string>
+    <string name="s08_calibrate_measured">Measured distance: %1$s</string>
+    <string name="s08_calibrate_factor_used">Factor used: %1$s</string>
+    <string name="s08_calibrate_actual">Actual distance (km)</string>
+    <string name="s08_calibrate_new">New factor: %1$s</string>
+    <string name="s08_calibrate_apply">Apply to the next session</string>
+    <string name="s08_calibrate_invalid">Enter a valid distance</string>
     <string name="s08_plan_done">Plan complete</string>
     <string name="s08_plan_stopped">Stopped before completion</string>
     <string name="s08_note_title">Note</string>

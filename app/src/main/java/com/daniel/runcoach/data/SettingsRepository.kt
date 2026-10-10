@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -37,6 +38,7 @@ data class AppSettings(
     val paceAlerts: Boolean = true,
     val liveMap: Boolean = false,
     val lastBackupEpochMs: Long? = null,
+    val calibrationFactor: Double = 1.0,
 )
 
 private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -62,6 +64,7 @@ class SettingsRepository(context: Context) {
             paceAlerts = prefs[KEY_PACE_ALERTS] ?: true,
             liveMap = prefs[KEY_LIVE_MAP] ?: false,
             lastBackupEpochMs = prefs[KEY_LAST_BACKUP],
+            calibrationFactor = prefs[KEY_CALIBRATION] ?: 1.0,
         )
     }
 
@@ -84,6 +87,8 @@ class SettingsRepository(context: Context) {
 
     suspend fun setLastBackup(epochMs: Long) = dataStore.edit { it[KEY_LAST_BACKUP] = epochMs }
 
+    suspend fun setCalibrationFactor(factor: Double) = dataStore.edit { it[KEY_CALIBRATION] = factor }
+
     /** Writes every field at once (used by restore). */
     suspend fun setAll(s: AppSettings) = dataStore.edit { prefs ->
         prefs[KEY_THEME] = s.theme.name
@@ -99,6 +104,7 @@ class SettingsRepository(context: Context) {
         prefs[KEY_KM_MARKER] = s.kmMarker
         prefs[KEY_PACE_ALERTS] = s.paceAlerts
         prefs[KEY_LIVE_MAP] = s.liveMap
+        prefs[KEY_CALIBRATION] = s.calibrationFactor
         s.lastBackupEpochMs?.let { prefs[KEY_LAST_BACKUP] = it }
     }
 
@@ -117,5 +123,6 @@ class SettingsRepository(context: Context) {
         val KEY_PACE_ALERTS = booleanPreferencesKey("pace_alerts")
         val KEY_LIVE_MAP = booleanPreferencesKey("live_map")
         val KEY_LAST_BACKUP = longPreferencesKey("last_backup")
+        val KEY_CALIBRATION = doublePreferencesKey("calibration_factor")
     }
 }

@@ -174,7 +174,7 @@ class RunForegroundService : Service() {
             autoPauseEnabled = appSettings.autoPause,
             cueDistanceM = appSettings.cueDistanceM,
         )
-        launchRun(WorkoutRunner(workout, config), freshStart = true)
+        launchRun(WorkoutRunner(workout, config, calibrationFactor = appSettings.calibrationFactor), freshStart = true)
     }
 
     private fun resumeRun(targetSessionId: String) {
@@ -194,7 +194,7 @@ class RunForegroundService : Service() {
             this@RunForegroundService.workout = workout
             startedAtElapsedMs = snapshot.startedAtElapsedMs
             startedAtEpochMs = snapshot.startedAtEpochMs
-            val replayed = WorkoutRunner(workout)
+            val replayed = WorkoutRunner(workout, calibrationFactor = appSettings.calibrationFactor)
             replayed.onStart(snapshot.startedAtElapsedMs)
             points.forEach { point ->
                 replayed.onTick(point.timeMs)
@@ -425,7 +425,7 @@ class RunForegroundService : Service() {
             segNoTarget = results.segments.count { it.status == "NO_TARGET" },
             planCompleted = state?.planCompleted ?: false,
             goalReached = state?.goalReached ?: false,
-            distanceCalibrationFactorUsed = 1.0,
+            distanceCalibrationFactorUsed = appSettings.calibrationFactor,
             droppedSampleCount = state?.droppedSampleCount ?: 0,
             updatedAt = now,
         )

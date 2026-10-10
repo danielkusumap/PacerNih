@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P3 step by step — P3.1–P3.6 selesai; selanjutnya P3.7 (Kalibrasi jarak).
+- **Berikutnya:** FASE P3 step by step — P3.1–P3.7 selesai; selanjutnya P3.8 (Pengingat cadangan).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -438,6 +438,15 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
 - `RunnerState.droppedSampleCount` (dari `SampleFilter.droppedCount`) → disimpan ke `SessionEntity.droppedSampleCount`.
 - Suara "Sinyal GPS hilang"/"pulih" (`PhraseBuilder.gpsLost/gpsRecovered`) + diumumkan `RunAnnouncer`.
 - Banner "Sinyal GPS hilang" sudah tampil di S05. Engine **188**, **instrumented 24/24 hijau**.
+
+## P3.7 Kalibrasi jarak (D08) — selesai (2026-10-11)
+- Engine `CalibrationCalculator.factorFor` (F25): `rawM = total / factorUsed`, `factorNew = clamp(actual / rawM, 0,95–1,05)`;
+  tidak menumpuk. `DistanceTracker`/`WorkoutRunner` sudah menerima `calibrationFactor`.
+- DataStore `calibrationFactor` (default 1,0) diterapkan ke sesi **berikutnya**; nilai yang dipakai disimpan di
+  `SessionEntity.distanceCalibrationFactorUsed`. S12 Tracking: tampil faktor + tombol **Reset ke 1,0**.
+- D08 di S08: dialog input jarak sebenarnya (km) → tampil faktor baru → **Terapkan untuk sesi berikutnya**.
+- Test: engine `CalibrationCalculatorTest` (V19 + clamp + degenerate); device `calibrationDoesNotChangeOldSessions`
+  + `calibrationFactorPersistsAndResetReturnsOne`. Engine **191**, **instrumented 26/26 hijau**.
 
 
 

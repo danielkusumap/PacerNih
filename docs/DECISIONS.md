@@ -281,3 +281,9 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - Deteksi hilang/pulih sudah ada di runner (berbasis `GPS_LOST_TIMEOUT_SEC`); P3.6 menambah test eksplisit, bukan logika baru.
 - `droppedSampleCount` diekspos lewat `RunnerState` (dari `SampleFilter`) lalu disimpan per sesi; tidak dihitung ulang saat replay.
 - Suara GPS memakai `PhraseBuilder` (ID/EN) dan diumumkan seperti alert lain (queue, bukan flush).
+
+## D-042 P3.7: kalibrasi jarak
+- Rumus F25 di engine (`CalibrationCalculator`) supaya mudah diuji dengan vektor V19; app hanya membaca/menulis DataStore.
+- Faktor tidak menumpuk: jarak mentah dipulihkan dengan membagi faktor lama sebelum menghitung faktor baru.
+- Nilai faktor yang dipakai saat lari disalin ke sesi (`distanceCalibrationFactorUsed`), jadi sesi lama tidak berubah.
+- Reset lewat `setCalibrationFactor(1.0)` (S12) dan `reset()` menghapus semua setelan → faktor kembali 1,0.

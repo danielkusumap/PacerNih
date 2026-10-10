@@ -37,4 +37,17 @@ class SettingsRepositoryTest {
             repository.setStartCountdown(5)
         }
     }
+
+    /** P3.7 AC: the calibration factor persists and reset brings it back to 1.0. */
+    @Test
+    fun calibrationFactorPersistsAndResetReturnsOne() {
+        runBlocking {
+            val repository = SettingsRepository(InstrumentationRegistry.getInstrumentation().targetContext)
+            repository.setCalibrationFactor(1.03)
+            assertEquals(1.03, repository.settings.first().calibrationFactor, 1e-9)
+
+            repository.reset()
+            assertEquals(1.0, repository.settings.first().calibrationFactor, 1e-9)
+        }
+    }
 }

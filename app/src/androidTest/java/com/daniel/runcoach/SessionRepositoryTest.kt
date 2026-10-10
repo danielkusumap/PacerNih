@@ -4,6 +4,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.daniel.runcoach.data.SessionEntity
 import com.daniel.runcoach.data.SessionRepository
+import com.daniel.runcoach.data.SettingsRepository
+import com.daniel.runcoach.engine.gps.CalibrationCalculator
 import com.daniel.runcoach.engine.result.BestEffort
 import com.daniel.runcoach.engine.result.BestEffortKey
 import com.daniel.runcoach.engine.result.KmSplit
@@ -11,6 +13,7 @@ import com.daniel.runcoach.engine.result.SegmentResultData
 import com.daniel.runcoach.engine.result.SegmentStatus
 import com.daniel.runcoach.engine.result.SessionResultsData
 import com.daniel.runcoach.engine.voice.VoiceLanguage
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -93,5 +96,24 @@ class SessionRepositoryTest {
     fun noteLimitIsFiveHundred() {
         assertTrue(SessionRepository.noteWithinLimit("a".repeat(500)))
         assertFalse(SessionRepository.noteWithinLimit("a".repeat(501)))
+    }
+
+    /** P3.7 AC: the new factor applies to the next session only; a saved session keeps the factor it used. */
+    @Test
+    fun calibrationDoesNotChangeOldSessions() {
+        runBlocking {
+            val settings = SettingsRepository(context)
+            val id = "cal-${System.nanoTime()}"
+            repository.saveSession(sampleSession(id).copy(distanceCalibrationFactorUsed = 1.02), sampleResults())
+
+            val factor = CalibrationCalculator.factorFor(5100.0, 5000.0, 1.02)
+            settings.setCalibrationFactor(factor)
+            assertEquals(factor, settings.settings.first().calibrationFactor, 1e-9)
+
+            assertEquals(1.02, repository.get(id)!!.distanceCalibrationFactorUsed, 1e-9)
+
+            settings.setCalibrationFactor(1.0)
+            repository.delete(id)
+        }
     }
 }

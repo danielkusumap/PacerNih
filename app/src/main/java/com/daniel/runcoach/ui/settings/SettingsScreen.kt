@@ -117,6 +117,10 @@ fun SettingsScreen(
                 // Tracking
                 Section(stringResource(R.string.s12_tracking)) {
                     ToggleRow(stringResource(R.string.s12_auto_pause), settings.autoPause) { scope.launch { repository.setAutoPause(it) } }
+                    Text(stringResource(R.string.s12_calibration_value, "%.4f".format(settings.calibrationFactor)))
+                    TextButton(onClick = { scope.launch { repository.setCalibrationFactor(1.0) } }) {
+                        Text(stringResource(R.string.s12_calibration_reset))
+                    }
                 }
 
                 // Data & help
