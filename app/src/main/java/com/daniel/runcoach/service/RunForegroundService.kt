@@ -18,8 +18,11 @@ import androidx.core.content.ContextCompat
 import com.daniel.runcoach.R
 import com.daniel.runcoach.data.RunPersistence
 import com.daniel.runcoach.data.RunSnapshot
+import com.daniel.runcoach.data.AppSettings
+import com.daniel.runcoach.data.CountdownStyleSetting
 import com.daniel.runcoach.data.SessionEntity
 import com.daniel.runcoach.data.SessionRepository
+import com.daniel.runcoach.data.SettingsRepository
 import com.daniel.runcoach.engine.alert.AlertEngine
 import com.daniel.runcoach.engine.alert.CorrectionInput
 import com.daniel.runcoach.engine.alert.CorrectionState
@@ -46,6 +49,7 @@ import com.daniel.runcoach.engine.runner.WorkoutRunner
 import com.daniel.runcoach.service.location.LocationSource
 import com.daniel.runcoach.service.location.LocationSourceFactory
 import com.daniel.runcoach.service.voice.RunAnnouncer
+import com.daniel.runcoach.service.voice.CountdownStyle
 import com.daniel.runcoach.ui.Formatters
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -89,6 +93,7 @@ class RunForegroundService : Service() {
     private var startCountdownSec: Int? = null
     private var voiceLanguage: VoiceLanguage = VoiceLanguage.ID
     private var expandedSteps: List<Segment> = emptyList()
+    private var appSettings: AppSettings = AppSettings()
     private val liveTrack = ArrayDeque<Pair<Double, Double>>()
     private val trackBuffer = mutableListOf<com.daniel.runcoach.data.TrackPointEntity>()
 
@@ -98,6 +103,7 @@ class RunForegroundService : Service() {
         super.onCreate()
         createNotificationChannel()
         persistence = RunPersistence(this)
+        scope.launch { SettingsRepository(this@RunForegroundService).settings.collect { appSettings = it } }
         val powerManager = getSystemService(PowerManager::class.java)
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG).apply {
             setReferenceCounted(false)
@@ -163,7 +169,11 @@ class RunForegroundService : Service() {
         startedAtElapsedMs = SystemClock.elapsedRealtime()
         startedAtEpochMs = System.currentTimeMillis()
         liveTrack.clear()
-        val config = startCountdownSec?.let { EngineConfig(startCountdownSec = it) } ?: EngineConfig()
+        val config = EngineConfig(
+            startCountdownSec = startCountdownSec ?: appSettings.startCountdownSec,
+            autoPauseEnabled = appSettings.autoPause,
+            cueDistanceM = appSettings.cueDistanceM,
+        )
         launchRun(WorkoutRunner(workout, config), freshStart = true)
     }
 
@@ -205,7 +215,12 @@ class RunForegroundService : Service() {
                 .getOrElse { WorkoutExpander.lazySteps(w.items).take(80).toList() }
         } ?: emptyList()
 
-        val activeAnnouncer = RunAnnouncer(this, language = voiceLanguage).also { it.start() }
+        val activeAnnouncer = RunAnnouncer(
+            this,
+            language = voiceLanguage,
+            countdownStyle = if (appSettings.countdownStyle == CountdownStyleSetting.VOICE) CountdownStyle.VOICE else CountdownStyle.BEEP,
+            vibrateEnabled = appSettings.vibrate,
+        ).also { it.start() }
         announcer = activeAnnouncer
         scope.launch { activeRunner.events.collect { runCatching { activeAnnouncer.onEvent(it) } } }
 

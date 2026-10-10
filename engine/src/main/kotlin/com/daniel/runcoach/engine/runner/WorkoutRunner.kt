@@ -2,6 +2,7 @@ package com.daniel.runcoach.engine.runner
 
 import com.daniel.runcoach.engine.EngineConfig
 import com.daniel.runcoach.engine.gps.DistanceTracker
+import com.daniel.runcoach.engine.gps.FilteredSample
 import com.daniel.runcoach.engine.gps.GpsOutcome
 import com.daniel.runcoach.engine.gps.SampleFilter
 import com.daniel.runcoach.engine.metrics.LivePaceEstimator
@@ -74,6 +75,9 @@ class WorkoutRunner(
     private var planCompleted = false
     private var gpsLost = false
     private var lastValidSampleMs: Long? = null
+    private var lastSampleMs: Long = 0L
+    private var autoPauseSinceMs: Long? = null
+    private var autoResumeSinceMs: Long? = null
 
     // --- inputs -------------------------------------------------------------
 
@@ -110,11 +114,15 @@ class WorkoutRunner(
     }
 
     fun onSample(sample: LocationSample) {
+        val sampleMs = sample.timeNanos / 1_000_000L
+        if (phase == RunnerPhase.PAUSED_AUTO) {
+            maybeAutoResume(sample, sampleMs)
+            return
+        }
         if (phase != RunnerPhase.RUNNING) return
         val filtered = filter.accept(sample)
         if (filtered.outcome == GpsOutcome.REJECTED) return
 
-        val sampleMs = sample.timeNanos / 1_000_000L
         lastValidSampleMs = sampleMs
         if (gpsLost) {
             gpsLost = false
@@ -135,6 +143,7 @@ class WorkoutRunner(
             }
         }
         if (phase == RunnerPhase.RUNNING) maybeDistanceCue()
+        maybeAutoPause(sample, filtered, sampleMs)
         updateState(sampleMs)
     }
 
@@ -331,6 +340,42 @@ class WorkoutRunner(
         val doneM = tracker.totalDistanceM - segmentStartTotalM
         if (limitM - doneM > cue) return false to null
         return true to next.kind
+    }
+
+    private fun maybeAutoPause(sample: LocationSample, filtered: FilteredSample, sampleMs: Long) {
+        val dt = sampleMs - lastSampleMs
+        lastSampleMs = sampleMs
+        if (!config.autoPauseEnabled) return
+        val speed = sample.speedMps ?: if (dt > 0) filtered.stepM / (dt / 1000.0) else null
+        if (speed == null) return
+        if (speed < config.autoPauseSpeedMps) {
+            if (autoPauseSinceMs == null) autoPauseSinceMs = sampleMs
+            val since = autoPauseSinceMs!!
+            if (sampleMs - since >= config.autoPauseHoldSec * 1000L) {
+                autoPauseSinceMs = null
+                pauseStartedMs = sampleMs // not retroactive (Assumption 17)
+                phase = RunnerPhase.PAUSED_AUTO
+                emit(AlertEvent.AutoPaused)
+            }
+        } else {
+            autoPauseSinceMs = null
+        }
+    }
+
+    private fun maybeAutoResume(sample: LocationSample, sampleMs: Long) {
+        if (!config.autoPauseEnabled) return
+        val speed = sample.speedMps ?: return
+        if (speed >= config.autoResumeSpeedMps) {
+            if (autoResumeSinceMs == null) autoResumeSinceMs = sampleMs
+            val since = autoResumeSinceMs!!
+            if (sampleMs - since >= config.autoResumeHoldSec * 1000L) {
+                autoResumeSinceMs = null
+                onResume(sampleMs)
+                emit(AlertEvent.AutoResumed)
+            }
+        } else {
+            autoResumeSinceMs = null
+        }
     }
 
     private fun movingMsAt(nowMs: Long): Long {        val start = tStartRunningMs ?: return 0L

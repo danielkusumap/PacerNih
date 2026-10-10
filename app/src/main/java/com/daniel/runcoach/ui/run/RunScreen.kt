@@ -214,7 +214,11 @@ fun RunScreen(
                 if (state.planCompleted) Text(stringResource(R.string.run_plan_completed))
                 if (state.goalReached) Text(stringResource(R.string.run_goal_reached))
                 if (ui.phase == RunnerPhase.PAUSED_MANUAL || ui.phase == RunnerPhase.PAUSED_AUTO) {
-                    Text(stringResource(R.string.run_paused), style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        if (ui.phase == RunnerPhase.PAUSED_AUTO) stringResource(R.string.run_paused_auto)
+                        else stringResource(R.string.run_paused),
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
                 }
 
                 // H. Controls

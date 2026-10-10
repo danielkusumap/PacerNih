@@ -207,6 +207,7 @@
     <string name="run_next">Next</string>
     <string name="run_next_free">Free run (no target)</string>
     <string name="run_paused">PAUSED</string>
+    <string name="run_paused_auto">AUTO-PAUSED</string>
     <string name="run_gps_lost">GPS signal lost</string>
     <string name="run_plan_completed">Plan complete. Keep going or Stop</string>
     <string name="run_goal_reached">Distance goal reached</string>

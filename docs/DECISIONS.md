@@ -258,3 +258,9 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - Tab Peta S08 aktif bila ada track point; batas segmen dihitung dari jarak kumulatif (perkiraan terdekat).
 - Peta live S05 default mati (setelan `liveMap`); pause/render mengikuti lifecycle; display-only.
 - Gap: uji offline & dark manual; track live kosong saat resume.
+
+## D-038 P3.3: auto-pause
+- Deteksi di runner (engine, pure) memakai `speedMps` sample atau kecepatan tersirat; hold 3 dtk / resume 2 dtk; tidak retroaktif.
+- Default OFF; diaktifkan lewat S12 (`autoPause`) dan diteruskan ke `EngineConfig` saat start.
+- Announcer + label S05 (DIJEDA OTOMATIS). Voice text "Dijeda."/"Dilanjutkan." sesuai P3.3.
+- Uji device tertunda (device terputus); AC inti (waktu berjalan tanpa durasi berhenti) diuji di engine.

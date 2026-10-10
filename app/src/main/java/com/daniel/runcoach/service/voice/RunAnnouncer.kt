@@ -18,12 +18,21 @@ class RunAnnouncer(
     context: Context,
     private var language: VoiceLanguage = VoiceLanguage.ID,
     private var countdownStyle: CountdownStyle = CountdownStyle.BEEP,
+    private var vibrateEnabled: Boolean = true,
     private val config: EngineConfig = EngineConfig(),
 ) {
 
     private val tts = TtsSpeaker(context)
     private val beep = BeepPlayer()
     private val haptics = Haptics(context)
+
+    private fun vibrateCountdown() {
+        if (vibrateEnabled) haptics.countdown()
+    }
+
+    private fun vibrateSegmentChange() {
+        if (vibrateEnabled) haptics.segmentChange()
+    }
 
     fun start() {
         tts.init()
@@ -44,7 +53,7 @@ class RunAnnouncer(
     fun onEvent(event: AlertEvent) {
         when (event) {
             is AlertEvent.Countdown -> {
-                haptics.countdown()
+                vibrateCountdown()
                 if (countdownStyle == CountdownStyle.VOICE) {
                     tts.speak(PhraseBuilder.countdownWord(event.seconds, language), flush = true)
                 } else {
@@ -54,12 +63,12 @@ class RunAnnouncer(
 
             AlertEvent.WorkoutStarted -> {
                 beep.segmentEnd()
-                haptics.segmentChange()
+                vibrateSegmentChange()
                 tts.speak(PhraseBuilder.workoutStarted(language), flush = true)
             }
 
             is AlertEvent.SegmentStart -> {
-                haptics.segmentChange()
+                vibrateSegmentChange()
                 beep.tick()
                 tts.speak(
                     PhraseBuilder.segmentStart(event.index, event.total ?: event.index, event.segment, language),
@@ -75,7 +84,7 @@ class RunAnnouncer(
             }
 
             is AlertEvent.DistanceCue -> {
-                haptics.segmentChange()
+                vibrateSegmentChange()
                 beep.tick()
                 tts.speak(PhraseBuilder.distanceCue(event.nextKind, language), flush = false)
             }
@@ -86,6 +95,8 @@ class RunAnnouncer(
 
             AlertEvent.GoalDistanceReached -> tts.speak(PhraseBuilder.goalDistanceReached(language), flush = false)
             AlertEvent.WorkoutPlanCompleted -> tts.speak(PhraseBuilder.workoutPlanCompleted(language), flush = false)
+            AlertEvent.AutoPaused -> tts.speak(PhraseBuilder.autoPaused(language), flush = false)
+            AlertEvent.AutoResumed -> tts.speak(PhraseBuilder.autoResumed(language), flush = false)
             else -> Unit
         }
     }

@@ -75,4 +75,14 @@ data class EngineConfig(
     val countdownTickMaxLateMs: Int = 700,
     /** A pace slower than this is shown as `--:--` (6.13). */
     val maxPaceDisplaySec: Double = 1800.0,
+    /** Auto-pause on/off (F26). Off by default; S12 toggles it. */
+    val autoPauseEnabled: Boolean = false,
+    /** Speed below this (with a hold) triggers auto-pause (F26). */
+    val autoPauseSpeedMps: Double = 0.6,
+    /** Seconds the runner must stay slow before auto-pause (F26). */
+    val autoPauseHoldSec: Int = 3,
+    /** Speed at or above this resumes automatically (F26). */
+    val autoResumeSpeedMps: Double = 1.0,
+    /** Seconds the runner must stay moving before auto-resume (F26). */
+    val autoResumeHoldSec: Int = 2,
 )

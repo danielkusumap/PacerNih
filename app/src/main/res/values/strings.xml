@@ -207,6 +207,7 @@
     <string name="run_next">Berikutnya</string>
     <string name="run_next_free">Lari bebas (tanpa target)</string>
     <string name="run_paused">DIJEDA</string>
+    <string name="run_paused_auto">DIJEDA OTOMATIS</string>
     <string name="run_gps_lost">Sinyal GPS hilang</string>
     <string name="run_plan_completed">Rencana selesai. Lanjut atau Stop</string>
     <string name="run_goal_reached">Target jarak tercapai</string>

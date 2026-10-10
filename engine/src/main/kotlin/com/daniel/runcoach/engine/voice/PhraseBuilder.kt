@@ -99,6 +99,12 @@ object PhraseBuilder {
         if (language == VoiceLanguage.ID) "Siap-siap. Sebentar lagi ganti ke ${segmentKind(nextKind, language)}."
         else "Get ready. Switching to ${segmentKind(nextKind, language)} soon."
 
+    fun autoPaused(language: VoiceLanguage): String =
+        if (language == VoiceLanguage.ID) "Dijeda." else "Paused."
+
+    fun autoResumed(language: VoiceLanguage): String =
+        if (language == VoiceLanguage.ID) "Dilanjutkan." else "Resumed."
+
     fun countdownWord(n: Int, language: VoiceLanguage): String {
         val id = listOf("nol", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh")
         val en = listOf("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")

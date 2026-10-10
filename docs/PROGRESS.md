@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P3 step by step — P3.1–P3.2 selesai; selanjutnya P3.3 (auto-pause).
+- **Berikutnya:** FASE P3 step by step — P3.1–P3.3 selesai; selanjutnya P3.4 (Export GPX).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -405,6 +405,15 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
 - Display-only (tidak memengaruhi engine/akurasi); render berhenti saat layar mati (pause via lifecycle).
 - Test: `LiveMapTest` (render tanpa crash). **Instrumented 22/22 hijau**.
 - Gap: uji offline & mode gelap masih manual; marker batas segmen perkiraan; track live mulai kosong saat resume.
+
+## P3.3 Auto-pause — selesai (2026-10-11)
+- Engine: deteksi di `WorkoutRunner` (pakai `speedMps` sample atau kecepatan tersirat): pause bila < 0.6 m/s selama
+  3 dtk; resume bila >= 1.0 m/s selama 2 dtk; **tidak retroaktif** (Asumsi 17). Event `AutoPaused`/`AutoResumed`;
+  default **OFF** (`EngineConfig.autoPauseEnabled`).
+- Wiring service dari settings: `autoPause`, `cueDistanceM`, `startCountdown`, `countdownStyle`, `vibrate`; announcer
+  mengucap "Dijeda."/"Dilanjutkan."; label S05 **DIJEDA OTOMATIS**.
+- Engine test `AutoPauseTest`: stopAndGo → moving 21 dtk dari 30 dtk; default off. Engine **183** hijau.
+- **Uji instrumented device TIDAK dijalankan ronde ini**: device Realme terputus (hanya emulator offline). Tersisa manual.
 
 
 
