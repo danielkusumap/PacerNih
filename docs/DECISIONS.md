@@ -144,3 +144,14 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
   diblokir → izin & lokasi diselesaikan lewat UI (tap). `svc location enable` juga tidak tersedia; lokasi
   akhirnya aktif (=3) dan izin diberikan lewat dialog.
 - Device ter-charge USB selama uji; uji tanpa charge (doze penuh) belum dilakukan.
+
+## D-022 P1.4: komponen suara/getar + perubahan payload event
+- `TtsSpeaker`, `BeepPlayer`, `Haptics`, `RunAnnouncer` di `:app` (`service/voice`). Audio focus
+  `GAIN_TRANSIENT_MAY_DUCK` (ducking), queue TTS tunggal, Countdown memakai `QUEUE_FLUSH` (memotong ucapan).
+- `AlertEvent.PreSegmentWarning` kini membawa `nextKind`; `AlertEvent.KmMarker` kini membawa
+  `km, timeSec, paceSecPerKm` — agar `PhraseBuilder` (F20) bisa menyusun teks. Test terkait disesuaikan; golden
+  test tidak terpengaruh (ringkasan dihitung per `simpleName`).
+- `VIBRATE` ditambahkan ke manifest; sebelum itu getar melempar `SecurityException` dan mematikan proses saat uji
+  device. Event announcer dibungkus `runCatching` agar satu kegagalan tidak mematikan service.
+- Gaya countdown & bahasa masih default (BEEP, ID); akan disambungkan ke pengaturan S12 pada P2.11.
+  `AlertEngine` (alert koreksi) dan teks `SegmentEnd` belum di-wire ke announcer.

@@ -98,7 +98,7 @@ class WorkoutRunnerTest {
         runner.onStart(0)
 
         sim.run(356, 3.0)
-        assertTrue(runner.emittedEvents.contains(AlertEvent.PreSegmentWarning))
+        assertTrue(runner.emittedEvents.any { it is AlertEvent.PreSegmentWarning })
         assertEquals(0, runner.countOf<AlertEvent.Countdown>())
 
         sim.run(1, 3.0)

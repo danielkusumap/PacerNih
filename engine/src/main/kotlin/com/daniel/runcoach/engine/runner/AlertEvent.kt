@@ -12,9 +12,9 @@ sealed interface AlertEvent {
     data class DistanceCue(val nextKind: SegmentKind) : AlertEvent
     data object WorkoutStarted : AlertEvent
     data class SegmentStart(val index: Int, val total: Int?, val segment: Segment) : AlertEvent
-    data object PreSegmentWarning : AlertEvent
+    data class PreSegmentWarning(val nextKind: SegmentKind) : AlertEvent
     data class SegmentEnd(val index: Int, val segment: Segment) : AlertEvent
-    data class KmMarker(val km: Int) : AlertEvent
+    data class KmMarker(val km: Int, val timeSec: Double, val paceSecPerKm: Double) : AlertEvent
     data object GoalDistanceReached : AlertEvent
     data object WorkoutPlanCompleted : AlertEvent
     data object GpsLost : AlertEvent

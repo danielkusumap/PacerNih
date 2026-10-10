@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P1 — P1.4 (voice/beep/haptic); P1.1–P1.3 sudah selesai (lihat bawah).
+- **Berikutnya:** FASE P1 — P1.5 (persistensi sesi & pemulihan); P1.1–P1.4 sudah selesai (lihat bawah).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -200,4 +200,16 @@ Semua task P0 selesai dan AC hijau; boleh lanjut ke FASE P1. Sisa yang sifatnya 
   jarak 0.10 km, service tetap hidup (tidak dibunuh OEM); aksi **Stop** menghentikan service & menghapus notifikasi.
   Catatan: device ter-charge USB saat uji (uji tanpa charge lebih ketat, menyusul).
 - Detail: `DECISIONS.md` D-019.
+
+## P1.4 Voice, beep, haptic — selesai (2026-10-11)
+- `TtsSpeaker` (TTS + audio focus `GAIN_TRANSIENT_MAY_DUCK`, queue tunggal, `QUEUE_FLUSH` untuk Countdown,
+  fallback English bila voice ID tidak ada), `BeepPlayer` (`ToneGenerator`: tick & end tone),
+  `Haptics` (pola countdown / ganti segmen / terlalu cepat / lambat).
+- `RunAnnouncer`: `AlertEvent` -> teks (`PhraseBuilder`) + beep + getar; gaya countdown beep/suara; bahasa ID/EN
+  (default BEEP & ID; disambung ke S12/P2.11). Di-wire ke `RunForegroundService` (collect `runner.events`).
+- Payload event diperkaya: `PreSegmentWarning(nextKind)`, `KmMarker(km, timeSec, paceSecPerKm)` (D-022).
+- Izin `VIBRATE` ditambahkan ke manifest (tanpa itu proses crash — ketemu & diperbaiki saat uji device).
+- **Uji device (Realme/Android 11):** service foreground, notifikasi update, engine TTS ter-load, **tanpa crash**;
+  Stop menghentikan service. Audibilitas (ducking/getar) belum bisa diverifikasi via adb.
+- Belum: wiring `AlertEngine` (TooSlow/TooFast/BackToStable) ke announcer; teks `SegmentEnd` (butuh hasil evaluator).
 

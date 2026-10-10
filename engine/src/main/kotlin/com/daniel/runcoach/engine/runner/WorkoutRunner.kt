@@ -126,7 +126,7 @@ class WorkoutRunner(
         val crossings = tracker.add(movingMs, filtered)
         livePace.add(movingMs, tracker.totalDistanceM, sample.speedMps, sample.speedAccuracyMps)
 
-        emitKmMarkers()
+        emitKmMarkers(movingMs)
         checkGoal()
 
         for (crossing in crossings) {
@@ -252,7 +252,8 @@ class WorkoutRunner(
             remainingMs <= config.preSegmentWarningSec * 1000L
         ) {
             preWarningEmitted = true
-            emit(AlertEvent.PreSegmentWarning)
+            val nextKind = cursor.peek(tracker.totalDistanceM)?.kind ?: current?.kind ?: SegmentKind.RUN
+            emit(AlertEvent.PreSegmentWarning(nextKind))
         }
         val countdown = config.segmentCountdownSec
         if (countdown > 0 && limitMs >= config.minSegmentSecForCountdown * 1000L) {
@@ -292,11 +293,13 @@ class WorkoutRunner(
         }
     }
 
-    private fun emitKmMarkers() {
+    private fun emitKmMarkers(movingMs: Long) {
         val km = floor(tracker.totalDistanceM / 1000.0).toInt()
         while (kmReached < km) {
             kmReached++
-            emit(AlertEvent.KmMarker(kmReached))
+            val timeSec = movingMs / 1000.0
+            val paceSecPerKm = if (tracker.totalDistanceM > 0.0) movingMs / tracker.totalDistanceM else 0.0
+            emit(AlertEvent.KmMarker(kmReached, timeSec, paceSecPerKm))
         }
     }
 

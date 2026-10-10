@@ -26,6 +26,7 @@ import com.daniel.runcoach.engine.runner.RunnerState
 import com.daniel.runcoach.engine.runner.WorkoutRunner
 import com.daniel.runcoach.service.location.LocationSource
 import com.daniel.runcoach.service.location.LocationSourceFactory
+import com.daniel.runcoach.service.voice.RunAnnouncer
 import com.daniel.runcoach.ui.Formatters
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -49,6 +50,7 @@ class RunForegroundService : Service() {
     private lateinit var locationSource: LocationSource
     private var wakeLock: PowerManager.WakeLock? = null
     private var runJob: Job? = null
+    private var announcer: RunAnnouncer? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -79,6 +81,10 @@ class RunForegroundService : Service() {
         val activeRunner = WorkoutRunner(workout)
         runner = activeRunner
         locationSource = LocationSourceFactory.create(this)
+
+        val activeAnnouncer = RunAnnouncer(this).also { it.start() }
+        announcer = activeAnnouncer
+        scope.launch { activeRunner.events.collect { runCatching { activeAnnouncer.onEvent(it) } } }
 
         startInForeground(buildNotification(activeRunner.state.value))
         activeRunner.onStart(SystemClock.elapsedRealtime())
@@ -115,6 +121,8 @@ class RunForegroundService : Service() {
     private fun stopRun() {
         runner?.onStop(SystemClock.elapsedRealtime())
         runJob?.cancel()
+        announcer?.shutdown()
+        announcer = null
         scope.cancel()
         notify(buildNotification(runner?.state?.value ?: RunnerState(phase = RunnerPhase.STOPPED)))
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
@@ -123,6 +131,8 @@ class RunForegroundService : Service() {
 
     override fun onDestroy() {
         scope.cancel()
+        announcer?.shutdown()
+        announcer = null
         wakeLock?.let { if (it.isHeld) it.release() }
         wakeLock = null
         super.onDestroy()
