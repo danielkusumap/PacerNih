@@ -33,3 +33,15 @@ Yang jadi:
 
 Catatan: aturan jitter diam (F3 di 6.14) belum diimplementasikan karena 6.14 belum ada.
 Bug diketahui: -
+
+## P0.4 DistanceTracker dan interpolasi batas — selesai (2026-10-10)
+Yang jadi:
+- `DistanceTracker` (6.3): akumulasi jarak Haversine antar-sample, batas jarak kumulatif, interpolasi waktu
+  `t = t1 + (boundary - d1)/(d2 - d1) * (t2 - t1)`, banyak batas dalam satu sample (loop), sisa jarak
+  (overshoot) tetap di `totalDistanceM` sehingga terbawa ke segmen berikutnya.
+- Gap GPS tidak butuh perlakuan khusus di tracker: loncatan tidak masuk akal sudah dibuang `SampleFilter`,
+  loncatan wajar (terowongan) dihitung sebagai garis lurus.
+- 9 unit test baru (DistanceTrackerTest). Total engine 49 test hijau.
+
+Belum: tidak ada yang bisa ditambah tanpa 6.14 (lihat Q-001).
+Bug diketahui: -
