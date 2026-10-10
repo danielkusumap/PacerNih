@@ -11,7 +11,7 @@ import com.daniel.runcoach.data.AppSettings
 import com.daniel.runcoach.data.AppTheme
 import com.daniel.runcoach.data.SettingsRepository
 import com.daniel.runcoach.ui.AppNavHost
-import com.daniel.runcoach.ui.theme.RunCoachTheme
+import com.daniel.runcoach.ui.theme.RcTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
                 AppTheme.LIGHT -> false
                 AppTheme.DARK -> true
             }
-            RunCoachTheme(darkTheme = darkTheme) {
+            RcTheme(darkTheme = darkTheme) {
                 AppNavHost()
             }
         }

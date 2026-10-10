@@ -457,6 +457,16 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
   `backupReminderIntervalPersists`. Engine **194**, **instrumented 29/29 hijau**.
 - FASE P3 selesai (P3.1–P3.8).
 
+## U0 Fondasi tema (DESIGN.md) — selesai (2026-10-11)
+- `RcColors` (dark+light, token 3.1–3.3, +`onFail`), `RcTypography` (Inter variabel dibundel di `res/font`,
+  angka tabular `tnum`), `RcSpacing`/`RcShapes`/`RcMotion`, `LocalRc*`.
+- `RcTheme` membungkus `MaterialTheme`, memetakan `colorScheme`/`typography` dari token (dynamic color mati, tanpa ungu);
+  `MainActivity` memakai `RcTheme`; `RunCoachTheme` tinggal alias.
+- 45 ikon Material Symbols Rounded → VectorDrawable `res/drawable/rc_*` + `RcIcons` (tanpa dependency ikon).
+- Test: unit **`ContrastTest`** (semua pasangan teks/latar + ikon status, 4,5:1 / 3:1) hijau; device `RcThemeTest`
+  (token benar di dua tema, `primary` = aksen, keluarga font Inter). Instrumented **30/30 hijau**.
+- Penyesuaian token: `textTertiary` light `#6A737C` → `#66707A` agar lolos 4,5:1 (D-046).
+
 
 
 

@@ -293,3 +293,29 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - Interval disimpan sebagai hari (`backupReminderDays`): 0 = mati, 14 = 2 minggu, 30 = sebulan (sesuai S13).
 - Belum pernah mencadangkan dianggap jatuh tempo saat pengingat aktif; default mati agar tidak mengganggu.
 - Ditampilkan sebagai banner di S13 (bukan notifikasi sistem) supaya tidak perlu izin notifikasi tambahan.
+
+## D-044 Adopsi DESIGN.md sebagai spec visual yang mengikat
+- `DESIGN_updated.md` di-rename menjadi `DESIGN.md` dan berlaku sebagai spec tampilan (menang untuk tampilan;
+  `RUNCOACH_PLAN.md` tetap menang untuk data/alur/rumus).
+- Konsekuensi: dikerjakan **U0** (fondasi tema: `RcColors`/`RcTypography`/`RcSpacing`/`RcShapes`/`RcMotion`,
+  Inter dibundel, uji kontras) dan **U1** (katalog komponen `ui/components`) **sebelum** FASE P4, lalu re-skin
+  halaman S02–S13 yang sudah dibangun dengan widget Material mentah.
+- Tema lama (`Theme.kt` dengan `darkColorScheme()`/`lightColorScheme()` bawaan, ungu Material) diganti `RcTheme`.
+- Penyimpangan yang diketahui & akan dibereskan saat re-skin: S05 masih bisa di-scroll (spec: tidak),
+  D08 dibuat dialog (spec: Sheet), S08 memakai tombol Export/Kalibrasi (spec: menu `more_vert`), S13 belum
+  punya "Zona bahaya"/SegmentedControl pengingat.
+
+## D-045 U0: fondasi tema
+- Inter hanya tersedia sebagai font variabel di sumber (tidak ada static); dibundel sebagai `inter_variable.ttf`
+  dan dipakai lewat `Font(..., variationSettings = FontVariation.Settings(FontVariation.weight(w)))`.
+- Ikon: 45 VectorDrawable dari Material Symbols Rounded (Apache 2.0), viewBox `0 -960 960 960` dipetakan dengan
+  `<group android:translateY="960">`; tanpa menambah dependency ikon (aturan DESIGN 5.4).
+- `MaterialTheme.colorScheme`/`typography` dipetakan dari token agar widget Material sisa tidak ungu; komponen baru
+  membaca `LocalRc*` langsung.
+
+## D-046 U0: penyesuaian kontras
+- `textTertiary` light diubah `#6A737C` → `#66707A`: pasangan dengan `bg` hanya 4,40:1, di bawah gerbang 4,5:1.
+- Warna `kind*` (tipe segmen) **tidak** masuk uji kontras numerik karena bersifat dekoratif dan selalu disertai
+  ikon + label (DESIGN 3.3, 3.4 "status tidak hanya warna").
+- Tombol destruktif terisi memakai token baru `onFail` (dark: teks gelap di atas merah terang; light: putih)
+  karena putih di atas `#FF5D5D` (dark) hanya 3,01:1.
