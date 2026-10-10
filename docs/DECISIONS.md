@@ -192,3 +192,9 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - **Ditunda & tercatat:** baris `Session` saat Stop (butuh `Session`/S06, P2.5); chip hasil segmen & status
   hasil per baris D10 (butuh evaluasi segmen di-wire, P2.8). Ini bukan stub: fitur belum ditambahkan, bukan dummy.
 - Back dialog memakai `BackHandler`; "Tetap lari" menutup dialog, "Stop" menghentikan sesi.
+
+## D-028 P2.1: tabel template + migrasi
+- `RunDatabase` dinaikkan ke v2 dengan `MIGRATION_1_2` menambah tabel `WorkoutTemplate` (SQL dibuat manual agar
+  cocok dengan skema hasil Room). Tanpa `fallbackToDestructiveMigration` (aturan plan).
+- Proteksi built-in dilakukan di lapisan repository (DAO `deleteIfNotBuiltIn`, `update` menolak jika `isBuiltIn`).
+- Verifikasi CRUD/migrasi memakai **instrumented test** di device (bukan unit lokal) karena butuh SQLite Android.

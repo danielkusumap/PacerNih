@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P1 SELESAI. FASE P2 dikerjakan step by step (lihat bawah).
+- **Berikutnya:** FASE P2 step by step — **P2.1 selesai**; selanjutnya P2.2 (Editor Workout).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -268,4 +268,12 @@ Semua task P0 selesai dan AC hijau; boleh lanjut ke FASE P1. Sisa yang sifatnya 
 ## Gerbang P1 — SELESAI (2026-10-11)
 P1.1–P1.9 selesai dan diuji di device (Realme/Android 11) secara bergantian. Sisa lintas-fase: F7/KmMarker (D-013),
 dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by step**.
+
+## P2.1 Template workout (CRUD) + Lari Bebas bawaan — selesai (2026-10-11)
+- Room `WorkoutTemplate` (tanpa FK): `WorkoutTemplateEntity` + `WorkoutTemplateDao`; database naik ke **v2** dengan
+  `MIGRATION_1_2` eksplisit (tanpa destructive fallback).
+- `WorkoutTemplateRepository`: create / update / duplicate / delete / markUsed + `ensureBuiltIn` (template bawaan
+  **Lari Bebas** tidak bisa diedit/dihapus). `Flow<List<WorkoutTemplate>>` disiapkan untuk UI.
+- **Instrumented test di device** (Realme/Android 11): CRUD + duplikat + proteksi built-in + migrasi → **2/2 hijau**.
+- Menghapus template tidak menyentuh riwayat (belum ada tabel sesi; akan diverifikasi penuh di P2.6).
 
