@@ -12,6 +12,10 @@
     <string name="gps_title">Status GPS perangkat</string>
     <string name="gps_desc">GPS harus aktif saat berlari.</string>
     <string name="status_granted">Diberikan</string>
+    <string name="onboarding_skip">Lewati</string>
+    <string name="onboarding_next">Lanjut</string>
+    <string name="onboarding_gps_off">GPS perangkat mati</string>
+    <string name="onboarding_denied_permanent">Izin ditolak permanen. Buka pengaturan untuk mengaktifkan.</string>
     <string name="status_denied">Ditolak / belum diberikan</string>
     <string name="action_grant_location">Berikan izin lokasi</string>
     <string name="action_grant_notification">Berikan izin notifikasi</string>
@@ -327,6 +331,13 @@
 
     <!-- S03 Editor Workout -->
     <string name="editor_title">Editor Workout</string>
+    <string name="editor_title_edit">Edit Workout</string>
+    <string name="editor_item_menu">Menu item</string>
+    <string name="editor_add_child">+ Segmen di sini</string>
+    <string name="editor_repeat_bound">Ubah ulangan</string>
+    <string name="editor_repeat_times_label">Ulangan (kali)</string>
+    <string name="editor_repeat_until_label">Sampai jarak (m)</string>
+    <string name="info_understand">Mengerti</string>
     <string name="editor_name">Nama workout</string>
     <string name="editor_goal">Target jarak total (m, opsional)</string>
     <string name="editor_add_segment">Tambah segmen</string>

@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -177,6 +178,7 @@ fun RcTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Default,
     enabled: Boolean = true,
+    textFieldTag: String? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val colors = LocalRcColors.current
@@ -214,7 +216,7 @@ fun RcTextField(
                             singleLine = !multiline,
                             keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
                             interactionSource = interaction,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().then(if (textFieldTag != null) Modifier.testTag(textFieldTag) else Modifier),
                         )
                     }
                     trailing?.invoke()

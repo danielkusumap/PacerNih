@@ -12,6 +12,10 @@
     <string name="gps_title">Device GPS status</string>
     <string name="gps_desc">GPS must be on while you run.</string>
     <string name="status_granted">Granted</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_gps_off">Device GPS is off</string>
+    <string name="onboarding_denied_permanent">Permission permanently denied. Open settings to enable it.</string>
     <string name="status_denied">Denied / not granted</string>
     <string name="action_grant_location">Grant location permission</string>
     <string name="action_grant_notification">Grant notification permission</string>
@@ -328,6 +332,13 @@
 
     <!-- S03 Workout editor -->
     <string name="editor_title">Workout editor</string>
+    <string name="editor_title_edit">Edit workout</string>
+    <string name="editor_item_menu">Item menu</string>
+    <string name="editor_add_child">+ Segment here</string>
+    <string name="editor_repeat_bound">Change repeat</string>
+    <string name="editor_repeat_times_label">Repeats (times)</string>
+    <string name="editor_repeat_until_label">Until distance (m)</string>
+    <string name="info_understand">Got it</string>
     <string name="editor_name">Workout name</string>
     <string name="editor_goal">Total distance goal (m, optional)</string>
     <string name="editor_add_segment">Add segment</string>
