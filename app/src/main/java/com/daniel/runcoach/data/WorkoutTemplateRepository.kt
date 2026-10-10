@@ -28,7 +28,8 @@ class WorkoutTemplateRepository(
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
 
-    private val dao = RunDatabase.get(context).workoutTemplateDao()
+    private val appContext = context.applicationContext
+    private val dao get() = RunDatabase.get(appContext).workoutTemplateDao()
 
     val templates: Flow<List<WorkoutTemplate>> =
         dao.observeAll().map { list -> list.mapNotNull { it.toDomain() } }

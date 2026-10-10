@@ -160,6 +160,24 @@
     <string name="s12_dev">Developer</string>
     <string name="s12_off">Off</string>
 
+    <!-- S13 Backup & data -->
+    <string name="s13_title">Backup &amp; data</string>
+    <string name="s13_summary">Data summary</string>
+    <string name="s13_sessions">Sessions</string>
+    <string name="s13_templates">Templates</string>
+    <string name="s13_db_size">Database size</string>
+    <string name="s13_last_backup">Last backup</string>
+    <string name="s13_never">Never</string>
+    <string name="s13_backup">Back up to file</string>
+    <string name="s13_restore">Restore from file</string>
+    <string name="s13_restore_warning">Restoring will overwrite all current data.</string>
+    <string name="s13_delete_all">Delete all data</string>
+    <string name="s13_delete_title">Delete all data?</string>
+    <string name="s13_delete_message">Type DELETE to confirm.</string>
+    <string name="s13_restore_ok">Backup restored.</string>
+    <string name="s13_restore_fail">Failed: %1$s</string>
+    <string name="s13_backup_done">Backup saved.</string>
+
     <!-- S07 History -->
     <string name="s07_title">History</string>
     <string name="s07_search">Search by name</string>

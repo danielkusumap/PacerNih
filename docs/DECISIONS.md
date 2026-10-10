@@ -269,3 +269,10 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - `GpxBuilder` pure di engine (mudah diuji dengan parser XML); `GpxExporter` di app menulis file + share via FileProvider.
 - File disimpan di `cacheDir/gpx`; provider authority `${applicationId}.fileprovider`.
 - Uji validitas file GPX dilakukan di device (`GpxExportTest`).
+
+## D-040 P3.5: cadangan & data
+- Format cadangan: satu file zip berisi `runcoach.db` (mentah) + `settings.json`; tidak ada format kustom agar DB utuh.
+- Restore menyimpan ulang file DB dan menghapus `-wal`/`-shm`; file rusak/tanpa DB → `BackupResult.Failure` dengan pesan.
+- `RunDatabase.close()` mereset singleton (bukan `RoomDatabase.close()` biasa) supaya DB bisa dibuka ulang setelah backup.
+- DAO di repository dibuat *lazy* (diambil tiap panggilan) agar tidak memakai instance DB yang sudah ditutup saat backup.
+- Hapus semua data = `clearAllTables()` + `reset()` setelan; konfirmasi dua langkah (ketik HAPUS).

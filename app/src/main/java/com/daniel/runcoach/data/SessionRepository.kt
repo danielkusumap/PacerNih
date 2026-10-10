@@ -15,8 +15,9 @@ import kotlinx.coroutines.flow.Flow
  */
 class SessionRepository(context: Context) {
 
-    private val dao = RunDatabase.get(context).sessionDao()
-    private val runDao = RunDatabase.get(context).runDao()
+    private val appContext = context.applicationContext
+    private val dao get() = RunDatabase.get(appContext).sessionDao()
+    private val runDao get() = RunDatabase.get(appContext).runDao()
 
     val sessions: Flow<List<SessionEntity>> = dao.observeSessions()
 

@@ -27,7 +27,8 @@ data class RecordSeriesPoint(val atEpochMs: Long, val durationMs: Long, val isRe
  */
 class RecordRepository(context: Context) {
 
-    private val dao = RunDatabase.get(context).sessionDao()
+    private val appContext = context.applicationContext
+    private val dao get() = RunDatabase.get(appContext).sessionDao()
 
     suspend fun currentRecords(): Map<BestEffortKey, RecordRow?> =
         BestEffortKey.entries.associateWith { key ->

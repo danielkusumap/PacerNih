@@ -33,6 +33,9 @@ interface SessionDao {
     @Query("SELECT * FROM Session ORDER BY startedAtEpochMs DESC")
     suspend fun allSessions(): List<SessionEntity>
 
+    @Query("SELECT COUNT(*) FROM Session")
+    suspend fun countSessions(): Int
+
     @Query("SELECT * FROM SegmentResult WHERE sessionId = :sessionId ORDER BY idx")
     suspend fun segments(sessionId: String): List<SegmentResultEntity>
 

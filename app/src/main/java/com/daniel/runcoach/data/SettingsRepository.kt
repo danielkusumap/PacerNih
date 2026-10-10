@@ -6,17 +6,22 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.daniel.runcoach.engine.voice.VoiceLanguage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
 
+@Serializable
 enum class AppTheme { SYSTEM, LIGHT, DARK }
 
+@Serializable
 enum class CountdownStyleSetting { BEEP, VOICE }
 
 /** All user settings (plan S12). Kept in DataStore, not Room. */
+@Serializable
 data class AppSettings(
     val theme: AppTheme = AppTheme.SYSTEM,
     val voiceLanguage: VoiceLanguage = VoiceLanguage.ID,
@@ -31,6 +36,7 @@ data class AppSettings(
     val kmMarker: Boolean = true,
     val paceAlerts: Boolean = true,
     val liveMap: Boolean = false,
+    val lastBackupEpochMs: Long? = null,
 )
 
 private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -55,6 +61,7 @@ class SettingsRepository(context: Context) {
             kmMarker = prefs[KEY_KM_MARKER] ?: true,
             paceAlerts = prefs[KEY_PACE_ALERTS] ?: true,
             liveMap = prefs[KEY_LIVE_MAP] ?: false,
+            lastBackupEpochMs = prefs[KEY_LAST_BACKUP],
         )
     }
 
@@ -72,6 +79,29 @@ class SettingsRepository(context: Context) {
     suspend fun setPaceAlerts(on: Boolean) = dataStore.edit { it[KEY_PACE_ALERTS] = on }
     suspend fun setLiveMap(on: Boolean) = dataStore.edit { it[KEY_LIVE_MAP] = on }
 
+    /** Restores every setting to its default (used by "delete all data"). */
+    suspend fun reset() = dataStore.edit { it.clear() }
+
+    suspend fun setLastBackup(epochMs: Long) = dataStore.edit { it[KEY_LAST_BACKUP] = epochMs }
+
+    /** Writes every field at once (used by restore). */
+    suspend fun setAll(s: AppSettings) = dataStore.edit { prefs ->
+        prefs[KEY_THEME] = s.theme.name
+        prefs[KEY_VOICE_LANG] = if (s.voiceLanguage == VoiceLanguage.EN) "en" else "id"
+        prefs[KEY_START_COUNTDOWN] = s.startCountdownSec
+        prefs[KEY_SEGMENT_COUNTDOWN] = s.segmentCountdownSec
+        prefs[KEY_CUE_DISTANCE] = s.cueDistanceM
+        prefs[KEY_COUNTDOWN_STYLE] = if (s.countdownStyle == CountdownStyleSetting.VOICE) "voice" else "beep"
+        prefs[KEY_FAST_MARGIN] = s.fastMarginSec
+        prefs[KEY_VIBRATE] = s.vibrate
+        prefs[KEY_AUTO_PAUSE] = s.autoPause
+        prefs[KEY_KEEP_SCREEN_ON] = s.keepScreenOn
+        prefs[KEY_KM_MARKER] = s.kmMarker
+        prefs[KEY_PACE_ALERTS] = s.paceAlerts
+        prefs[KEY_LIVE_MAP] = s.liveMap
+        s.lastBackupEpochMs?.let { prefs[KEY_LAST_BACKUP] = it }
+    }
+
     private companion object {
         val KEY_THEME = stringPreferencesKey("theme")
         val KEY_VOICE_LANG = stringPreferencesKey("voice_lang")
@@ -86,5 +116,6 @@ class SettingsRepository(context: Context) {
         val KEY_KM_MARKER = booleanPreferencesKey("km_marker")
         val KEY_PACE_ALERTS = booleanPreferencesKey("pace_alerts")
         val KEY_LIVE_MAP = booleanPreferencesKey("live_map")
+        val KEY_LAST_BACKUP = longPreferencesKey("last_backup")
     }
 }

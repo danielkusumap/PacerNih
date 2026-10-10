@@ -27,4 +27,7 @@ interface WorkoutTemplateDao {
 
     @Query("UPDATE WorkoutTemplate SET lastUsedAt = :atMs WHERE id = :id")
     suspend fun markUsed(id: String, atMs: Long)
+
+    @Query("SELECT COUNT(*) FROM WorkoutTemplate")
+    suspend fun count(): Int
 }

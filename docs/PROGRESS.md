@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P3 step by step — P3.1–P3.4 selesai; selanjutnya P3.5 (Cadangan & Data S13).
+- **Berikutnya:** FASE P3 step by step — P3.1–P3.5 selesai; selanjutnya P3.6 (Ketahanan GPS).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -421,6 +421,17 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
   provider di manifest + `res/xml/file_paths.xml`. Tombol **Export GPX** di S08 (bila ada track point).
 - Test: engine `GpxBuilderTest` 2/2 + device `GpxExportTest` (file valid). Engine **185**; **instrumented 23/23 hijau**.
 - Device Realme tersambung kembali → semua instrumented (termasuk regresi P3.3) dijalankan & hijau.
+
+## P3.5 Cadangan & Data (S13) — selesai (2026-10-11)
+- `BackupRepository`: satu file zip berisi `runcoach.db` + `settings.json`; `backupTo`/`restoreFrom` berbasis stream
+  (UI memakai SAF, test memakai file biasa). Restore menolak file rusak dengan pesan jelas.
+- `deleteAllData`: `clearAllTables()` + reset setelan. Ringkasan data (jumlah sesi/template, ukuran DB) + cadangan terakhir.
+- S13 `BackupScreen`: tombol **Cadangkan ke file** (CreateDocument), **Pulihkan dari file** (OpenDocument),
+  **Hapus semua data** (konfirmasi ketik HAPUS). Setelan `@Serializable` + `setAll`/`reset`/`setLastBackup`.
+- `RunDatabase.close()` (reset singleton) + DAO repository dibuat *lazy* agar aman setelah DB di-close saat backup.
+- Test: device `BackupRestoreTest` (backup → wipe → restore memulihkan sesi/template/setelan; file rusak ditolak).
+  Engine **185**, unit app **2**, **instrumented 24/24 hijau**.
+
 
 
 

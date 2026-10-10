@@ -6,6 +6,8 @@ import com.daniel.runcoach.engine.model.SegmentKind
 import com.daniel.runcoach.engine.result.SegmentStatus
 import com.daniel.runcoach.engine.roundHalfUp
 
+import kotlinx.serialization.Serializable
+
 enum class VoiceLanguage { ID, EN }
 
 /**

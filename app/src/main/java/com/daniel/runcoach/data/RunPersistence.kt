@@ -12,7 +12,8 @@ import kotlinx.serialization.json.Json
  */
 class RunPersistence(context: Context) {
 
-    private val dao = RunDatabase.get(context).runDao()
+    private val appContext = context.applicationContext
+    private val dao get() = RunDatabase.get(appContext).runDao()
 
     suspend fun saveSnapshot(snapshot: RunSnapshot, savedAtMs: Long) {
         dao.upsertSnapshot(

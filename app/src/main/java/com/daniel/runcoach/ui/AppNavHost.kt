@@ -20,7 +20,7 @@ import com.daniel.runcoach.ui.home.BerandaScreen
 import com.daniel.runcoach.ui.onboarding.OnboardingScreen
 import com.daniel.runcoach.ui.prestart.PraStartScreen
 import com.daniel.runcoach.ui.run.RunRoute
-import com.daniel.runcoach.ui.settings.DataScreen
+import com.daniel.runcoach.ui.settings.BackupScreen
 import com.daniel.runcoach.ui.settings.SettingsScreen
 import com.daniel.runcoach.ui.stats.RecordDetailScreen
 import com.daniel.runcoach.ui.stats.StatsScreen
@@ -131,7 +131,7 @@ fun AppNavHost() {
             )
         }
         composable(Routes.DATA) {
-            DataScreen(onBack = { navController.popBackStack() })
+            BackupScreen(onBack = { navController.popBackStack() })
         }
         composable(
             route = Routes.RECORD,

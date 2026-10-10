@@ -87,5 +87,13 @@ abstract class RunDatabase : RoomDatabase() {
                     .build()
                     .also { instance = it }
             }
+
+        /** Closes the database and forgets the singleton, so the file can be copied for backup/restore. */
+        fun close() {
+            synchronized(this) {
+                instance?.close()
+                instance = null
+            }
+        }
     }
 }

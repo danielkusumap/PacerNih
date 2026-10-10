@@ -160,6 +160,24 @@
     <string name="s12_dev">Pengembang</string>
     <string name="s12_off">Mati</string>
 
+    <!-- S13 Cadangan & Data -->
+    <string name="s13_title">Cadangan &amp; Data</string>
+    <string name="s13_summary">Ringkasan data</string>
+    <string name="s13_sessions">Sesi</string>
+    <string name="s13_templates">Template</string>
+    <string name="s13_db_size">Ukuran database</string>
+    <string name="s13_last_backup">Cadangan terakhir</string>
+    <string name="s13_never">Belum pernah</string>
+    <string name="s13_backup">Cadangkan ke file</string>
+    <string name="s13_restore">Pulihkan dari file</string>
+    <string name="s13_restore_warning">Memulihkan akan menimpa seluruh data saat ini.</string>
+    <string name="s13_delete_all">Hapus semua data</string>
+    <string name="s13_delete_title">Hapus semua data?</string>
+    <string name="s13_delete_message">Ketik HAPUS untuk konfirmasi.</string>
+    <string name="s13_restore_ok">Cadangan berhasil dipulihkan.</string>
+    <string name="s13_restore_fail">Gagal: %1$s</string>
+    <string name="s13_backup_done">Cadangan tersimpan.</string>
+
     <!-- S07 Riwayat -->
     <string name="s07_title">Riwayat</string>
     <string name="s07_search">Cari nama</string>
