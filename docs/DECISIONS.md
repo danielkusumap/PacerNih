@@ -264,3 +264,8 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - Default OFF; diaktifkan lewat S12 (`autoPause`) dan diteruskan ke `EngineConfig` saat start.
 - Announcer + label S05 (DIJEDA OTOMATIS). Voice text "Dijeda."/"Dilanjutkan." sesuai P3.3.
 - Uji device tertunda (device terputus); AC inti (waktu berjalan tanpa durasi berhenti) diuji di engine.
+
+## D-039 P3.4: export GPX
+- `GpxBuilder` pure di engine (mudah diuji dengan parser XML); `GpxExporter` di app menulis file + share via FileProvider.
+- File disimpan di `cacheDir/gpx`; provider authority `${applicationId}.fileprovider`.
+- Uji validitas file GPX dilakukan di device (`GpxExportTest`).

@@ -184,6 +184,7 @@
     <string name="s08_tab_splits">Km splits</string>
     <string name="s08_tab_charts">Charts</string>
     <string name="s08_tab_map">Map</string>
+    <string name="s08_export_gpx">Export GPX</string>
     <string name="s08_plan_done">Plan complete</string>
     <string name="s08_plan_stopped">Stopped before completion</string>
     <string name="s08_note_title">Note</string>

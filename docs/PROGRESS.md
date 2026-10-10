@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P3 step by step — P3.1–P3.3 selesai; selanjutnya P3.4 (Export GPX).
+- **Berikutnya:** FASE P3 step by step — P3.1–P3.4 selesai; selanjutnya P3.5 (Cadangan & Data S13).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -414,6 +414,13 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
   mengucap "Dijeda."/"Dilanjutkan."; label S05 **DIJEDA OTOMATIS**.
 - Engine test `AutoPauseTest`: stopAndGo → moving 21 dtk dari 30 dtk; default off. Engine **183** hijau.
 - **Uji instrumented device TIDAK dijalankan ronde ini**: device Realme terputus (hanya emulator offline). Tersisa manual.
+
+## P3.4 Export GPX — selesai (2026-10-11)
+- Engine `GpxBuilder` (GPX 1.1, escape XML) + `GpxBuilderTest` (diparse dengan `DocumentBuilder`).
+- App `GpxExporter`: tulis ke `cache/gpx/<id>.gpx` + share via `FileProvider` (`ACTION_SEND`, `application/gpx+xml`);
+  provider di manifest + `res/xml/file_paths.xml`. Tombol **Export GPX** di S08 (bila ada track point).
+- Test: engine `GpxBuilderTest` 2/2 + device `GpxExportTest` (file valid). Engine **185**; **instrumented 23/23 hijau**.
+- Device Realme tersambung kembali → semua instrumented (termasuk regresi P3.3) dijalankan & hijau.
 
 
 

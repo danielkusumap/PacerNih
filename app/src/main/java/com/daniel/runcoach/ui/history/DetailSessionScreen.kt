@@ -1,5 +1,6 @@
 package com.daniel.runcoach.ui.history
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +37,7 @@ import com.daniel.runcoach.data.SessionEntity
 import com.daniel.runcoach.data.SessionRepository
 import com.daniel.runcoach.data.TrackPointEntity
 import com.daniel.runcoach.engine.gps.haversineM
+import com.daniel.runcoach.export.GpxExporter
 import com.daniel.runcoach.ui.Formatters
 import com.daniel.runcoach.ui.map.RouteMapView
 import com.daniel.runcoach.ui.charts.Bar
@@ -43,6 +46,7 @@ import com.daniel.runcoach.ui.charts.LineChart
 import com.daniel.runcoach.ui.charts.LinePoint
 import com.daniel.runcoach.ui.charts.TargetStep
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * S08 Session detail (plan section 8): fixed header with stats plus Segments / Km splits / Charts tabs.
@@ -52,6 +56,7 @@ import kotlinx.coroutines.delay
 fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
     val context = LocalContext.current
     val repository = remember { SessionRepository(context) }
+    val scope = rememberCoroutineScope()
     var session by remember { mutableStateOf<SessionEntity?>(null) }
     var segments by remember { mutableStateOf<List<SegmentResultEntity>>(emptyList()) }
     var splits by remember { mutableStateOf<List<KmSplitEntity>>(emptyList()) }
@@ -122,6 +127,19 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
                     boundaryIndices = boundaryIndices(trackPoints, segments),
                     modifier = Modifier.fillMaxWidth().height(320.dp),
                 )
+            }
+
+            if (trackPoints.size >= 2) {
+                OutlinedButton(
+                    onClick = {
+                        val current = session ?: return@OutlinedButton
+                        scope.launch {
+                            val file = GpxExporter.write(context, current.id, current.name, current.startedAtEpochMs, trackPoints)
+                            context.startActivity(Intent.createChooser(GpxExporter.shareIntent(context, file), null))
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.s08_export_gpx)) }
             }
 
             OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_back)) }
