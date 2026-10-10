@@ -17,4 +17,6 @@ data class EngineConfig(
     val maxSpeedMps: Double = 9.0,
     /** Mean Earth radius in metres, used by the Haversine formula. */
     val earthRadiusM: Double = 6_371_008.8,
+    /** Best efforts faster than this pace are treated as GPS anomalies and discarded. */
+    val recordMinValidPaceSecPerKm: Double = 150.0,
 )

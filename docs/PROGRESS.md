@@ -43,5 +43,18 @@ Yang jadi:
   loncatan wajar (terowongan) dihitung sebagai garis lurus.
 - 9 unit test baru (DistanceTrackerTest). Total engine 49 test hijau.
 
-Belum: tidak ada yang bisa ditambah tanpa 6.14 (lihat Q-001).
+Belum: -
+Bug diketahui: -
+
+## P0.10 BestEffortCalculator — selesai (2026-10-10)
+Catatan urutan: P0.5 (PaceCalculator) dan P0.7-P0.9, P0.11 ditunda karena bergantung pada 6.14 (Q-001),
+maka dilanjutkan ke P0.10 yang mandiri.
+Yang jadi:
+- `BestEffortKey` (K1/K5/K10/HM/FM), `DistTimePoint`, `BestEffort`.
+- `BestEffortCalculator.compute` (6.10): sliding window dua-pointer O(n) atas kurva jarak kumulatif/waktu
+  berjalan, interpolasi titik awal window, memakai waktu berjalan (bukan wall clock).
+- Effort lebih cepat dari `recordMinValidPaceSecPerKm` (anomali GPS) dibuang.
+- 7 unit test baru (BestEffortCalculatorTest). Total engine 56 test hijau.
+
+Belum: P0.6 (WorkoutRunner) tertunda sebagian karena countdown/cue merujuk F15 di 6.14.
 Bug diketahui: -
