@@ -12,4 +12,15 @@ Yang jadi:
 - `docs/PROGRESS.md`, `docs/DECISIONS.md`, `docs/OPEN_QUESTIONS.md` dibuat.
 - AC hijau: `gradlew :engine:test :app:assembleDebug`.
 
-Belum: P0.2 dst.
+Belum: -
+
+## P0.2 Domain model dan validasi workout — selesai (2026-10-10)
+Yang jadi:
+- `Workout`, `Block` (Segment/Repeat), `Limit` (Distance/Duration/Open), `SegmentKind`.
+- Serialisasi JSON (`WorkoutJson`, diskriminator `type`); round-trip untuk kelima contoh (bagian 5).
+- `WorkoutValidator` dengan kode error spesifik (`WorkoutErrorCode`) dan path yang menunjuk lokasi masalah.
+- `WorkoutExpander`: `expandFinite`, `stepCountOrNull`, `lazySteps` (untuk `untilTotalDistanceM` yang diekspansi malas).
+- 27 unit test hijau: WorkoutSerializationTest (5), WorkoutValidatorTest (16), WorkoutExpanderTest (6).
+
+Belum: P0.3 dst.
+Bug diketahui: -
