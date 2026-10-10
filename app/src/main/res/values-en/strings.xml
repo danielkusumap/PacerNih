@@ -209,6 +209,7 @@
     <string name="s13_restore_ok">Backup restored.</string>
     <string name="s13_restore_fail">Failed: %1$s</string>
     <string name="s13_backup_done">Backup saved.</string>
+    <string name="s13_danger_zone">Danger zone</string>
     <string name="s13_reminder">Backup reminder</string>
     <string name="s13_reminder_off">Off</string>
     <string name="s13_reminder_2w">Every 2 weeks</string>

@@ -2,22 +2,18 @@ package com.daniel.runcoach.ui.settings
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,13 +32,30 @@ import com.daniel.runcoach.data.BackupResult
 import com.daniel.runcoach.data.BackupSummary
 import com.daniel.runcoach.data.SettingsRepository
 import com.daniel.runcoach.engine.backup.BackupReminder
+import com.daniel.runcoach.ui.components.Banner
+import com.daniel.runcoach.ui.components.MetricBlock
+import com.daniel.runcoach.ui.components.RcBannerVariant
+import com.daniel.runcoach.ui.components.RcButton
+import com.daniel.runcoach.ui.components.RcButtonVariant
+import com.daniel.runcoach.ui.components.RcCard
+import com.daniel.runcoach.ui.components.RcDialog
+import com.daniel.runcoach.ui.components.RcStatus
+import com.daniel.runcoach.ui.components.RcTextField
+import com.daniel.runcoach.ui.components.ResultChip
+import com.daniel.runcoach.ui.components.SectionHeader
+import com.daniel.runcoach.ui.components.SegmentedControl
+import com.daniel.runcoach.ui.components.TopBar
+import com.daniel.runcoach.ui.theme.LocalRcColors
+import com.daniel.runcoach.ui.theme.LocalRcShapes
+import com.daniel.runcoach.ui.theme.LocalRcSpacing
+import com.daniel.runcoach.ui.theme.LocalRcTypography
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-/** S13 Backup & data (plan section 8, P3.5). */
+/** S13 Backup & data (DESIGN.md section 8). */
 @Composable
 fun BackupScreen(onBack: () -> Unit) {
     val context = LocalContext.current
@@ -88,86 +101,88 @@ fun BackupScreen(onBack: () -> Unit) {
         }
     }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(stringResource(R.string.s13_title), style = MaterialTheme.typography.headlineSmall)
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(stringResource(R.string.s13_summary), style = MaterialTheme.typography.titleSmall)
-                    summary?.let {
-                        Text("${stringResource(R.string.s13_sessions)}: ${it.sessionCount}")
-                        Text("${stringResource(R.string.s13_templates)}: ${it.templateCount}")
-                        Text("${stringResource(R.string.s13_db_size)}: ${"%.1f".format(it.databaseBytes / 1024.0)} KB")
-                    }
-                    Text(
-                        "${stringResource(R.string.s13_last_backup)}: " +
-                            (lastBackup?.let { SimpleDateFormat("d MMM yyyy HH:mm", Locale.getDefault()).format(Date(it)) }
-                                ?: stringResource(R.string.s13_never)),
-                    )
-                }
-            }
+    val colors = LocalRcColors.current
+    val shapes = LocalRcShapes.current
+    val spacing = LocalRcSpacing.current
+    val type = LocalRcTypography.current
 
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(stringResource(R.string.s13_reminder), style = MaterialTheme.typography.titleSmall)
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        listOf(
-                            0 to stringResource(R.string.s13_reminder_off),
-                            14 to stringResource(R.string.s13_reminder_2w),
-                            30 to stringResource(R.string.s13_reminder_month),
-                        ).forEach { (days, label) ->
-                            TextButton(onClick = { scope.launch { settingsRepository.setBackupReminderDays(days); refresh() } }) {
-                                Text(label + if (days == reminderDays) " ✓" else "")
-                            }
-                        }
-                    }
+    Column(modifier = Modifier.fillMaxSize().background(colors.bg)) {
+        TopBar(title = stringResource(R.string.s13_title), onBack = onBack)
+        Column(
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = spacing.screenH),
+            verticalArrangement = Arrangement.spacedBy(spacing.cardGap),
+        ) {
+            RcCard {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.s4)) {
+                    MetricBlock(stringResource(R.string.s13_sessions), (summary?.sessionCount ?: 0).toString())
+                    MetricBlock(stringResource(R.string.s13_templates), (summary?.templateCount ?: 0).toString())
+                    MetricBlock(stringResource(R.string.s13_db_size), "%.0f".format((summary?.databaseBytes ?: 0) / 1024.0), unit = "KB")
                 }
             }
 
             if (BackupReminder.isDue(lastBackup, System.currentTimeMillis(), reminderDays)) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-                ) {
-                    Text(stringResource(R.string.s13_backup_due), modifier = Modifier.padding(12.dp))
-                }
+                Banner(stringResource(R.string.s13_backup_due), variant = RcBannerVariant.Warning)
             }
 
-            message?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
+            RcCard {
+                Text(stringResource(R.string.s13_last_backup), style = type.label, color = colors.textSecondary)
+                Text(
+                    lastBackup?.let { SimpleDateFormat("d MMM yyyy HH:mm", Locale.getDefault()).format(Date(it)) } ?: stringResource(R.string.s13_never),
+                    style = type.titleM,
+                    color = if (lastBackup == null) colors.warn else colors.textPrimary,
+                )
+                RcButton(stringResource(R.string.s13_backup), onClick = { createBackup.launch("runcoach-backup.zip") }, fillWidth = true, modifier = Modifier.padding(top = spacing.s2))
+                RcButton(stringResource(R.string.s13_restore), onClick = { openBackup.launch(arrayOf("application/zip", "*/*")) }, variant = RcButtonVariant.Secondary, fillWidth = true)
+                Text(stringResource(R.string.s13_restore_warning), style = type.bodySmall, color = colors.textSecondary)
+            }
 
-            Button(onClick = { createBackup.launch("runcoach-backup.zip") }, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.s13_backup))
+            message?.let { Text(it, style = type.bodySmall, color = colors.accentText) }
+
+            SectionHeader(stringResource(R.string.s13_reminder))
+            SegmentedControl(
+                options = listOf(
+                    0 to stringResource(R.string.s13_reminder_off),
+                    14 to stringResource(R.string.s13_reminder_2w),
+                    30 to stringResource(R.string.s13_reminder_month),
+                ),
+                selected = reminderDays,
+                onSelect = { scope.launch { settingsRepository.setBackupReminderDays(it); refresh() } },
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = spacing.s4)
+                    .border(1.dp, colors.fail, RoundedCornerShape(shapes.radiusL))
+                    .padding(spacing.cardPad),
+                verticalArrangement = Arrangement.spacedBy(spacing.s2),
+            ) {
+                Text(stringResource(R.string.s13_danger_zone), style = type.titleS, color = colors.fail)
+                RcButton(stringResource(R.string.s13_delete_all), onClick = { showDelete = true }, variant = RcButtonVariant.DestructiveFilled, fillWidth = true)
             }
-            OutlinedButton(onClick = { openBackup.launch(arrayOf("application/zip", "*/*")) }, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.s13_restore))
-            }
-            Text(stringResource(R.string.s13_restore_warning), style = MaterialTheme.typography.bodySmall)
-            OutlinedButton(onClick = { showDelete = true }, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.s13_delete_all), color = MaterialTheme.colorScheme.error)
-            }
-            OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_back)) }
+            androidx.compose.foundation.layout.Spacer(Modifier.padding(bottom = spacing.s4))
         }
     }
 
     if (showDelete) {
-        AlertDialog(
-            onDismissRequest = { showDelete = false },
-            title = { Text(stringResource(R.string.s13_delete_title)) },
-            text = {
-                Column {
-                    Text(stringResource(R.string.s13_delete_message))
-                    OutlinedTextField(value = deleteText, onValueChange = { deleteText = it }, label = { Text("HAPUS") })
+        RcDialog(
+            onDismiss = { showDelete = false; deleteText = "" },
+            title = stringResource(R.string.s13_delete_title),
+            content = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.s13_delete_message), style = type.body, color = colors.textSecondary)
+                    RcTextField(value = deleteText, onValueChange = { deleteText = it }, label = "HAPUS")
                 }
             },
-            confirmButton = {
-                TextButton(
+            dismiss = { RcButton(stringResource(R.string.editor_discard_keep), onClick = { showDelete = false; deleteText = "" }, variant = RcButtonVariant.Tertiary) },
+            confirm = {
+                RcButton(
+                    stringResource(R.string.s13_delete_all),
+                    onClick = { scope.launch { repository.deleteAllData(); showDelete = false; deleteText = ""; refresh() } },
                     enabled = deleteText.trim().uppercase() == "HAPUS",
-                    onClick = {
-                        scope.launch { repository.deleteAllData(); showDelete = false; deleteText = ""; refresh() }
-                    },
-                ) { Text(stringResource(R.string.s13_delete_all)) }
+                    variant = RcButtonVariant.DestructiveFilled,
+                )
             },
-            dismissButton = { TextButton(onClick = { showDelete = false; deleteText = "" }) { Text(stringResource(R.string.editor_discard_keep)) } },
         )
     }
 }

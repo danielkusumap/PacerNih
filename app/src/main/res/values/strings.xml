@@ -209,6 +209,7 @@
     <string name="s13_restore_ok">Cadangan berhasil dipulihkan.</string>
     <string name="s13_restore_fail">Gagal: %1$s</string>
     <string name="s13_backup_done">Cadangan tersimpan.</string>
+    <string name="s13_danger_zone">Zona bahaya</string>
     <string name="s13_reminder">Pengingat cadangan</string>
     <string name="s13_reminder_off">Mati</string>
     <string name="s13_reminder_2w">Tiap 2 minggu</string>

@@ -25,9 +25,9 @@ class SettingsUiTest {
                 SettingsScreen(debugBuild = false, onOpenBatteryGuide = {}, onOpenData = {}, onOpenSimulator = {}, onSelectTab = {})
             }
         }
-        rule.onNodeWithText(context.getString(R.string.s12_theme)).assertExists()
-        rule.onNodeWithText(context.getString(R.string.s12_countdown)).assertExists()
-        rule.onNodeWithText("Voice pack", substring = true).assertExists()
+        rule.onNodeWithText(context.getString(R.string.s12_display).uppercase()).assertExists()
+        rule.onNodeWithText(context.getString(R.string.s12_countdown).uppercase()).assertExists()
+        rule.onNodeWithText(context.getString(R.string.s12_voice).uppercase()).assertExists()
     }
 }
 
