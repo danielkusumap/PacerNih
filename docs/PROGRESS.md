@@ -3,14 +3,14 @@
 Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diketahui.
 
 ## Status P0 (diperbarui 2026-10-10, sinkron dengan Lampiran C)
-- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.4b, P0.5, P0.6, P0.7, P0.8, P0.9, P0.10.
-- **Tersedia sekarang:** 6.14 (Katalog Rumus + V1–V22) dan 8.3 (Info Segmen). Q-001/Q-002/Q-003/Q-005/Q-008 ditutup.
-- **Urutan yang disarankan (Lampiran C):** P0.4b -> P0.5 -> P0.6 -> P0.8 -> P0.7 -> P0.9 -> P0.11.
-- **Belum:** P0.11.
-- **Gerbang P0 belum tercapai**, jadi P1 (runtime Android) belum dimulai.
+- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.4b, P0.5, P0.6, P0.7, P0.8, P0.9, P0.10, P0.11.
+- **Gerbang P0 tercapai** (semua AC P0 hijau). P1 (runtime Android) boleh dimulai.
+  Catatan: P0.11 dibatasi ke vektor milik P0 (Q-008); F7 & KmMarker live menyusul (D-013).
+- **Tersedia sekarang:** 6.14 (Katalog Rumus + V1–V22) dan 8.3 (Info Segmen).
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
-- **Versi:** tech stack kini menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya dicatat di `DECISIONS.md` D-010.
-- **Test:** `:engine` 158 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
+- **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
+- **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
+- **Berikutnya:** FASE P1 (P1.1 izin & onboarding).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -155,4 +155,15 @@ Bug diketahui: (seperti P0.8) F7 & KmMarker live (D-013); antrean suara TTS di s
 
 Belum: P0.11 dst.
 Bug diketahui: (seperti P0.8) F7 & KmMarker live (D-013).
+
+## P0.11 Audit vektor rumus — selesai (2026-10-10)
+- `VectorAuditTest` (refleksi atas nama test `vNN_...`) gagal bila ada vektor milik P0 yang belum punya test.
+- Cakupan P0 (keputusan Q-008): **V2–V15, V20–V22** — semuanya hijau. V1, V16–V19 menyusul di task-nya
+  (P1.7 / P2.10 / P2.5 / P3.7).
+- Test: **159 hijau**.
+
+## Gerbang P0 — TERCAPAI (2026-10-10)
+Semua task P0 selesai dan AC hijau; boleh lanjut ke FASE P1. Sisa yang sifatnya lintas-fase:
+- Pemisahan jarak proporsional F7 (batas waktu) & `KmMarker` live non-interpolasi (D-013).
+- Antrean suara TTS (flush Countdown, buang alert basi >5 dtk) & tick countdown >700 ms → service P1.4.
 
