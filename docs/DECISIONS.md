@@ -47,3 +47,10 @@ melihat wall clock. Algoritma dua-pointer O(n) dengan interpolasi titik awal win
 Plan menganjurkan urutan prioritas, tetapi P0.5/P0.7/P0.8/P0.9/P0.11 bergantung pada 6.14 yang belum ada.
 P0.10 (mandiri, angka di 6.10) dikerjakan lebih dulu agar ada kemajuan tanpa mengarang. P0.6 dan P0.8
 ditunda karena detail tepinya (F15, pembulatan) berpotensi berubah. Tidak melompat fase (masih P0).
+
+## D-010 Versi AGP masih alpha (9.5.0-alpha09)
+Tech stack (bagian 4) diperbarui: pakai versi **stabil**; alpha/beta hanya bila terpaksa dan alasannya
+wajib dicatat di sini. Alasan saat ini: proyek di-generate oleh Android Studio **preview** (build AI-262)
+yang memasang AGP 9.5.0-alpha09, Gradle 9.6.0, compileSdk 37, dan toolchain daemon JDK 25. Menurunkan ke
+AGP stabil menuntut penyelarasan Gradle/JDK dan berisiko memecah template; ditunda. Build tetap
+reproducible lewat version catalog. Tindak lanjut: evaluasi naik ke AGP stabil sebelum rilis (mis. P4.3).
