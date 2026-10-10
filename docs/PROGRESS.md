@@ -22,5 +22,14 @@ Yang jadi:
 - `WorkoutExpander`: `expandFinite`, `stepCountOrNull`, `lazySteps` (untuk `untilTotalDistanceM` yang diekspansi malas).
 - 27 unit test hijau: WorkoutSerializationTest (5), WorkoutValidatorTest (16), WorkoutExpanderTest (6).
 
-Belum: P0.3 dst.
+Belum: -
+
+## P0.3 Filter sample GPS — selesai (2026-10-10)
+Yang jadi:
+- `EngineConfig` (data class) sebagai satu-satunya rumah angka ambang; berisi konstanta 6.1 yang dipakai sejauh ini.
+- `LocationSample` (model) dan `haversineM` (gps) sebagai fungsi jarak bersama.
+- `SampleFilter` (6.2): buang sample dengan akurasi > `maxAccuracyM`, timestamp tidak naik, atau kecepatan tersirat > `maxSpeedMps`; `droppedCount` tersedia untuk statistik kualitas GPS.
+- 13 unit test baru (SampleFilterTest 10, HaversineTest 3). Total engine 40 test hijau.
+
+Catatan: aturan jitter diam (F3 di 6.14) belum diimplementasikan karena 6.14 belum ada.
 Bug diketahui: -

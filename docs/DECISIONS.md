@@ -24,3 +24,9 @@ ketergantungan View (kemungkinan setelah UI Compose final).
 ## D-005 Build dari CLI butuh JDK 25
 `gradle/gradle-daemon-jvm.properties` menetapkan toolchain daemon = 25 (sama dengan Android
 Studio JBR). Contoh: set `JAVA_HOME=C:\Program Files\Android\Android Studio\jbr` sebelum `gradlew`.
+
+## D-006 `EngineConfig` berupa data class (bukan konstanta global)
+Aturan anti-slop #5 meminta semua ambang di satu file. Bentuk `data class` dipilih agar nilai bisa
+disetel per-run (mis. dari Pengaturan) tanpa menyentuh algoritma, dan mudah di-inject di test.
+Untuk sekarang hanya konstanta 6.1 yang sudah dipakai (P0.1-P0.3) yang ditambahkan; sisanya
+menyusul saat task terkait membutuhkannya. Nilai masih provisional menunggu 6.14 (Q-003).
