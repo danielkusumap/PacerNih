@@ -1,25 +1,23 @@
 package com.daniel.runcoach.ui.history
 
 import android.content.Intent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.daniel.runcoach.R
@@ -42,21 +41,39 @@ import com.daniel.runcoach.data.SettingsRepository
 import com.daniel.runcoach.data.TrackPointEntity
 import com.daniel.runcoach.engine.gps.CalibrationCalculator
 import com.daniel.runcoach.engine.gps.haversineM
+import com.daniel.runcoach.engine.voice.VoiceLanguage
 import com.daniel.runcoach.export.GpxExporter
 import com.daniel.runcoach.ui.Formatters
-import com.daniel.runcoach.ui.map.RouteMapView
 import com.daniel.runcoach.ui.charts.Bar
 import com.daniel.runcoach.ui.charts.BarChart
 import com.daniel.runcoach.ui.charts.LineChart
 import com.daniel.runcoach.ui.charts.LinePoint
 import com.daniel.runcoach.ui.charts.TargetStep
+import com.daniel.runcoach.ui.components.MetricBlock
+import com.daniel.runcoach.ui.components.RcButton
+import com.daniel.runcoach.ui.components.RcButtonVariant
+import com.daniel.runcoach.ui.components.RcCard
+import com.daniel.runcoach.ui.components.RcDialog
+import com.daniel.runcoach.ui.components.RcIconButton
+import com.daniel.runcoach.ui.components.RcSheet
+import com.daniel.runcoach.ui.components.RcStatus
+import com.daniel.runcoach.ui.components.RcTextField
+import com.daniel.runcoach.ui.components.ResultChip
+import com.daniel.runcoach.ui.components.ResultStrip
+import com.daniel.runcoach.ui.components.TopBar
+import com.daniel.runcoach.ui.map.RouteMapView
+import com.daniel.runcoach.ui.theme.LocalRcColors
+import com.daniel.runcoach.ui.theme.LocalRcShapes
+import com.daniel.runcoach.ui.theme.LocalRcSpacing
+import com.daniel.runcoach.ui.theme.LocalRcTypography
+import com.daniel.runcoach.ui.theme.RcIcons
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/**
- * S08 Session detail (plan section 8): fixed header with stats plus Segments / Km splits / Charts tabs.
- * The Map tab arrives in P3.1.
- */
+/** S08 Session detail (DESIGN.md section 8): header, tabs, per-segment cards, splits table, charts, map. */
 @Composable
 fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
     val context = LocalContext.current
@@ -68,7 +85,10 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
     var splits by remember { mutableStateOf<List<KmSplitEntity>>(emptyList()) }
     var trackPoints by remember { mutableStateOf<List<TrackPointEntity>>(emptyList()) }
     var tab by remember { mutableIntStateOf(0) }
+    var menu by remember { mutableStateOf(false) }
     var showCalibrate by remember { mutableStateOf(false) }
+    var showEdit by remember { mutableStateOf(false) }
+    var showDelete by remember { mutableStateOf(false) }
 
     LaunchedEffect(sessionId) {
         var loaded = repository.get(sessionId)
@@ -86,45 +106,86 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
         }
     }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            val current = session
-            if (current == null) {
-                Text(stringResource(R.string.s08_loading))
-                return@Column
-            }
+    val colors = LocalRcColors.current
+    val spacing = LocalRcSpacing.current
+    val type = LocalRcTypography.current
 
-            Text(current.name, style = MaterialTheme.typography.headlineSmall)
-            Text(current.templateNameSnapshot, style = MaterialTheme.typography.titleSmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Stat(Formatters.distanceKm(current.totalDistanceM))
-                Stat(Formatters.duration(current.movingMs))
-                Stat(Formatters.pace(current.avgPaceSecPerKm))
+    Column(modifier = Modifier.fillMaxSize().background(colors.bg)) {
+        TopBar(
+            title = "",
+            onBack = onBack,
+            actions = {
+                Box {
+                    RcIconButton(RcIcons.MoreVert, stringResource(R.string.s08_more), onClick = { menu = true }, tint = colors.textPrimary)
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = colors.surfaceRaised) {
+                        DropdownMenuItem(text = { Text(stringResource(R.string.s08_edit)) }, onClick = { menu = false; showEdit = true })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.s08_export_gpx)) }, onClick = {
+                            menu = false
+                            val current = session
+                            if (current != null && trackPoints.size >= 2) {
+                                scope.launch {
+                                    val file = GpxExporter.write(context, current.id, current.name, current.startedAtEpochMs, trackPoints)
+                                    context.startActivity(Intent.createChooser(GpxExporter.shareIntent(context, file), null))
+                                }
+                            }
+                        })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.s08_calibrate)) }, onClick = { menu = false; showCalibrate = true })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.s07_delete)) }, onClick = { menu = false; showDelete = true })
+                    }
+                }
+            },
+        )
+
+        val current = session
+        if (current == null) {
+            Text(stringResource(R.string.s08_loading), modifier = Modifier.padding(spacing.screenH), color = colors.textSecondary)
+            return@Column
+        }
+
+        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = spacing.screenH).padding(bottom = spacing.s6)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+                Text(current.name, style = type.titleL, color = colors.textPrimary, modifier = Modifier.weight(1f))
+                RcIconButton(RcIcons.Edit, stringResource(R.string.s08_edit), onClick = { showEdit = true }, tint = colors.textSecondary)
             }
-            Text(
-                stringResource(R.string.s06_seg_counts, current.segPass, current.segFail, current.segBorderline),
-                style = MaterialTheme.typography.bodySmall,
-            )
+            Text(formatRange(current), style = type.bodySmall, color = colors.textSecondary)
+            Text(current.templateNameSnapshot, style = type.caption, color = colors.textTertiary)
+
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = spacing.s2)) {
+                Text(Formatters.distanceKm(current.totalDistanceM).removeSuffix(" km"), style = type.numberXL, color = colors.textPrimary)
+                Text("km", style = type.titleS, color = colors.textSecondary)
+            }
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = spacing.s3), horizontalArrangement = Arrangement.spacedBy(spacing.s5)) {
+                MetricBlock(stringResource(R.string.s08_metric_time), Formatters.duration(current.movingMs))
+                MetricBlock(stringResource(R.string.s08_metric_avg_pace), Formatters.pace(current.avgPaceSecPerKm))
+                MetricBlock(stringResource(R.string.s08_metric_result), stringResource(R.string.s07_chip_pass, current.segPass, current.segPass + current.segFail + current.segBorderline))
+            }
+            if (current.pausedMs > 0) {
+                Text(stringResource(R.string.s08_paused, Formatters.duration(current.pausedMs)), style = type.bodySmall, color = colors.textSecondary)
+            }
             Text(
                 if (current.planCompleted) stringResource(R.string.s08_plan_done) else stringResource(R.string.s08_plan_stopped),
-                style = MaterialTheme.typography.bodySmall,
+                style = type.bodySmall,
+                color = colors.textSecondary,
             )
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(stringResource(R.string.s08_note_title), style = MaterialTheme.typography.titleSmall)
-                    Text(current.note?.takeIf { it.isNotBlank() } ?: stringResource(R.string.s08_no_note))
-                    if (current.rpe != null) Text("RPE: ${current.rpe}")
-                }
+
+            if (segments.isNotEmpty()) {
+                ResultStrip(
+                    statuses = segments.map { statusFor(it.status) },
+                    weights = segments.map { it.distanceM.toFloat() },
+                    modifier = Modifier.padding(vertical = spacing.s3),
+                )
             }
 
-            TabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.s08_tab_segments)) })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.s08_tab_splits)) })
-                Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.s08_tab_charts)) })
-                if (trackPoints.size >= 2) {
-                    Tab(selected = tab == 3, onClick = { tab = 3 }, text = { Text(stringResource(R.string.s08_tab_map)) })
+            RcCard(modifier = Modifier.padding(top = spacing.s2)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+                    Icon(painterResource(RcIcons.Notes), contentDescription = null, tint = colors.textSecondary, modifier = Modifier.size(20.dp))
+                    Text(stringResource(R.string.s08_notes), style = type.titleS, color = colors.textPrimary)
                 }
+                Text(current.note?.takeIf { it.isNotBlank() } ?: stringResource(R.string.s08_no_note), style = type.body, color = colors.textSecondary)
+                if (current.rpe != null) Text(stringResource(R.string.s08_rpe, current.rpe), style = type.titleS, color = colors.textPrimary)
             }
+
+            TabRow(tab, hasMap = trackPoints.size >= 2) { tab = it }
             when (tab) {
                 0 -> SegmentsTab(segments)
                 1 -> SplitsTab(splits)
@@ -132,103 +193,91 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
                 else -> RouteMapView(
                     points = trackPoints.map { it.lat to it.lon },
                     boundaryIndices = boundaryIndices(trackPoints, segments),
-                    modifier = Modifier.fillMaxWidth().height(320.dp),
+                    modifier = Modifier.fillMaxWidth().height(360.dp),
                 )
             }
-
-            if (trackPoints.size >= 2) {
-                OutlinedButton(
-                    onClick = {
-                        val current = session ?: return@OutlinedButton
-                        scope.launch {
-                            val file = GpxExporter.write(context, current.id, current.name, current.startedAtEpochMs, trackPoints)
-                            context.startActivity(Intent.createChooser(GpxExporter.shareIntent(context, file), null))
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text(stringResource(R.string.s08_export_gpx)) }
-            }
-
-            OutlinedButton(onClick = { showCalibrate = true }, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.s08_calibrate))
-            }
-
-            OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_back)) }
         }
     }
 
     if (showCalibrate) {
         session?.let { current ->
-            CalibrateDialog(
+            CalibrateSheet(
                 session = current,
                 onDismiss = { showCalibrate = false },
-                onApply = { factor ->
-                    scope.launch { settingsRepository.setCalibrationFactor(factor) }
-                    showCalibrate = false
-                },
+                onApply = { factor -> scope.launch { settingsRepository.setCalibrationFactor(factor) }; showCalibrate = false },
             )
+        }
+    }
+    if (showEdit) {
+        session?.let { current ->
+            EditSheet(
+                session = current,
+                onSave = { name, note, rpe ->
+                    scope.launch {
+                        repository.updateForm(current.id, name, note, rpe, current.excludeFromRecords, currentLanguage(), System.currentTimeMillis())
+                        session = repository.get(current.id)
+                        showEdit = false
+                    }
+                },
+                onDismiss = { showEdit = false },
+            )
+        }
+    }
+    if (showDelete) {
+        RcDialog(
+            onDismiss = { showDelete = false },
+            title = stringResource(R.string.d09_delete_session_title),
+            content = { Text(stringResource(R.string.d09_delete_session_message, session?.name ?: ""), style = type.body, color = colors.textSecondary) },
+            dismiss = { RcButton(stringResource(R.string.editor_discard_keep), onClick = { showDelete = false }, variant = RcButtonVariant.Tertiary) },
+            confirm = {
+                RcButton(stringResource(R.string.s07_delete), onClick = {
+                    scope.launch { session?.let { repository.delete(it.id) }; showDelete = false; onBack() }
+                }, variant = RcButtonVariant.DestructiveFilled)
+            },
+        )
+    }
+}
+
+@Composable
+private fun TabRow(selected: Int, hasMap: Boolean, onSelect: (Int) -> Unit) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    val labels = buildList {
+        add(stringResource(R.string.s08_tab_segments))
+        add(stringResource(R.string.s08_tab_splits))
+        add(stringResource(R.string.s08_tab_charts))
+        if (hasMap) add(stringResource(R.string.s08_tab_map))
+    }
+    Row(modifier = Modifier.fillMaxWidth().padding(top = 24.dp)) {
+        labels.forEachIndexed { index, label ->
+            Column(modifier = Modifier.weight(1f).clickable { onSelect(index) }, horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(label, style = type.titleS, color = if (index == selected) colors.textPrimary else colors.textSecondary, modifier = Modifier.padding(vertical = 8.dp))
+                Box(modifier = Modifier.fillMaxWidth().height(3.dp).background(if (index == selected) colors.accent else androidx.compose.ui.graphics.Color.Transparent))
+            }
         }
     }
 }
 
-/** D08: works out the correction factor for the next session from the real distance (F25). */
-@Composable
-private fun CalibrateDialog(session: SessionEntity, onDismiss: () -> Unit, onApply: (Double) -> Unit) {
-    var text by remember { mutableStateOf("") }
-    val actualKm = text.trim().replace(',', '.').toDoubleOrNull()
-    val factor = actualKm?.let {
-        CalibrationCalculator.factorFor(it * 1000.0, session.totalDistanceM, session.distanceCalibrationFactorUsed)
-    }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.s08_calibrate)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.s08_calibrate_measured, Formatters.distanceKm(session.totalDistanceM)))
-                Text(stringResource(R.string.s08_calibrate_factor_used, "%.4f".format(session.distanceCalibrationFactorUsed)))
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    label = { Text(stringResource(R.string.s08_calibrate_actual)) },
-                )
-                when {
-                    factor != null -> Text(stringResource(R.string.s08_calibrate_new, "%.4f".format(factor)))
-                    text.isNotBlank() -> Text(stringResource(R.string.s08_calibrate_invalid), color = MaterialTheme.colorScheme.error)
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(enabled = factor != null, onClick = { factor?.let(onApply) }) {
-                Text(stringResource(R.string.s08_calibrate_apply))
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.editor_discard_keep)) } },
-    )
-}
-
-@Composable
-private fun Stat(value: String) {
-    Text(value, style = MaterialTheme.typography.titleMedium)
-}
-
 @Composable
 private fun SegmentsTab(segments: List<SegmentResultEntity>) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    val spacing = LocalRcSpacing.current
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.cardGap), modifier = Modifier.padding(top = spacing.s3)) {
         segments.forEach { segment ->
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("${segment.idx}. ${segment.label} (${segment.kind})", style = MaterialTheme.typography.titleSmall)
-                    Text("${limitText(segment)} · ${targetText(segment)}", style = MaterialTheme.typography.bodySmall)
-                    Text(
-                        "${Formatters.distanceKm(segment.distanceM)} · ${Formatters.duration(segment.durationMs)} · ${Formatters.pace(segment.avgPace)}",
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    Text(
-                        "${segment.deltaSec?.let { Formatters.deltaSeconds(it) } ?: ""} ${statusText(segment.status)}",
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                    if (segment.status == "BORDERLINE") Text("dalam batas error GPS", style = MaterialTheme.typography.labelSmall)
+            RcCard {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+                    Text("#${segment.idx} ${segment.label}", style = type.titleS, color = colors.textPrimary, modifier = Modifier.weight(1f))
+                    ResultChip(statusFor(segment.status), statusLabel(segment.status))
                 }
+                Text("${limitText(segment)} · ${targetText(segment)}", style = type.bodySmall, color = colors.textSecondary)
+                Row(horizontalArrangement = Arrangement.spacedBy(spacing.s4)) {
+                    MetricBlock("Jarak", Formatters.distanceKm(segment.distanceM).removeSuffix(" km"), unit = "km")
+                    MetricBlock("Waktu", Formatters.duration(segment.durationMs))
+                    MetricBlock("Pace", Formatters.pace(segment.avgPace))
+                }
+                segment.deltaSec?.let { Text(Formatters.deltaSeconds(it), style = type.bodySmall, color = if (it <= 0) colors.pass else colors.fail) }
+                if (segment.status == "BORDERLINE") Text(stringResource(R.string.s08_borderline_note), style = type.caption, color = colors.warn)
             }
         }
     }
@@ -236,31 +285,42 @@ private fun SegmentsTab(segments: List<SegmentResultEntity>) {
 
 @Composable
 private fun SplitsTab(splits: List<KmSplitEntity>) {
-    val fastestIndex = splits.filter { !it.isPartialRow() && it.paceSecPerKm != null }.minByOrNull { it.paceSecPerKm!! }?.idx
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        splits.forEach { split ->
-            val partial = split.distanceM < 1000.0
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(if (partial) "%.2f km".format(split.distanceM / 1000.0) else "Km ${split.idx}")
-                Text(Formatters.duration(split.durationMs))
-                Text(Formatters.pace(split.paceSecPerKm))
-                Text(if (split.idx == fastestIndex) "★" else "")
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    val spacing = LocalRcSpacing.current
+    val fastestIndex = splits.filter { it.distanceM >= 1000.0 && it.paceSecPerKm != null }.minByOrNull { it.paceSecPerKm!! }?.idx
+    Column(modifier = Modifier.padding(top = spacing.s3)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(vertical = spacing.s2)) {
+            listOf(stringResource(R.string.s08_col_km), stringResource(R.string.s08_col_time), stringResource(R.string.s08_col_pace), stringResource(R.string.s08_col_delta)).forEach {
+                Text(it.uppercase(), style = type.label, color = colors.textSecondary, modifier = Modifier.weight(1f))
             }
         }
-        if (fastestIndex != null) Text(stringResource(R.string.s08_fastest) + ": Km $fastestIndex", style = MaterialTheme.typography.labelSmall)
+        splits.forEach { split ->
+            val partial = split.distanceM < 1000.0
+            Row(modifier = Modifier.fillMaxWidth().height(52.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(if (partial) "%.2f km".format(split.distanceM / 1000.0) else "Km ${split.idx}", style = type.titleS, color = colors.textPrimary, modifier = Modifier.weight(1f))
+                Text(Formatters.duration(split.durationMs), style = type.numberM, color = colors.textPrimary, modifier = Modifier.weight(1f))
+                Text(Formatters.pace(split.paceSecPerKm), style = type.numberM, color = colors.textPrimary, modifier = Modifier.weight(1f))
+                Text(split.deltaSec?.let { Formatters.deltaSeconds(it) } ?: "", style = type.bodySmall, color = if ((split.deltaSec ?: 0) <= 0) colors.pass else colors.fail, modifier = Modifier.weight(1f))
+            }
+            if (split.idx == fastestIndex) Text(stringResource(R.string.s08_fastest), style = type.caption, color = colors.accentText)
+            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(colors.outline))
+        }
     }
 }
 
 @Composable
 private fun ChartsTab(segments: List<SegmentResultEntity>, splits: List<KmSplitEntity>) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 12.dp)) {
         val fullSplits = splits.filter { it.distanceM >= 1000.0 && it.paceSecPerKm != null }
+        Text(stringResource(R.string.s08_chart_per_km), style = LocalRcTypography.current.titleS, color = LocalRcColors.current.textPrimary)
         BarChart(
             bars = fullSplits.map { Bar("Km ${it.idx}", it.paceSecPerKm, it.targetPace?.toDouble()) },
             valueFormatter = { Formatters.pace(it) },
         )
         val points = fullSplits.mapIndexed { index, split -> LinePoint((index + 1) * 1000.0, split.paceSecPerKm) }
         val steps = targetSteps(segments)
+        Text(stringResource(R.string.s08_chart_over_distance), style = LocalRcTypography.current.titleS, color = LocalRcColors.current.textPrimary)
         LineChart(
             points = points,
             steps = steps,
@@ -269,6 +329,57 @@ private fun ChartsTab(segments: List<SegmentResultEntity>, splits: List<KmSplitE
         )
     }
 }
+
+@Composable
+private fun CalibrateSheet(session: SessionEntity, onDismiss: () -> Unit, onApply: (Double) -> Unit) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    var text by remember { mutableStateOf("") }
+    val actualKm = text.trim().replace(',', '.').toDoubleOrNull()
+    val factor = actualKm?.let { CalibrationCalculator.factorFor(it * 1000.0, session.totalDistanceM, session.distanceCalibrationFactorUsed) }
+    RcSheet(onDismiss = onDismiss) {
+        Text(stringResource(R.string.s08_calibrate), style = type.titleM, color = colors.textPrimary)
+        Text(stringResource(R.string.s08_calibrate_measured, Formatters.distanceKm(session.totalDistanceM)), style = type.bodySmall, color = colors.textSecondary)
+        RcTextField(value = text, onValueChange = { text = it }, label = stringResource(R.string.s08_calibrate_actual), modifier = Modifier.padding(top = 12.dp))
+        if (factor != null) Text(stringResource(R.string.s08_calibrate_new, "%.4f".format(factor)), style = type.titleS, color = colors.textPrimary)
+        else if (text.isNotBlank()) Text(stringResource(R.string.s08_calibrate_invalid), style = type.bodySmall, color = colors.fail)
+        RcButton(stringResource(R.string.s08_calibrate_apply), onClick = { factor?.let(onApply) }, enabled = factor != null, fillWidth = true, modifier = Modifier.padding(top = 12.dp))
+    }
+}
+
+@Composable
+private fun EditSheet(session: SessionEntity, onSave: (String, String?, Int?) -> Unit, onDismiss: () -> Unit) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    var name by remember { mutableStateOf(if (session.nameIsCustom) session.name else "") }
+    var note by remember { mutableStateOf(session.note ?: "") }
+    var rpe by remember { mutableStateOf(session.rpe?.toString() ?: "") }
+    RcSheet(onDismiss = onDismiss) {
+        Text(stringResource(R.string.d03_title), style = type.titleM, color = colors.textPrimary)
+        RcTextField(value = name, onValueChange = { name = it }, label = stringResource(R.string.d03_name), placeholder = session.name, modifier = Modifier.padding(top = 12.dp))
+        RcTextField(value = rpe, onValueChange = { rpe = it.filter(Char::isDigit).take(2) }, label = stringResource(R.string.d03_rpe), modifier = Modifier.padding(top = 8.dp))
+        RcTextField(value = note, onValueChange = { note = it }, label = stringResource(R.string.d03_note), multiline = true, modifier = Modifier.padding(top = 8.dp))
+        RcButton(stringResource(R.string.s06_save), onClick = { onSave(name, note.ifBlank { null }, rpe.toIntOrNull()?.coerceIn(1, 10)) }, fillWidth = true, modifier = Modifier.padding(top = 12.dp))
+    }
+}
+
+private fun statusFor(status: String): RcStatus = when (status) {
+    "PASS" -> RcStatus.Pass
+    "FAIL" -> RcStatus.Fail
+    "BORDERLINE" -> RcStatus.Warn
+    else -> RcStatus.Neutral
+}
+
+@Composable
+private fun statusLabel(status: String): String = stringResource(
+    when (status) {
+        "PASS" -> R.string.result_pass
+        "FAIL" -> R.string.result_fail
+        "BORDERLINE" -> R.string.result_borderline
+        "SKIPPED" -> R.string.result_skipped
+        else -> R.string.result_no_target
+    },
+)
 
 private fun boundaryIndices(trackPoints: List<TrackPointEntity>, segments: List<SegmentResultEntity>): List<Int> {
     if (trackPoints.size < 2 || segments.size < 2) return emptyList()
@@ -287,7 +398,8 @@ private fun boundaryIndices(trackPoints: List<TrackPointEntity>, segments: List<
     return indices
 }
 
-private fun targetSteps(segments: List<SegmentResultEntity>): List<TargetStep> {    var cumulative = 0.0
+private fun targetSteps(segments: List<SegmentResultEntity>): List<TargetStep> {
+    var cumulative = 0.0
     val steps = mutableListOf<TargetStep>()
     segments.forEach { segment ->
         val start = cumulative
@@ -296,8 +408,6 @@ private fun targetSteps(segments: List<SegmentResultEntity>): List<TargetStep> {
     }
     return steps
 }
-
-private fun KmSplitEntity.isPartialRow(): Boolean = distanceM < 1000.0
 
 private fun limitText(segment: SegmentResultEntity): String = when (segment.limitType) {
     "distance" -> "${segment.limitValue.toInt()} m"
@@ -308,4 +418,12 @@ private fun limitText(segment: SegmentResultEntity): String = when (segment.limi
 private fun targetText(segment: SegmentResultEntity): String =
     segment.targetPace?.let { "≤ ${Formatters.pace(it.toDouble())}" } ?: "Tanpa target"
 
-private fun statusText(status: String): String = status
+private fun formatRange(session: SessionEntity): String {
+    val fmt = SimpleDateFormat("d MMM yyyy · HH:mm", Locale.getDefault())
+    return "${fmt.format(Date(session.startedAtEpochMs))} - ${fmt.format(Date(session.endedAtEpochMs))}"
+}
+
+private fun currentLanguage(): VoiceLanguage {
+    val language = Locale.getDefault().language
+    return if (language.startsWith("in") || language == "id") VoiceLanguage.ID else VoiceLanguage.EN
+}

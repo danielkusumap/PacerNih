@@ -2,6 +2,7 @@ package com.daniel.runcoach
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -41,6 +42,7 @@ class HistoryUiTest {
         rule.setContent { RunCoachTheme { HistoryScreen(onOpenSession = {}, onSelectTab = {}) } }
         rule.waitUntil(5_000) { rule.onAllNodesWithText("History Test").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithText("History Test").assertExists()
+        rule.onNodeWithContentDescription(context.getString(R.string.s07_more)).performClick()
         rule.onNodeWithText(context.getString(R.string.s07_edit)).assertExists()
         rule.onNodeWithText(context.getString(R.string.s07_delete)).assertExists()
     }
