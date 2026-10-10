@@ -226,3 +226,11 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - Catatan >500 **dipotong** di repository; S06 menolak (tombol nonaktif) saat >500.
 - Lencana rekor = effort sesi ini yang lebih cepat dari minimum sesi lain yang tidak dikecualikan.
 - P2.4 & P2.5 di-commit bersama karena menyentuh file yang sama (service/AppNavHost/strings).
+
+## D-033 P2.6-P2.8: Riwayat, chart, detail
+- Bottom bar baru 2 tab (Latihan/Riwayat); tab Statistik & Pengaturan menyusul (P2.9/P2.11).
+- Chart = Compose Canvas kustom (tanpa library), sesuai tech stack; tap memilih titik/index.
+- D03 mengedit nama/catatan/RPE/kecualikan-rekor via `SessionRepository.updateForm`; kosong → nama default.
+- S08 memuat hasil dari tabel (`SegmentResult`/`KmSplit`), bukan menghitung ulang.
+- **Gap dicatat:** DILEWATI belum dipersistensi; lencana rekor di daftar S07 belum ada; tab Peta menunggu P3.1.
+- P2.6-P2.8 di-commit bersama karena berbagi file (AppNavHost/Beranda/strings).

@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P2 step by step — P2.1–P2.5 selesai; selanjutnya P2.6 (Riwayat S07 + Edit Sesi D03).
+- **Berikutnya:** FASE P2 step by step — P2.1–P2.8 selesai; selanjutnya P2.9 (Rekor Pribadi S10/S11).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -327,5 +327,35 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
 - Test: `SessionRepositoryTest` 2/2 (save, default name, limit 500, hapus tanpa yatim, migrasi v3).
 - **Instrumented 13/13 hijau**; engine 173; app lokal 2.
 - Catatan: P2.4 & P2.5 di-commit bersamaan karena berbagi file (service/AppNavHost/strings).
+
+## P2.6 Riwayat (S07) + Edit Sesi (D03) — selesai (2026-10-11)
+- Bottom bar (tab **Latihan**/**Riwayat**) ditambahkan; S07 & S02 memakainya (Statistik/Pengaturan menyusul).
+- S07: daftar sesi (terbaru dulu), pencarian nama, header bulan (nama bulan · total km · jumlah sesi), item dengan
+  chip hasil ("x/y lulus"/"Tanpa target"), aksi **Edit (D03)** & **Hapus (D09)**; kosong: "Belum ada sesi".
+- D03: nama (kosong → default), RPE 1-10, catatan (≤500), toggle **kecualikan dari rekor**. Simpan via `updateForm`.
+- Hapus sesi = `deleteSessionCascade` (tanpa baris yatim).
+- Test: `HistoryUiTest` (list + edit/delete) hijau.
+
+## P2.7 Komponen chart (Canvas) — selesai (2026-10-11)
+- `BarChart` & `LineChart` reusable (Compose Canvas, **tanpa dependency chart**): sumbu label, **garis target/tangga**,
+  **garis vertikal putus** di batas segmen, **titik sorotan**, **tap → nilai**, data kosong, nilai null (garis putus).
+- `@Preview` semua varian (bar/line, normal/kosong/gap, light & dark).
+- Test: `ChartsRenderTest` (render normal & kosong) hijau.
+
+## P2.8 Detail Sesi (S08) — selesai (2026-10-11)
+- Header (nama + snapshot workout, tanggal, statistik, hasil segmen, status rencana, kartu catatan/RPE) +
+  tab **Segmen / Split km / Grafik**. Tab Peta menunggu **P3.1**.
+- Segmen: dari `SegmentResult` (batas, target, hasil, pace, selisih, status; BORDERLINE beri keterangan).
+- Split km: dari `KmSplit` (baris sisa parsial, km tercepat disorot).
+- Grafik: `BarChart` pace per km (dengan garis target) + `LineChart` pace per km dengan **target tangga** & batas segmen.
+- Test: `HistoryUiTest.detailShowsHeaderAndTabs` hijau.
+- **Gap dicatat:** status **DILEWATI** belum dipersistensi (jalur skip runner belum menulis hasil) → menyusul;
+  lencana rekor belum ditampilkan di daftar S07 (baru di S06).
+
+## Status P2 (diperbarui 2026-10-11)
+- Selesai: P2.1, P2.2, P2.3, P2.4, P2.5, P2.6, P2.7, P2.8.
+- Berikutnya: P2.9 (Rekor S10/S11) → P2.10 (Ringkasan Mingguan S09) → P2.11 (Pengaturan S12).
+- Instrumented **16/16 hijau**; engine 173; app lokal 2.
+
 
 

@@ -32,6 +32,8 @@ class SessionRepository(context: Context) {
 
     suspend fun latest(): SessionEntity? = dao.latestSession()
 
+    suspend fun allSessions(): List<SessionEntity> = dao.allSessions()
+
     suspend fun segments(id: String): List<SegmentResultEntity> = dao.segments(id)
 
     suspend fun splits(id: String): List<KmSplitEntity> = dao.splits(id)

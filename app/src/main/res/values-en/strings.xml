@@ -89,6 +89,40 @@
     <string name="s06_skip">Skip</string>
     <string name="s06_discard">Discard session</string>
     <string name="s06_loading">Saving session…</string>
+
+    <!-- Tabs -->
+    <string name="tab_workout">Workout</string>
+    <string name="tab_history">History</string>
+
+    <!-- S07 History -->
+    <string name="s07_title">History</string>
+    <string name="s07_search">Search by name</string>
+    <string name="s07_empty">No sessions yet</string>
+    <string name="s07_month_header">%1$s · %2$s · %3$d sessions</string>
+    <string name="s07_chip_pass">%1$d/%2$d passed</string>
+    <string name="s07_chip_no_target">No target</string>
+    <string name="s07_edit">Edit</string>
+    <string name="s07_delete">Delete</string>
+
+    <!-- D03 Edit session -->
+    <string name="d03_title">Edit session</string>
+    <string name="d03_name">Name</string>
+    <string name="d03_note">Note</string>
+    <string name="d03_rpe">Effort 1-10</string>
+    <string name="d03_exclude">Exclude from personal records</string>
+    <string name="d09_delete_session_title">Delete session?</string>
+    <string name="d09_delete_session_message">Session "%1$s" and its results, splits, and track points will be deleted.</string>
+
+    <!-- S08 Session detail -->
+    <string name="s08_tab_segments">Segments</string>
+    <string name="s08_tab_splits">Km splits</string>
+    <string name="s08_tab_charts">Charts</string>
+    <string name="s08_plan_done">Plan complete</string>
+    <string name="s08_plan_stopped">Stopped before completion</string>
+    <string name="s08_note_title">Note</string>
+    <string name="s08_no_note">Add note</string>
+    <string name="s08_fastest">Fastest km</string>
+    <string name="s08_loading">Loading session…</string>
     <string name="debug_title">Debug / Simulator</string>
     <string name="debug_speed">Speed</string>
     <string name="debug_running">Running…</string>

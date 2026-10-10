@@ -44,6 +44,8 @@ import com.daniel.runcoach.engine.model.WorkoutExpander
 import com.daniel.runcoach.engine.model.WorkoutJson
 import com.daniel.runcoach.service.RunForegroundService
 import com.daniel.runcoach.ui.Formatters
+import com.daniel.runcoach.ui.MainBottomBar
+import com.daniel.runcoach.ui.MainTab
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -60,6 +62,7 @@ fun BerandaScreen(
     onResumeRun: () -> Unit,
     onOpenEditor: (Workout?) -> Unit,
     onOpenSimulator: () -> Unit,
+    onSelectTab: (MainTab) -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -83,6 +86,7 @@ fun BerandaScreen(
     }
 
     Scaffold(
+        bottomBar = { MainBottomBar(MainTab.WORKOUT, onSelectTab) },
         floatingActionButton = {
             ExtendedFloatingActionButton(onClick = { onOpenEditor(null) }) { Text(stringResource(R.string.home_editor)) }
         },

@@ -89,6 +89,40 @@
     <string name="s06_skip">Lewati</string>
     <string name="s06_discard">Buang sesi</string>
     <string name="s06_loading">Menyimpan sesi…</string>
+
+    <!-- Tabs -->
+    <string name="tab_workout">Latihan</string>
+    <string name="tab_history">Riwayat</string>
+
+    <!-- S07 Riwayat -->
+    <string name="s07_title">Riwayat</string>
+    <string name="s07_search">Cari nama</string>
+    <string name="s07_empty">Belum ada sesi</string>
+    <string name="s07_month_header">%1$s · %2$s · %3$d sesi</string>
+    <string name="s07_chip_pass">%1$d/%2$d lulus</string>
+    <string name="s07_chip_no_target">Tanpa target</string>
+    <string name="s07_edit">Edit</string>
+    <string name="s07_delete">Hapus</string>
+
+    <!-- D03 Edit Sesi -->
+    <string name="d03_title">Edit Sesi</string>
+    <string name="d03_name">Nama</string>
+    <string name="d03_note">Catatan</string>
+    <string name="d03_rpe">Skala capek 1-10</string>
+    <string name="d03_exclude">Jangan hitung untuk rekor pribadi</string>
+    <string name="d09_delete_session_title">Hapus sesi?</string>
+    <string name="d09_delete_session_message">Sesi "%1$s" akan dihapus beserta hasil, split, dan track point-nya.</string>
+
+    <!-- S08 Detail Sesi -->
+    <string name="s08_tab_segments">Segmen</string>
+    <string name="s08_tab_splits">Split km</string>
+    <string name="s08_tab_charts">Grafik</string>
+    <string name="s08_plan_done">Rencana selesai</string>
+    <string name="s08_plan_stopped">Dihentikan sebelum selesai</string>
+    <string name="s08_note_title">Catatan</string>
+    <string name="s08_no_note">Tambah catatan</string>
+    <string name="s08_fastest">Km tercepat</string>
+    <string name="s08_loading">Memuat sesi…</string>
     <string name="debug_title">Debug / Simulator</string>
     <string name="debug_speed">Kecepatan</string>
     <string name="debug_running">Menjalankan…</string>
