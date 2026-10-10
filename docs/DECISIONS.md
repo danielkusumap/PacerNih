@@ -287,3 +287,9 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - Faktor tidak menumpuk: jarak mentah dipulihkan dengan membagi faktor lama sebelum menghitung faktor baru.
 - Nilai faktor yang dipakai saat lari disalin ke sesi (`distanceCalibrationFactorUsed`), jadi sesi lama tidak berubah.
 - Reset lewat `setCalibrationFactor(1.0)` (S12) dan `reset()` menghapus semua setelan → faktor kembali 1,0.
+
+## D-043 P3.8: pengingat cadangan
+- Aturan "jatuh tempo" di engine (`BackupReminder`) supaya UI dan test memakai definisi yang sama.
+- Interval disimpan sebagai hari (`backupReminderDays`): 0 = mati, 14 = 2 minggu, 30 = sebulan (sesuai S13).
+- Belum pernah mencadangkan dianggap jatuh tempo saat pengingat aktif; default mati agar tidak mengganggu.
+- Ditampilkan sebagai banner di S13 (bukan notifikasi sistem) supaya tidak perlu izin notifikasi tambahan.

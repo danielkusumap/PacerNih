@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P3 step by step — P3.1–P3.7 selesai; selanjutnya P3.8 (Pengingat cadangan).
+- **Berikutnya:** FASE P3 selesai (P3.1–P3.8). Selanjutnya FASE P4 (P4.1 aksi notifikasi, dst).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -447,6 +447,15 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
 - D08 di S08: dialog input jarak sebenarnya (km) → tampil faktor baru → **Terapkan untuk sesi berikutnya**.
 - Test: engine `CalibrationCalculatorTest` (V19 + clamp + degenerate); device `calibrationDoesNotChangeOldSessions`
   + `calibrationFactorPersistsAndResetReturnsOne`. Engine **191**, **instrumented 26/26 hijau**.
+
+## P3.8 Pengingat cadangan — selesai (2026-10-11)
+- Engine `BackupReminder.isDue(lastBackup, now, reminderDays)`: 0 = mati; belum pernah cadang → jatuh tempo; selain itu
+  jatuh tempo saat interval (2 minggu / sebulan) terlewati.
+- S13: pilihan **Mati / Tiap 2 minggu / Tiap bulan** (DataStore `backupReminderDays`) + banner "Waktunya mencadangkan data."
+  saat jatuh tempo.
+- Test: engine `BackupReminderTest`; device `BackupUiTest` (banner muncul saat terlewati, sembunyi saat mati) +
+  `backupReminderIntervalPersists`. Engine **194**, **instrumented 29/29 hijau**.
+- FASE P3 selesai (P3.1–P3.8).
 
 
 

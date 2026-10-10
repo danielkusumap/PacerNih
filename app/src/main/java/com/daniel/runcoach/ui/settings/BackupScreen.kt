@@ -4,12 +4,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -19,6 +21,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -32,6 +35,7 @@ import com.daniel.runcoach.data.BackupRepository
 import com.daniel.runcoach.data.BackupResult
 import com.daniel.runcoach.data.BackupSummary
 import com.daniel.runcoach.data.SettingsRepository
+import com.daniel.runcoach.engine.backup.BackupReminder
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -47,13 +51,16 @@ fun BackupScreen(onBack: () -> Unit) {
     val settingsRepository = remember { SettingsRepository(context) }
     var summary by remember { mutableStateOf<BackupSummary?>(null) }
     var lastBackup by remember { mutableStateOf<Long?>(null) }
+    var reminderDays by remember { mutableIntStateOf(0) }
     var message by remember { mutableStateOf<String?>(null) }
     var showDelete by remember { mutableStateOf(false) }
     var deleteText by remember { mutableStateOf("") }
 
     suspend fun refresh() {
         summary = repository.summary()
-        lastBackup = settingsRepository.settings.first().lastBackupEpochMs
+        val current = settingsRepository.settings.first()
+        lastBackup = current.lastBackupEpochMs
+        reminderDays = current.backupReminderDays
     }
     LaunchedEffect(Unit) { refresh() }
 
@@ -97,6 +104,32 @@ fun BackupScreen(onBack: () -> Unit) {
                             (lastBackup?.let { SimpleDateFormat("d MMM yyyy HH:mm", Locale.getDefault()).format(Date(it)) }
                                 ?: stringResource(R.string.s13_never)),
                     )
+                }
+            }
+
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(R.string.s13_reminder), style = MaterialTheme.typography.titleSmall)
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        listOf(
+                            0 to stringResource(R.string.s13_reminder_off),
+                            14 to stringResource(R.string.s13_reminder_2w),
+                            30 to stringResource(R.string.s13_reminder_month),
+                        ).forEach { (days, label) ->
+                            TextButton(onClick = { scope.launch { settingsRepository.setBackupReminderDays(days); refresh() } }) {
+                                Text(label + if (days == reminderDays) " ✓" else "")
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (BackupReminder.isDue(lastBackup, System.currentTimeMillis(), reminderDays)) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                ) {
+                    Text(stringResource(R.string.s13_backup_due), modifier = Modifier.padding(12.dp))
                 }
             }
 

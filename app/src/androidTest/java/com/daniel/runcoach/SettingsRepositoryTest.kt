@@ -50,4 +50,16 @@ class SettingsRepositoryTest {
             assertEquals(1.0, repository.settings.first().calibrationFactor, 1e-9)
         }
     }
+
+    /** P3.8: the backup reminder interval persists. */
+    @Test
+    fun backupReminderIntervalPersists() {
+        runBlocking {
+            val repository = SettingsRepository(InstrumentationRegistry.getInstrumentation().targetContext)
+            repository.setBackupReminderDays(14)
+            assertEquals(14, repository.settings.first().backupReminderDays)
+            repository.setBackupReminderDays(0)
+            assertEquals(0, repository.settings.first().backupReminderDays)
+        }
+    }
 }
