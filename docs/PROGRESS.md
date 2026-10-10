@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P2 step by step — P2.1–P2.2 selesai; selanjutnya P2.3 (Beranda S02).
+- **Berikutnya:** FASE P2 step by step — P2.1–P2.3 selesai; selanjutnya P2.4 (Pra-start S04).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -294,4 +294,16 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
   - AC2 (buat via UI): `EditorUiTest.addSegmentEnterNameAndSavePersistsTemplate` — add segmen + nama + Simpan → template tersimpan (2/2).
   - AC4/AC5 (preset lolos validator; progressive tempo 5 km 7:30 −20 dtk): `WorkoutPresetsTest` (engine).
   - Tombol ⓘ dipastikan ada lewat cek manual (glyph). Total: engine 168, app lokal 2, instrumented 7.
+
+## P2.3 Beranda (S02) — selesai (2026-10-11)
+- `BerandaScreen`: tombol **Lari Bebas** (start cepat), **daftar template** (nama, jumlah segmen, estimasi jarak/durasi,
+  range target, aksi Mulai / Edit / Duplikat / Hapus), **FAB Buat workout**, **state kosong**, dan **banner
+  "Sesi belum selesai"** (Lanjutkan / Buang) yang hanya muncul bila ada snapshot.
+- `EditorScreen` kini mendukung **update** (tombol Edit) — Simpan memilih create vs update; `EditorRequestHolder`
+  membawa Workout yang diedit ke route editor.
+- **Test**: `BerandaUiTest` 3/3 (state kosong; banner absen tanpa snapshot; banner tampil dengan snapshot) +
+  P2.1/P2.2 tests → **instrumented 10/10 hijau**. Engine 168, app lokal 2.
+- **Uji device**: buat template lewat UI → muncul di Beranda dengan aksinya. Catatan: tombol aksi editor bisa
+  tertutup keyboard saat field nama fokus (perlu scroll) — kandidat perbaikan `imePadding`.
+- Kartu ringkasan minggu ini menunggu **P2.10**. **D04** (dialog) digabung jadi banner S02 (D-030).
 

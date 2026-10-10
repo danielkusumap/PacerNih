@@ -197,7 +197,7 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
                 Button(
                     onClick = {
                         scope.launch {
-                            repository.create(workout)
+                            if (!initial?.id.isNullOrBlank()) repository.update(workout) else repository.create(workout)
                             onSaved()
                         }
                     },

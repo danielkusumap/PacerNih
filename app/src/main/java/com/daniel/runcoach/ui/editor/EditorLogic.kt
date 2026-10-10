@@ -19,3 +19,8 @@ internal fun formatPace(seconds: Int): String = "%d:%02d".format(seconds / 60, s
 
 /** Save is allowed only with a name and no validation errors (P2.2 AC). */
 internal fun editorCanSave(name: String, errorCount: Int): Boolean = name.isNotBlank() && errorCount == 0
+
+/** Hand-off for the editor route: the workout to edit, or null for a new one. */
+object EditorRequestHolder {
+    var initial: com.daniel.runcoach.engine.model.Workout? = null
+}

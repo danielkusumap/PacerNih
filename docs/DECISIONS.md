@@ -206,3 +206,9 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - **D11**: konten 8.3 disimpan di `strings.xml` (ID & EN) sebagai satu string per topik dengan label bagian inline
   (Kegunaan/Kapan/Contoh/Perilaku/Tips) — penyederhanaan dari tabel 8.3 agar praktis; isi tetap dari resource.
 - Menyimpan template lewat `WorkoutTemplateRepository.create`; editor dipakai juga nanti untuk edit (initial Workout).
+
+## D-030 P2.3: Beranda + update template
+- **D04 digabung** menjadi banner di S02 (sesuai spec bagian 8) agar tidak ada dua prompt untuk sesi yang sama.
+- `EditorRequestHolder` membawa Workout yang diedit ke route editor; Simpan memilih create/update.
+- Kartu ringkasan minggu ini ditunda ke P2.10 sesuai plan.
+- Catatan UX: tombol aksi editor bisa tertutup keyboard saat field nama fokus → kandidat `imePadding` (belum dikerjakan).

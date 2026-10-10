@@ -42,6 +42,23 @@
     <string name="action_discard">Discard</string>
     <string name="home_simulator">Simulator (debug)</string>
     <string name="home_editor">Create workout</string>
+
+    <!-- S02 Home -->
+    <string name="s02_title">Home</string>
+    <string name="s02_free_run">Free run</string>
+    <string name="s02_resume_title">Unfinished session</string>
+    <string name="s02_resume_detail">%1$s · saved %2$s</string>
+    <string name="s02_create_first">No workouts yet. Create your first workout.</string>
+    <string name="s02_mulai">Start</string>
+    <string name="s02_edit">Edit</string>
+    <string name="s02_segments">%1$d segments</string>
+    <string name="s02_last_used">Last used %1$s</string>
+    <string name="s02_target_range">Target %1$s</string>
+    <string name="s02_delete_title">Delete workout?</string>
+    <string name="s02_delete_message">Workout "%1$s" will be deleted. History is unaffected.</string>
+    <string name="s02_duplicate">Duplicate</string>
+    <string name="s02_delete">Delete</string>
+    <string name="s02_builtin_note">Built-in templates can\'t be deleted/edited</string>
     <string name="debug_title">Debug / Simulator</string>
     <string name="debug_speed">Speed</string>
     <string name="debug_running">Running…</string>

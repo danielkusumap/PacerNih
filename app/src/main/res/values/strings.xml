@@ -42,6 +42,23 @@
     <string name="action_discard">Buang</string>
     <string name="home_simulator">Simulator (debug)</string>
     <string name="home_editor">Buat workout</string>
+
+    <!-- S02 Beranda -->
+    <string name="s02_title">Beranda</string>
+    <string name="s02_free_run">Lari Bebas</string>
+    <string name="s02_resume_title">Sesi belum selesai</string>
+    <string name="s02_resume_detail">%1$s · disimpan %2$s</string>
+    <string name="s02_create_first">Belum ada workout. Buat workout pertamamu.</string>
+    <string name="s02_mulai">Mulai</string>
+    <string name="s02_edit">Edit</string>
+    <string name="s02_segments">%1$d segmen</string>
+    <string name="s02_last_used">Terakhir dipakai %1$s</string>
+    <string name="s02_target_range">Target %1$s</string>
+    <string name="s02_delete_title">Hapus workout?</string>
+    <string name="s02_delete_message">Workout "%1$s" akan dihapus. Riwayat tidak terpengaruh.</string>
+    <string name="s02_duplicate">Duplikat</string>
+    <string name="s02_delete">Hapus</string>
+    <string name="s02_builtin_note">Template bawaan tidak bisa dihapus/diedit</string>
     <string name="debug_title">Debug / Simulator</string>
     <string name="debug_speed">Kecepatan</string>
     <string name="debug_running">Menjalankan…</string>
