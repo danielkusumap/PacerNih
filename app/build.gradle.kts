@@ -38,9 +38,12 @@ android {
 
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
+    implementation(project(":engine"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.play.services.location)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)

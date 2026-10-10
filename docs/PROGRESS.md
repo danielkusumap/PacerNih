@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P1 — P1.2 (`LocationSource`); P1.1 sudah selesai (lihat bawah).
+- **Berikutnya:** FASE P1 — P1.3 (`RunForegroundService`); P1.1–P1.2 sudah selesai (lihat bawah).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -177,4 +177,14 @@ Semua task P0 selesai dan AC hijau; boleh lanjut ke FASE P1. Sisa yang sifatnya 
   `ACCESS_BACKGROUND_LOCATION`. Teks UI di `strings.xml` (values=ID, values-en=EN), `@Preview` light & dark.
 - AC P1.1 terpenuhi (perilaku izin; tidak ada jalur crash karena denial). Detail: `DECISIONS.md` D-017.
 - Verifikasi: `:app:assembleDebug` sukses.
+
+## P1.2 LocationSource — selesai (2026-10-10)
+- `LocationSource` (interface) + `FusedLocationSource` (Play Services, 1 Hz, `PRIORITY_HIGH_ACCURACY`) +
+  fallback `AndroidLocationSource` (`LocationManager.GPS_PROVIDER`, 1 Hz); `LocationSourceFactory` memilih
+  berdasar ketersediaan Play Services.
+- Konversi `android.location.Location` -> `LocationSample` (`elapsedRealtimeNanos`, `speed`, `speedAccuracyMetersPerSecond`).
+- Helper engine `gpsFixQuality` (S04: SEARCHING / READY / WEAK, berbasis `GOOD_FIX_ACCURACY_M`) + test.
+- Dependency: `play-services-location` 21.4.0 (whitelist) dan `:app` kini bergantung pada `:engine` (D-018).
+- Verifikasi: `:app:assembleDebug` sukses; `:engine` **162** test hijau.
+- **Belum diuji di perangkat nyata** (AC "sampel ~1 Hz" butuh device).
 

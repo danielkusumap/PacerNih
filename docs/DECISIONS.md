@@ -115,3 +115,10 @@ filter, lalu menerapkan `calibrationFactor` (F4, clamp 0.95–1.05). `BoundaryCr
 - Deep link baterai memakai `ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS` (tanpa izin khusus), bukan
   `ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` yang menuntut izin `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`.
 - Teks UI di `strings.xml` (values = ID, values-en = EN); tiap layar punya `@Preview` light & dark (aturan #12/#13).
+
+## D-018 P1.2: LocationSource, dependency, dan wiring `:engine`
+- `:app` menambahkan dependency `:engine` (project) dan `play-services-location` 21.4.0 (whitelist bagian 4).
+- `LocationSource` interface; `FusedLocationSource` (Play Services) + `AndroidLocationSource` (fallback framework);
+  `LocationSourceFactory` memilih berdasar ketersediaan Play Services.
+- `LocationSample` juga membawa `speedAccuracyMps` (dipakai F8 untuk syarat Doppler); field ini sudah ditambahkan saat P0.6.
+- Catatan: AC "sampel ~1 Hz di perangkat nyata" belum diverifikasi (butuh device).
