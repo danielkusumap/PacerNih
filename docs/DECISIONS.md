@@ -130,3 +130,17 @@ filter, lalu menerapkan `calibrationFactor` (F4, clamp 0.95–1.05). `BoundaryCr
 - Tombol "Mulai/Stop sesi uji" pada layar placeholder `home` bersifat **sementara** (agar uji lapangan P1.3 bisa
   dilakukan); akan diganti S02 pada P2.3. Tidak ada fitur produk di luar plan yang ditambahkan.
 - AC "layar mati 30 menit" belum diuji (butuh device).
+
+## D-020 targetSdk diturunkan ke 30 (Android 11) untuk device uji
+Plan bagian 4 menulis "Min SDK / Target = 26 / latest stable". Atas permintaan pemilik, `targetSdk` diturunkan
+dari 37 ke **30 (Android 11)** agar perilaku app cocok dengan device uji (Realme, API 30). `minSdk` tetap **26
+(Android 8)** — jadi app memang sudah bisa berjalan di Android 11 sejak awal; penurunan ini penyimpangan sengaja
+dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap 37.
+
+## D-021 Uji device P1.3 (Realme RMX1971 / Android 11)
+- Diuji via adb: service foreground tipe `location` hidup, notifikasi update tiap detik, bertahan **5 menit layar
+  mati** (durasi 00:20 → 05:27, jarak 0.10 km), Stop menghentikan service + menghapus notifikasi.
+- Kendala adb di perangkat: `pm grant` izin ditolak shell (OEM Realme) dan `settings put secure location_mode`
+  diblokir → izin & lokasi diselesaikan lewat UI (tap). `svc location enable` juga tidak tersedia; lokasi
+  akhirnya aktif (=3) dan izin diberikan lewat dialog.
+- Device ter-charge USB selama uji; uji tanpa charge (doze penuh) belum dilakukan.

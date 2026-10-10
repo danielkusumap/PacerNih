@@ -195,6 +195,9 @@ Semua task P0 selesai dan AC hijau; boleh lanjut ke FASE P1. Sisa yang sifatnya 
 - Izin ditambah: `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_LOCATION`, `WAKE_LOCK`.
 - `Formatters` (aturan #14, 6.13): pace `m:ss`, durasi `mm:ss`/`h:mm:ss`, jarak km 2 desimal (locale), delta bertanda.
 - Layar placeholder `home` punya tombol Mulai/Stop sesi uji (sementara sampai S02/P2.3) agar AC bisa diuji manual.
-- Verifikasi: `:app:assembleDebug` sukses. **Uji layar mati 30 menit belum dijalankan** (butuh device).
+- **Uji device** (Realme RMX1971, Android 11 / API 30, via adb): service `isForeground=true`, notifikasi update
+  tiap detik (title = label segmen, text "durasi · jarak · pace"). **Layar mati 5 menit**: durasi 00:20 → 05:27,
+  jarak 0.10 km, service tetap hidup (tidak dibunuh OEM); aksi **Stop** menghentikan service & menghapus notifikasi.
+  Catatan: device ter-charge USB saat uji (uji tanpa charge lebih ketat, menyusul).
 - Detail: `DECISIONS.md` D-019.
 
