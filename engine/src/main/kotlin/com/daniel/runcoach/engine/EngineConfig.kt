@@ -73,4 +73,6 @@ data class EngineConfig(
     val noCorrectionBelowSegmentSec: Int = 60,
     /** A countdown tick later than this is dropped instead of played late (6.1). */
     val countdownTickMaxLateMs: Int = 700,
+    /** A pace slower than this is shown as `--:--` (6.13). */
+    val maxPaceDisplaySec: Double = 1800.0,
 )

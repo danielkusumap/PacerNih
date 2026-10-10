@@ -122,3 +122,11 @@ filter, lalu menerapkan `calibrationFactor` (F4, clamp 0.95–1.05). `BoundaryCr
   `LocationSourceFactory` memilih berdasar ketersediaan Play Services.
 - `LocationSample` juga membawa `speedAccuracyMps` (dipakai F8 untuk syarat Doppler); field ini sudah ditambahkan saat P0.6.
 - Catatan: AC "sampel ~1 Hz di perangkat nyata" belum diverifikasi (butuh device).
+
+## D-019 P1.3: RunForegroundService
+- Service tipe `location` memegang `WorkoutRunner` + `LocationSource`; partial wake lock; notifikasi ongoing
+  diperbarui tiap detik dari `runner.state`; aksi Stop memanggil `onStop` lalu `stopSelf`. Tidak auto-restart.
+- `Formatters` (aturan #14) ditambahkan sebagai satu-satunya tempat format angka tampilan/notifikasi.
+- Tombol "Mulai/Stop sesi uji" pada layar placeholder `home` bersifat **sementara** (agar uji lapangan P1.3 bisa
+  dilakukan); akan diganti S02 pada P2.3. Tidak ada fitur produk di luar plan yang ditambahkan.
+- AC "layar mati 30 menit" belum diuji (butuh device).

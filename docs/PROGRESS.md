@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P1 — P1.3 (`RunForegroundService`); P1.1–P1.2 sudah selesai (lihat bawah).
+- **Berikutnya:** FASE P1 — P1.4 (voice/beep/haptic); P1.1–P1.3 sudah selesai (lihat bawah).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -187,4 +187,14 @@ Semua task P0 selesai dan AC hijau; boleh lanjut ke FASE P1. Sisa yang sifatnya 
 - Dependency: `play-services-location` 21.4.0 (whitelist) dan `:app` kini bergantung pada `:engine` (D-018).
 - Verifikasi: `:app:assembleDebug` sukses; `:engine` **162** test hijau.
 - **Belum diuji di perangkat nyata** (AC "sampel ~1 Hz" butuh device).
+
+## P1.3 RunForegroundService — selesai (2026-10-10)
+- `RunForegroundService` (tipe `location`): memegang `WorkoutRunner` + `LocationSource`, partial wake lock,
+  notifikasi ongoing (durasi, jarak, pace, label segmen) diperbarui tiap detik, aksi **Stop** di notifikasi.
+  Berhenti hanya saat Stop (START_NOT_STICKY, tidak auto-restart).
+- Izin ditambah: `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_LOCATION`, `WAKE_LOCK`.
+- `Formatters` (aturan #14, 6.13): pace `m:ss`, durasi `mm:ss`/`h:mm:ss`, jarak km 2 desimal (locale), delta bertanda.
+- Layar placeholder `home` punya tombol Mulai/Stop sesi uji (sementara sampai S02/P2.3) agar AC bisa diuji manual.
+- Verifikasi: `:app:assembleDebug` sukses. **Uji layar mati 30 menit belum dijalankan** (butuh device).
+- Detail: `DECISIONS.md` D-019.
 

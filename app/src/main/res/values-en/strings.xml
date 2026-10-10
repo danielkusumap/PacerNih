@@ -35,4 +35,9 @@
     <string name="battery_brand_other">Others: Settings &gt; Apps &gt; RunCoach &gt; Battery &gt; Unrestricted.</string>
 
     <string name="home_placeholder">Home screen (P1.7)</string>
+    <string name="action_start_test_run">Start test run</string>
+
+    <!-- Foreground service notification -->
+    <string name="notification_channel_run">Run session</string>
+    <string name="action_stop_run">Stop</string>
 </resources>
