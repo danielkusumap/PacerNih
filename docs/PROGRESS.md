@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P2 step by step — **P2.1 selesai**; selanjutnya P2.2 (Editor Workout).
+- **Berikutnya:** FASE P2 step by step — P2.1–P2.2 selesai; selanjutnya P2.3 (Beranda S02).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -276,4 +276,16 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
   **Lari Bebas** tidak bisa diedit/dihapus). `Flow<List<WorkoutTemplate>>` disiapkan untuk UI.
 - **Instrumented test di device** (Realme/Android 11): CRUD + duplikat + proteksi built-in + migrasi → **2/2 hijau**.
 - Menghapus template tidak menyentuh riwayat (belum ada tabel sesi; akan diverifikasi penuh di P2.6).
+
+## P2.2 Editor Workout (S03, D01, D02, D11) — selesai (2026-10-11)
+- Engine: `WorkoutEstimator` (F24) + `WorkoutPresets` (stable run, progressive tempo, interval, run/walk); unit test hijau.
+- **S03**: nama + target jarak total, daftar item (Segmen + Repeat + anak menjorok), tambah/duplikat/hapus/urut,
+  validasi live (`WorkoutValidator`), ringkasan (F24), Simpan ke repository, dialog "buang perubahan".
+- **D01 Editor Segmen** (sheet): label, tipe, batas (Jarak/Durasi/Tanpa batas), target pace, margin terlalu cepat,
+  per-km check; tombol ⓘ ke D11. **D02 Preset Generator** (sheet): 4 preset. **D11 Info** (sheet): 12 topik
+  (6 tipe segmen + 6 istilah) dari `strings.xml` ID & EN.
+- Engine test: **168 hijau** (+6). `:app` build sukses.
+- **Uji device (parsial)**: editor terbuka; "Add segment" menambah item; sheet D01 terbuka ("Segment editor");
+  Save hanya aktif bila nama terisi & tidak ada error. Verifikasi tap tombol **ⓘ** D11 via uiautomator belum tuntas
+  (glyph ⓘ tidak ter-encode) → sisa uji manual.
 

@@ -198,3 +198,11 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
   cocok dengan skema hasil Room). Tanpa `fallbackToDestructiveMigration` (aturan plan).
 - Proteksi built-in dilakukan di lapisan repository (DAO `deleteIfNotBuiltIn`, `update` menolak jika `isBuiltIn`).
 - Verifikasi CRUD/migrasi memakai **instrumented test** di device (bukan unit lokal) karena butuh SQLite Android.
+
+## D-029 P2.2: editor + preset + info
+- Estimasi (F24) dan preset (D02) ditaruh di **engine** (pure, teruji), bukan di UI; UI hanya memanggil.
+- `Repeat` diedit inline di daftar (batas via dialog, anak via D01); `Open` hanya diizinkan untuk segmen terakhir
+  di luar Repeat (konsisten dengan validator).
+- **D11**: konten 8.3 disimpan di `strings.xml` (ID & EN) sebagai satu string per topik dengan label bagian inline
+  (Kegunaan/Kapan/Contoh/Perilaku/Tips) — penyederhanaan dari tabel 8.3 agar praktis; isi tetap dari resource.
+- Menyimpan template lewat `WorkoutTemplateRepository.create`; editor dipakai juga nanti untuk edit (initial Workout).

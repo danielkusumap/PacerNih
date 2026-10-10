@@ -37,6 +37,7 @@ import com.daniel.runcoach.engine.model.Workout
 import com.daniel.runcoach.service.RunForegroundService
 import com.daniel.runcoach.ui.battery.BatteryGuideScreen
 import com.daniel.runcoach.ui.debug.SimulatorScreen
+import com.daniel.runcoach.ui.editor.EditorScreen
 import com.daniel.runcoach.ui.onboarding.OnboardingScreen
 import com.daniel.runcoach.ui.run.RunRoute
 import kotlinx.coroutines.launch
@@ -47,6 +48,7 @@ object Routes {
     const val BATTERY = "battery"
     const val HOME = "home"
     const val RUN = "run"
+    const val EDITOR = "editor"
     const val DEBUG = "debug"
 }
 
@@ -70,11 +72,18 @@ fun AppNavHost() {
         composable(Routes.HOME) {
             HomePlaceholder(
                 onOpenRun = { navController.navigate(Routes.RUN) },
+                onOpenEditor = { navController.navigate(Routes.EDITOR) },
                 onOpenSimulator = { navController.navigate(Routes.DEBUG) },
             )
         }
         composable(Routes.RUN) {
             RunRoute(onStop = { navController.popBackStack() })
+        }
+        composable(Routes.EDITOR) {
+            EditorScreen(
+                onSaved = { navController.popBackStack() },
+                onCancel = { navController.popBackStack() },
+            )
         }
         composable(Routes.DEBUG) {
             SimulatorScreen(onBack = { navController.popBackStack() })
@@ -88,7 +97,7 @@ fun AppNavHost() {
  * Replaced by S02 (Beranda) in P2.3.
  */
 @Composable
-private fun HomePlaceholder(onOpenRun: () -> Unit, onOpenSimulator: () -> Unit) {
+private fun HomePlaceholder(onOpenRun: () -> Unit, onOpenEditor: () -> Unit, onOpenSimulator: () -> Unit) {
     val context = LocalContext.current
     val debugBuild = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
     val scope = rememberCoroutineScope()
@@ -137,6 +146,9 @@ private fun HomePlaceholder(onOpenRun: () -> Unit, onOpenSimulator: () -> Unit) 
             }
             OutlinedButton(onClick = { RunForegroundService.stop(context) }) {
                 Text(stringResource(R.string.action_stop_run))
+            }
+            OutlinedButton(onClick = onOpenEditor) {
+                Text(stringResource(R.string.home_editor))
             }
             if (debugBuild) {
                 OutlinedButton(onClick = onOpenSimulator) {

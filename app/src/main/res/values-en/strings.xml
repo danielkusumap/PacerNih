@@ -41,6 +41,7 @@
     <string name="action_resume">Resume</string>
     <string name="action_discard">Discard</string>
     <string name="home_simulator">Simulator (debug)</string>
+    <string name="home_editor">Create workout</string>
     <string name="debug_title">Debug / Simulator</string>
     <string name="debug_speed">Speed</string>
     <string name="debug_running">Running…</string>
@@ -82,6 +83,88 @@
     <string name="run_state_running">In progress</string>
     <string name="run_state_upcoming">Upcoming</string>
     <string name="run_state_done">Done</string>
+
+    <!-- S03 Workout editor -->
+    <string name="editor_title">Workout editor</string>
+    <string name="editor_name">Workout name</string>
+    <string name="editor_goal">Total distance goal (m, optional)</string>
+    <string name="editor_add_segment">Add segment</string>
+    <string name="editor_add_repeat">Add Repeat</string>
+    <string name="editor_preset">Presets</string>
+    <string name="editor_up">Up</string>
+    <string name="editor_down">Down</string>
+    <string name="editor_duplicate">Duplicate</string>
+    <string name="editor_delete">Delete</string>
+    <string name="editor_save">Save</string>
+    <string name="editor_summary">Summary</string>
+    <string name="editor_seg_count">Segments after expand: %1$d</string>
+    <string name="editor_distance">Distance</string>
+    <string name="editor_duration">Estimated duration</string>
+    <string name="editor_at_least">≥ %1$s</string>
+    <string name="editor_invalid">Fix %1$d invalid items before saving.</string>
+    <string name="editor_repeat_line">Repeat %1$s · %2$d segments</string>
+    <string name="editor_repeat_times">%1$d×</string>
+    <string name="editor_repeat_until">until %1$d m</string>
+    <string name="editor_discard_title">Discard changes?</string>
+    <string name="editor_discard_message">There are unsaved changes.</string>
+    <string name="editor_discard_confirm">Discard</string>
+    <string name="editor_discard_keep">Keep editing</string>
+    <string name="info_open">Info</string>
+
+    <!-- D01 Segment editor -->
+    <string name="d01_title">Segment editor</string>
+    <string name="d01_label">Label</string>
+    <string name="d01_kind">Type</string>
+    <string name="d01_limit">Limit</string>
+    <string name="d01_distance_m">Distance (m)</string>
+    <string name="d01_duration_ms">Duration (mm:ss)</string>
+    <string name="d01_open">Open ended (last segment)</string>
+    <string name="d01_target">Target pace m:ss (optional)</string>
+    <string name="d01_fast_margin">Too-fast margin, seconds (0 = off)</string>
+    <string name="d01_per_km">Per-km check</string>
+    <string name="d01_done">Done</string>
+
+    <!-- D02 Preset generator -->
+    <string name="d02_title">Preset generator</string>
+    <string name="d02_stable">Stable run</string>
+    <string name="d02_tempo">Progressive tempo</string>
+    <string name="d02_interval">Interval</string>
+    <string name="d02_runwalk">Run/walk</string>
+    <string name="d02_generate">Generate</string>
+    <string name="d02_distance_m">Distance (m)</string>
+    <string name="d02_km">Kilometres</string>
+    <string name="d02_start_pace">Start pace (m:ss)</string>
+    <string name="d02_step">Step per km (seconds)</string>
+    <string name="d02_reps">Repetitions</string>
+    <string name="d02_run_s">Run (seconds)</string>
+    <string name="d02_walk_s">Walk (seconds)</string>
+    <string name="d02_goal_m">Distance goal (m)</string>
+
+    <!-- D11 Info (8.3) -->
+    <string name="info_warmup_title">Warm up</string>
+    <string name="info_warmup_body">Purpose: prepare muscles and breathing.\nWhen: start of almost every workout.\nExample: 1.5 km ≤ 8:00.\nBehaviour: target is the slowest allowed pace; graded pass/fail.\nTip: set a slower target than the main part.</string>
+    <string name="info_run_title">Run</string>
+    <string name="info_run_body">Purpose: the main part (steady/interval/tempo).\nWhen: any segment with a target.\nExample: 5 km ≤ 7:00; or 400 m ≤ 6:00 repeated 3×.\nBehaviour: average ≤ target; segments ≥1 km also check each km.\nTip: a 200 m segment can be BORDERLINE due to GPS error.</string>
+    <string name="info_walk_title">Walk</string>
+    <string name="info_walk_body">Purpose: walking break, e.g. run/walk.\nWhen: run/walk workouts or catching your breath.\nExample: walk 2 min after running 6 min.\nBehaviour: usually no target; voice calls walk/run on change.\nTip: use a duration limit for a steady rhythm.</string>
+    <string name="info_recovery_title">Recovery</string>
+    <string name="info_recovery_body">Purpose: active rest between fast intervals.\nWhen: between fast intervals.\nExample: jog 200 m ≤ 9:00.\nBehaviour: same as Walk; only the name and voice word differ.\nTip: don\'t target it too strictly.</string>
+    <string name="info_cooldown_title">Cool down</string>
+    <string name="info_cooldown_body">Purpose: lower intensity at the end.\nWhen: after the main part.\nExample: 1 km ≤ 8:00.\nBehaviour: like Warm up; the app does not stop by itself.\nTip: don\'t stop immediately.</string>
+    <string name="info_free_title">Free run (open ended)</string>
+    <string name="info_free_body">Purpose: record without a plan; used automatically after the plan ends.\nWhen: casual runs or continuing after a plan.\nExample: built-in "Free run" template.\nBehaviour: last segment only; ends on Stop; result "No target".\nTip: good for measuring pace and distance.</string>
+    <string name="info_limit_title">Limit</string>
+    <string name="info_limit_body">Explanation: when a segment ends — Distance, Duration, or Open ended (last).\nExample: short segments tolerate GPS error better with a duration.\nTip: a distance limit is intuitive but may be off by a few metres.</string>
+    <string name="info_target_title">Target pace</string>
+    <string name="info_target_body">Explanation: the slowest allowed pace (min/km); faster is fine.\nExample: target 7:00 → average must be ≤ 7:00.\nTip: empty = free (no alerts, no pass/fail).</string>
+    <string name="info_margin_title">Too-fast margin</string>
+    <string name="info_margin_body">Explanation: if live pace is faster than target by this margin, voice says "too fast".\nExample: target 7:00 + margin 20 → alert below 6:40.\nTip: turn off for segments you may sprint; inactive on short segments.</string>
+    <string name="info_perkm_title">Per-km check</string>
+    <string name="info_perkm_body">Explanation: for target segments ≥1 km, every full km must also be ≤ target besides the average.\nExample: 5 km at 7:00 fails if one km is 7:05.\nTip: turn off if only the average matters.</string>
+    <string name="info_repeat_title">Repeat</string>
+    <string name="info_repeat_body">Explanation: repeats a group of segments — a count or until a total distance.\nExample: Repeat 3× [200 m fast, 400 m recovery].\nTip: "until distance" finishes the running segment first, then ends.</string>
+    <string name="info_cue_title">Cue before segment change</string>
+    <string name="info_cue_body">Explanation: time segments → 3-2-1 countdown; distance segments → one "get ready" cue.\nExample: default distance cue 20 m.\nTip: configurable in Settings.</string>
 
     <!-- Foreground service notification -->
     <string name="notification_channel_run">Run session</string>

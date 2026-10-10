@@ -41,6 +41,7 @@
     <string name="action_resume">Lanjutkan</string>
     <string name="action_discard">Buang</string>
     <string name="home_simulator">Simulator (debug)</string>
+    <string name="home_editor">Buat workout</string>
     <string name="debug_title">Debug / Simulator</string>
     <string name="debug_speed">Kecepatan</string>
     <string name="debug_running">Menjalankan…</string>
@@ -82,6 +83,88 @@
     <string name="run_state_running">Sedang berjalan</string>
     <string name="run_state_upcoming">Belum dimulai</string>
     <string name="run_state_done">Selesai</string>
+
+    <!-- S03 Editor Workout -->
+    <string name="editor_title">Editor Workout</string>
+    <string name="editor_name">Nama workout</string>
+    <string name="editor_goal">Target jarak total (m, opsional)</string>
+    <string name="editor_add_segment">Tambah segmen</string>
+    <string name="editor_add_repeat">Tambah Repeat</string>
+    <string name="editor_preset">Preset</string>
+    <string name="editor_up">Naik</string>
+    <string name="editor_down">Turun</string>
+    <string name="editor_duplicate">Duplikat</string>
+    <string name="editor_delete">Hapus</string>
+    <string name="editor_save">Simpan</string>
+    <string name="editor_summary">Ringkasan</string>
+    <string name="editor_seg_count">Segmen setelah expand: %1$d</string>
+    <string name="editor_distance">Jarak</string>
+    <string name="editor_duration">Perkiraan durasi</string>
+    <string name="editor_at_least">≥ %1$s</string>
+    <string name="editor_invalid">Perbaiki %1$d item yang tidak valid sebelum menyimpan.</string>
+    <string name="editor_repeat_line">Repeat %1$s · %2$d segmen</string>
+    <string name="editor_repeat_times">%1$d×</string>
+    <string name="editor_repeat_until">sampai %1$d m</string>
+    <string name="editor_discard_title">Buang perubahan?</string>
+    <string name="editor_discard_message">Ada perubahan yang belum disimpan.</string>
+    <string name="editor_discard_confirm">Buang</string>
+    <string name="editor_discard_keep">Lanjut mengedit</string>
+    <string name="info_open">Info</string>
+
+    <!-- D01 Editor Segmen -->
+    <string name="d01_title">Editor Segmen</string>
+    <string name="d01_label">Label</string>
+    <string name="d01_kind">Tipe</string>
+    <string name="d01_limit">Batas</string>
+    <string name="d01_distance_m">Jarak (m)</string>
+    <string name="d01_duration_ms">Durasi (mm:ss)</string>
+    <string name="d01_open">Tanpa batas (segmen terakhir)</string>
+    <string name="d01_target">Target pace m:ss (opsional)</string>
+    <string name="d01_fast_margin">Margin terlalu cepat, detik (0 = mati)</string>
+    <string name="d01_per_km">Per-km check</string>
+    <string name="d01_done">Selesai</string>
+
+    <!-- D02 Preset Generator -->
+    <string name="d02_title">Preset Generator</string>
+    <string name="d02_stable">Stable run</string>
+    <string name="d02_tempo">Progressive tempo</string>
+    <string name="d02_interval">Interval</string>
+    <string name="d02_runwalk">Run/walk</string>
+    <string name="d02_generate">Buat</string>
+    <string name="d02_distance_m">Jarak (m)</string>
+    <string name="d02_km">Jumlah km</string>
+    <string name="d02_start_pace">Pace awal (m:ss)</string>
+    <string name="d02_step">Langkah per km (detik)</string>
+    <string name="d02_reps">Ulangan</string>
+    <string name="d02_run_s">Run (detik)</string>
+    <string name="d02_walk_s">Walk (detik)</string>
+    <string name="d02_goal_m">Target jarak (m)</string>
+
+    <!-- D11 Info (8.3) -->
+    <string name="info_warmup_title">Pemanasan</string>
+    <string name="info_warmup_body">Kegunaan: menyiapkan otot dan napas.\nKapan: awal hampir semua workout.\nContoh: 1,5 km ≤ 8:00.\nPerilaku: target = batas paling lambat; dinilai lulus/gagal.\nTips: pakai target lebih lambat dari bagian utama.</string>
+    <string name="info_run_title">Lari</string>
+    <string name="info_run_body">Kegunaan: bagian inti (stable/interval/tempo).\nKapan: setiap bagian ber-target.\nContoh: 5 km ≤ 7:00; atau 400 m ≤ 6:00 diulang 3×.\nPerilaku: rata-rata ≤ target; segmen ≥1 km dicek per km.\nTips: segmen 200 m bisa BORDERLINE karena error GPS.</string>
+    <string name="info_walk_title">Jalan</string>
+    <string name="info_walk_body">Kegunaan: jeda jalan, mis. pola run/walk.\nKapan: run/walk atau saat mengatur napas.\nContoh: jalan 2 menit setelah lari 6 menit.\nPerilaku: biasanya tanpa target; voice mengumumkan jalan/lari.\nTips: pakai batas durasi supaya ritmenya konsisten.</string>
+    <string name="info_recovery_title">Pemulihan</string>
+    <string name="info_recovery_body">Kegunaan: istirahat aktif antar interval.\nKapan: di antara interval cepat.\nContoh: jogging 200 m ≤ 9:00.\nPerilaku: sama seperti Jalan; beda nama dan kata voice.\nTips: jangan terlalu ketat menargetkannya.</string>
+    <string name="info_cooldown_title">Pendinginan</string>
+    <string name="info_cooldown_body">Kegunaan: menurunkan intensitas di akhir.\nKapan: setelah bagian utama.\nContoh: 1 km ≤ 8:00.\nPerilaku: seperti Pemanasan; app tidak berhenti sendiri.\nTips: jangan langsung Stop.</string>
+    <string name="info_free_title">Lari Bebas (tanpa batas)</string>
+    <string name="info_free_body">Kegunaan: merekam tanpa rencana; dipakai otomatis setelah rencana selesai.\nKapan: lari santai atau lanjut setelah rencana.\nContoh: template bawaan Lari Bebas.\nPerilaku: hanya segmen terakhir; berakhir saat Stop; hasil "Tanpa target".\nTips: cocok mengukur pace dan jarak.</string>
+    <string name="info_limit_title">Batas</string>
+    <string name="info_limit_body">Penjelasan: kapan segmen selesai — Jarak, Durasi, atau Tanpa batas (terakhir).\nContoh: segmen pendek lebih tahan error GPS bila pakai durasi.\nTips: batas jarak lebih intuitif tapi bisa meleset beberapa meter.</string>
+    <string name="info_target_title">Target pace</string>
+    <string name="info_target_body">Penjelasan: batas paling lambat (menit/km); lebih cepat boleh.\nContoh: target 7:00 → rata-rata harus ≤ 7:00.\nTips: kosong = bebas (tanpa alert, tanpa lulus/gagal).</string>
+    <string name="info_margin_title">Margin terlalu cepat</string>
+    <string name="info_margin_body">Penjelasan: bila pace live lebih cepat dari target sebesar margin ini, voice bilang "terlalu cepat".\nContoh: target 7:00 + margin 20 → alert bila di bawah 6:40.\nTips: matikan untuk segmen yang boleh ngebut; tak aktif di segmen pendek.</string>
+    <string name="info_perkm_title">Per-km check</string>
+    <string name="info_perkm_body">Penjelasan: untuk segmen ≥1 km ber-target, tiap km penuh juga harus ≤ target selain rata-rata.\nContoh: 5 km 7:00 gagal jika satu km 7:05.\nTips: matikan bila hanya rata-rata yang penting.</string>
+    <string name="info_repeat_title">Repeat</string>
+    <string name="info_repeat_body">Penjelasan: mengulang sekelompok segmen — jumlah ulangan atau sampai total jarak.\nContoh: Repeat 3× [200 m cepat, 400 m pemulihan].\nTips: "sampai total jarak" menyelesaikan segmen berjalan dulu, lalu berakhir.</string>
+    <string name="info_cue_title">Cue sebelum ganti segmen</string>
+    <string name="info_cue_body">Penjelasan: segmen waktu → hitung mundur 3-2-1; segmen jarak → satu cue "siap-siap".\nContoh: cue jarak default 20 m.\nTips: bisa diubah/dimatikan di Pengaturan.</string>
 
     <!-- Foreground service notification -->
     <string name="notification_channel_run">Sesi lari</string>
