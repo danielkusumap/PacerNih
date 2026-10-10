@@ -82,3 +82,12 @@ filter, lalu menerapkan `calibrationFactor` (F4, clamp 0.95–1.05). `BoundaryCr
     waktu seluruhnya masuk segmen lama, dan segmen berikutnya mulai dari total saat itu.
   - `KmMarker` live memakai waktu sample, bukan hasil interpolasi (F6).
   Keduanya belum diuji AC P0.6 dan akan diselaraskan saat P0.8 (split/interpolasi) atau saat ada vektor terkait.
+
+## D-014 P0.8: evaluator dan split
+- Penilaian segmen memakai pace dibulatkan (6.14.0). `SegmentEvaluator.marginSec`/`marginKmSec` diekspos
+  sebagai fungsi murni sehingga vektor V11 (margin dibatasi 15) dapat diuji walaupun segmen 40 m (<50 m)
+  berstatus DATA KURANG.
+- `KmSplit` hanya diberi status/target bila jendela km `[(k-1)·1000, k·1000]` berada sepenuhnya di dalam satu
+  segmen bertarget (F18); selain itu status kosong.
+- Catatan: F7 (pemisahan jarak proporsional pada batas waktu) dan interpolasi `KmMarker` live tetap belum
+  dikerjakan — keduanya urusan runner (D-013), bukan evaluator.

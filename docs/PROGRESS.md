@@ -3,14 +3,14 @@
 Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diketahui.
 
 ## Status P0 (diperbarui 2026-10-10, sinkron dengan Lampiran C)
-- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.4b, P0.5, P0.6, P0.10.
+- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.4b, P0.5, P0.6, P0.8, P0.10.
 - **Tersedia sekarang:** 6.14 (Katalog Rumus + V1–V22) dan 8.3 (Info Segmen). Q-001/Q-002/Q-003/Q-005 ditutup.
 - **Urutan yang disarankan (Lampiran C):** P0.4b -> P0.5 -> P0.6 -> P0.8 -> P0.7 -> P0.9 -> P0.11.
-- **Belum:** P0.7, P0.8, P0.9, P0.11.
+- **Belum:** P0.7, P0.9, P0.11.
 - **Gerbang P0 belum tercapai**, jadi P1 (runtime Android) belum dimulai.
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack kini menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya dicatat di `DECISIONS.md` D-010.
-- **Test:** `:engine` 101 unit test hijau; `:app:assembleDebug` sukses.
+- **Test:** `:engine` 116 unit test hijau; `:app:assembleDebug` sukses.
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -116,4 +116,17 @@ Bug diketahui: -
 
 Belum: P0.8 dst.
 Bug diketahui: pemisahan jarak proporsional F7 (batas waktu) belum diimplementasikan (D-013).
+
+## P0.8 SegmentEvaluator + KmSplitCalculator — selesai (2026-10-10)
+- `SegmentEvaluator` (6.8, F17): penilaian memakai pace dibulatkan (`roundHalfUp`), status PASS/BORDERLINE/
+  FAIL/NO_TARGET/NO_DATA/DILEWATI, selisih `deltaSec`, margin GPS `marginSec`/`marginKmSec`, cek per-km.
+- `KmSplitCalculator` (6.9, F18): baris km dari kurva jarak workout dengan interpolasi; baris sisa (>=10 m),
+  pace sisa null bila <50 m; status diberi hanya bila jendela km sepenuhnya di satu segmen bertarget;
+  km tercepat disorot.
+- Test: **116 hijau**. Vektor V9, V10, V11, V12 hijau (FormulaVectorsTest).
+- Catatan: `marginSec` diekspos sebagai fungsi murni agar V11 (margin terbatas, segmen 40 m) bisa diuji —
+  lihat `DECISIONS.md` D-014.
+
+Belum: P0.7 dst.
+Bug diketahui: pemisahan jarak proporsional F7 (batas waktu) & KmMarker live masih non-interpolasi (D-013).
 

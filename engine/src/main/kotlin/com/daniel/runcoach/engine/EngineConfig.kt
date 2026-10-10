@@ -51,4 +51,8 @@ data class EngineConfig(
     val preSegmentWarningMinSegmentSec: Int = 30,
     /** Distance cue lead for distance-based segments (6.1); 0 disables. */
     val cueDistanceM: Int = 20,
+    /** Assumed GPS distance error used for the BORDERLINE margin (F17). */
+    val paceErrorAssumedM: Double = 6.0,
+    /** Upper bound for the BORDERLINE margin in seconds per km (F17). */
+    val paceMarginCapSec: Double = 15.0,
 )

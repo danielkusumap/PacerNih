@@ -2,6 +2,10 @@ package com.daniel.runcoach.engine.gps
 
 import com.daniel.runcoach.engine.metrics.LivePaceEstimator
 import com.daniel.runcoach.engine.metrics.PaceCalculator
+import com.daniel.runcoach.engine.result.DistTimePoint
+import com.daniel.runcoach.engine.result.KmSplitCalculator
+import com.daniel.runcoach.engine.result.SegmentEvaluator
+import com.daniel.runcoach.engine.result.SegmentStatus
 import com.daniel.runcoach.engine.roundHalfUp
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -81,5 +85,50 @@ class FormulaVectorsTest {
     @Test
     fun v08_requiredPaceUnrealistic() {
         assertNull(PaceCalculator.requiredPaceSecPerKm(330.0, 1700.0, 5000.0, 3000.0))
+    }
+
+    /** V9: rounded average pace decides the segment status. */
+    @Test
+    fun v09_segmentRoundedPaceStatus() {
+        fun status(avg: Double) =
+            SegmentEvaluator.evaluate(420, perKmCheck = false, distanceM = 1000.0, movingSec = avg).status
+        assertEquals(SegmentStatus.PASS, status(420.4))
+        assertEquals(SegmentStatus.BORDERLINE, status(420.5))
+        assertEquals(SegmentStatus.FAIL, status(423.0))
+    }
+
+    /** V10: a 200 m segment's BORDERLINE margin. */
+    @Test
+    fun v10_shortSegmentMargin() {
+        fun status(avg: Double) =
+            SegmentEvaluator.evaluate(390, perKmCheck = false, distanceM = 200.0, movingSec = avg * 0.2).status
+        assertEquals(SegmentStatus.BORDERLINE, status(398.0))
+        assertEquals(SegmentStatus.FAIL, status(405.0))
+    }
+
+    /** V11: the BORDERLINE margin is capped at 15 s/km. */
+    @Test
+    fun v11_marginCapped() {
+        assertEquals(15.0, SegmentEvaluator.marginSec(420.0, 40.0), 1e-9)
+    }
+
+    /** V12: 3.1 km km-split rows, including the trailing partial kilometre. */
+    @Test
+    fun v12_kmSplits() {
+        val points = listOf(
+            DistTimePoint(0.0, 0L),
+            DistTimePoint(1000.0, 400_000L),
+            DistTimePoint(2000.0, 800_000L),
+            DistTimePoint(3000.0, 1_203_000L),
+            DistTimePoint(3100.0, 1_245_000L),
+        )
+        val splits = KmSplitCalculator.compute(points).splits
+        assertEquals(4, splits.size)
+        assertEquals(400.0, splits[0].paceSecPerKm!!, 1e-9)
+        assertEquals(400.0, splits[1].paceSecPerKm!!, 1e-9)
+        assertEquals(403.0, splits[2].paceSecPerKm!!, 1e-9)
+        assertEquals(100.0, splits[3].distanceM, 0.001)
+        assertEquals(42_000L, splits[3].durationMs)
+        assertEquals(420.0, splits[3].paceSecPerKm!!, 1e-9)
     }
 }
