@@ -127,6 +127,9 @@
     <string name="s10_recent">Recent records</string>
     <string name="s10_none">None yet</string>
     <string name="s10_note">Computed from the fastest part of a session, not just the start.</string>
+    <string name="s10_pace">pace %1$s</string>
+    <string name="s11_need_two">At least 2 sessions are needed for the chart</string>
+    <string name="s09_more_data">More data is needed for the chart</string>
     <string name="s11_title">Record detail</string>
     <string name="s11_current">Current record</string>
     <string name="s11_from">from km %1$s</string>

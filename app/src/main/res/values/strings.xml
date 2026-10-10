@@ -127,6 +127,9 @@
     <string name="s10_recent">Rekor terbaru</string>
     <string name="s10_none">Belum ada</string>
     <string name="s10_note">Dihitung dari bagian tercepat dalam sesi, bukan hanya dari awal.</string>
+    <string name="s10_pace">pace %1$s</string>
+    <string name="s11_need_two">Butuh minimal 2 sesi untuk grafik</string>
+    <string name="s09_more_data">Butuh lebih banyak data untuk grafik</string>
     <string name="s11_title">Detail Rekor</string>
     <string name="s11_current">Rekor saat ini</string>
     <string name="s11_from">dari km %1$s</string>
