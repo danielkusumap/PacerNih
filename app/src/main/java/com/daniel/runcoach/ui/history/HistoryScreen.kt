@@ -192,10 +192,10 @@ private fun SessionRow(session: SessionEntity, onOpen: () -> Unit, onEdit: () ->
             }
         }
         Row(modifier = Modifier.fillMaxWidth().padding(top = spacing.s2), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(Formatters.pace(session.avgPaceSecPerKm), style = type.bodySmall, color = colors.textSecondary)
+            Text(Formatters.pace(session.avgPaceSecPerKm), style = type.bodySmall, color = colors.textSecondary, modifier = Modifier.weight(1f))
             ResultChip(
                 status = if (targetCount == 0) RcStatus.Neutral else if (session.segFail == 0) RcStatus.Pass else RcStatus.Warn,
-                label = if (targetCount == 0) stringResource(R.string.s07_chip_no_target) else stringResource(R.string.s07_chip_pass, session.segPass, targetCount),
+                label = if (targetCount == 0) stringResource(R.string.s07_chip_no_target) else stringResource(R.string.s07_chip_short, session.segPass, targetCount),
             )
         }
     }

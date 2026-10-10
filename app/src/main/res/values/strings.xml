@@ -230,6 +230,7 @@
     <string name="s07_empty">Belum ada sesi</string>
     <string name="s07_month_header">%1$s · %2$s · %3$d sesi</string>
     <string name="s07_chip_pass">%1$d/%2$d lulus</string>
+    <string name="s07_chip_short">%1$d/%2$d</string>
     <string name="s07_month_summary">%1$s · %2$d sesi</string>
     <string name="s07_start">Mulai lari</string>
     <string name="s07_more">Menu sesi</string>
