@@ -1,20 +1,21 @@
 package com.daniel.runcoach.ui.prestart
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,11 +23,14 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.daniel.runcoach.R
+import com.daniel.runcoach.data.SettingsRepository
 import com.daniel.runcoach.engine.EngineConfig
 import com.daniel.runcoach.engine.gps.GpsFixQuality
 import com.daniel.runcoach.engine.gps.gpsFixQuality
@@ -39,14 +43,28 @@ import com.daniel.runcoach.engine.voice.VoiceLanguage
 import com.daniel.runcoach.service.RunForegroundService
 import com.daniel.runcoach.service.location.LocationSourceFactory
 import com.daniel.runcoach.ui.Formatters
+import com.daniel.runcoach.ui.components.Banner
+import com.daniel.runcoach.ui.components.RcBannerVariant
+import com.daniel.runcoach.ui.components.RcButton
+import com.daniel.runcoach.ui.components.RcButtonVariant
+import com.daniel.runcoach.ui.components.RcCard
+import com.daniel.runcoach.ui.components.RcDivider
+import com.daniel.runcoach.ui.components.RcStatus
+import com.daniel.runcoach.ui.components.ResultChip
+import com.daniel.runcoach.ui.components.SegmentStrip
+import com.daniel.runcoach.ui.components.SegmentedControl
+import com.daniel.runcoach.ui.components.TopBar
+import com.daniel.runcoach.ui.components.segmentKindColor
+import com.daniel.runcoach.ui.components.segmentKindIcon
 import com.daniel.runcoach.ui.onboarding.hasLocationPermission
-import com.daniel.runcoach.data.SettingsRepository
+import com.daniel.runcoach.ui.theme.LocalRcColors
+import com.daniel.runcoach.ui.theme.LocalRcShapes
+import com.daniel.runcoach.ui.theme.LocalRcSpacing
+import com.daniel.runcoach.ui.theme.LocalRcTypography
+import com.daniel.runcoach.ui.theme.RcIcons
 import kotlinx.coroutines.flow.first
 
-/**
- * S04 Pre-start (plan section 8): workout segment summary, live GPS readiness, permission status, quick
- * settings (voice language, start countdown), and Start / Wait for GPS / Start anyway.
- */
+/** S04 Pre-start (DESIGN.md section 8): GPS readiness, segment list, quick settings, sticky Start. */
 @Composable
 fun PraStartScreen(workout: Workout, onStarted: () -> Unit, onBack: () -> Unit) {
     val context = LocalContext.current
@@ -56,6 +74,7 @@ fun PraStartScreen(workout: Workout, onStarted: () -> Unit, onBack: () -> Unit) 
 
     val permissionGranted = hasLocationPermission(context)
     val quality = gpsFixQuality(accuracy)
+    val segments = expandedSegments(workout)
 
     LaunchedEffect(Unit) {
         val settingsRepository = SettingsRepository(context)
@@ -71,60 +90,93 @@ fun PraStartScreen(workout: Workout, onStarted: () -> Unit, onBack: () -> Unit) 
         onStarted()
     }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(stringResource(R.string.s04_title), style = MaterialTheme.typography.headlineSmall)
-            Text(workout.name, style = MaterialTheme.typography.titleMedium)
+    val colors = LocalRcColors.current
+    val spacing = LocalRcSpacing.current
+    val type = LocalRcTypography.current
+    val ready = permissionGranted && quality == GpsFixQuality.READY
 
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(stringResource(R.string.s04_segments), style = MaterialTheme.typography.titleSmall)
-                    expandedSegments(workout).forEach { Text(describe(it), style = MaterialTheme.typography.bodySmall) }
-                }
-            }
+    Column(modifier = Modifier.fillMaxSize().background(colors.bg)) {
+        TopBar(title = workout.name, onBack = onBack)
+        Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = spacing.screenH), verticalArrangement = Arrangement.spacedBy(spacing.cardGap)) {
+            SegmentStrip(kinds = segments.map { it.kind })
+            Text(stringResource(R.string.s04_summary, segments.size, Formatters.distanceKm(segments.sumOf { (it.limit as? Limit.Distance)?.meters?.toDouble() ?: 0.0 })), style = type.bodySmall, color = colors.textSecondary)
 
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(stringResource(R.string.s04_gps_status), style = MaterialTheme.typography.titleSmall)
-                    Text(
-                        when (quality) {
-                            GpsFixQuality.READY -> stringResource(R.string.s04_gps_ready, (accuracy?.toInt() ?: 0).toString())
-                            GpsFixQuality.WEAK -> stringResource(R.string.s04_gps_weak, (accuracy?.toInt() ?: 0).toString())
-                            GpsFixQuality.SEARCHING -> stringResource(R.string.s04_gps_searching)
+            RcCard {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s4)) {
+                    SignalBars(accuracy)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text((accuracy?.toInt() ?: 0).toString(), style = type.numberL, color = colors.textPrimary)
+                        Text(stringResource(R.string.s04_accuracy), style = type.label, color = colors.textSecondary)
+                    }
+                    ResultChip(
+                        status = when (quality) {
+                            GpsFixQuality.READY -> RcStatus.Pass
+                            GpsFixQuality.WEAK -> RcStatus.Warn
+                            GpsFixQuality.SEARCHING -> RcStatus.Neutral
+                        },
+                        label = when (quality) {
+                            GpsFixQuality.READY -> stringResource(R.string.s04_status_ready)
+                            GpsFixQuality.WEAK -> stringResource(R.string.s04_status_weak)
+                            GpsFixQuality.SEARCHING -> stringResource(R.string.s04_status_searching)
                         },
                     )
                 }
             }
 
-            Text(stringResource(R.string.s04_quick_settings), style = MaterialTheme.typography.titleSmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(stringResource(R.string.s04_voice_language) + ": ")
-                TextButton(onClick = { voiceLanguage = VoiceLanguage.ID }) { Text("ID" + if (voiceLanguage == VoiceLanguage.ID) " ✓" else "") }
-                TextButton(onClick = { voiceLanguage = VoiceLanguage.EN }) { Text("EN" + if (voiceLanguage == VoiceLanguage.EN) " ✓" else "") }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(stringResource(R.string.s04_countdown) + ": ")
-                listOf(0, 3, 5, 10).forEach { value ->
-                    TextButton(onClick = { countdownSec = value }) { Text("$value" + if (countdownSec == value) " ✓" else "") }
+            Text(stringResource(R.string.s04_segments), style = type.label, color = colors.textSecondary)
+            segments.forEach { segment ->
+                Row(modifier = Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+                    Icon(painterResource(segmentKindIcon(segment.kind)), contentDescription = null, tint = segmentKindColor(segment.kind), modifier = Modifier.size(20.dp))
+                    Text(describe(segment), style = type.body, color = colors.textPrimary, modifier = Modifier.weight(1f))
                 }
+                RcDivider()
             }
 
-            if (!permissionGranted) {
-                Text(stringResource(R.string.s04_no_permission), color = MaterialTheme.colorScheme.error)
+            Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
+                Text(stringResource(R.string.s04_voice_language), style = type.bodySmall, color = colors.textSecondary)
+                SegmentedControl(listOf(VoiceLanguage.ID to "ID", VoiceLanguage.EN to "EN"), voiceLanguage, { voiceLanguage = it })
+                Text(stringResource(R.string.s04_countdown), style = type.bodySmall, color = colors.textSecondary)
+                SegmentedControl(listOf(0, 3, 5, 10).map { it to it.toString() }, countdownSec, { countdownSec = it })
             }
+            if (!permissionGranted) Banner(stringResource(R.string.s04_no_permission), variant = RcBannerVariant.Warning)
+            Box(Modifier.padding(bottom = spacing.s4))
+        }
 
-            if (permissionGranted && quality == GpsFixQuality.READY) {
-                Button(onClick = { start() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.s04_start)) }
+        Column(modifier = Modifier.fillMaxWidth().background(colors.bg).padding(horizontal = spacing.screenH).padding(vertical = spacing.s3), verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
+            if (ready) {
+                RcButton(stringResource(R.string.s04_start).uppercase(), onClick = { start() }, icon = RcIcons.PlayArrow, fillWidth = true, modifier = Modifier.height(64.dp))
             } else {
-                Button(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.s04_wait_gps)) }
-                OutlinedButton(onClick = { if (permissionGranted) start() }, enabled = permissionGranted, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.s04_start_anyway))
-                }
+                RcButton(stringResource(R.string.s04_wait_gps), onClick = {}, enabled = false, fillWidth = true, modifier = Modifier.height(64.dp))
+                RcButton(stringResource(R.string.s04_start_anyway), onClick = { if (permissionGranted) start() }, enabled = permissionGranted, variant = RcButtonVariant.Tertiary, fillWidth = true)
             }
-            OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_back)) }
+        }
+    }
+}
+
+@Composable
+private fun SignalBars(accuracy: Double?) {
+    val colors = LocalRcColors.current
+    val shapes = LocalRcShapes.current
+    val filled = when {
+        accuracy == null -> 0
+        accuracy <= 8 -> 5
+        accuracy <= 12 -> 4
+        accuracy <= 20 -> 3
+        else -> 2
+    }
+    val tint = when {
+        filled >= 4 -> colors.pass
+        filled >= 3 -> colors.warn
+        else -> colors.neutral
+    }
+    Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        (1..5).forEach { bar ->
+            Box(
+                modifier = Modifier
+                    .width(6.dp)
+                    .height((8 * bar).dp)
+                    .background(if (bar <= filled) tint else colors.outline, RoundedCornerShape(2.dp)),
+            )
         }
     }
 }

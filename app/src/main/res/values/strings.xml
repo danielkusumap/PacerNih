@@ -90,6 +90,11 @@
     <string name="s04_wait_gps">Tunggu GPS</string>
     <string name="s04_start_anyway">Mulai saja</string>
     <string name="s04_no_permission">Izin lokasi belum diberikan.</string>
+    <string name="s04_accuracy">Akurasi GPS</string>
+    <string name="s04_status_ready">Siap</string>
+    <string name="s04_status_searching">Mencari sinyal</string>
+    <string name="s04_status_weak">Lemah</string>
+    <string name="s04_summary">%1$d segmen · ≥ %2$s</string>
 
     <!-- S06 Selesai & Simpan -->
     <string name="s06_title">Selesai</string>
@@ -103,6 +108,13 @@
     <string name="s06_save">Simpan</string>
     <string name="s06_skip">Lewati</string>
     <string name="s06_discard">Buang sesi</string>
+    <string name="s06_saved">Sesi tersimpan</string>
+    <string name="s06_optional_notes">Catatan (opsional)</string>
+    <string name="s06_effort">Seberapa capek? (1-10)</string>
+    <string name="s06_note_counter">%1$d/500</string>
+    <string name="s06_metric_time">Waktu</string>
+    <string name="s06_metric_avg_pace">Pace rata-rata</string>
+    <string name="s06_metric_pass">Segmen lulus</string>
     <string name="s06_loading">Menyimpan sesi…</string>
 
     <!-- Tabs -->

@@ -90,6 +90,11 @@
     <string name="s04_wait_gps">Wait for GPS</string>
     <string name="s04_start_anyway">Start anyway</string>
     <string name="s04_no_permission">Location permission is not granted.</string>
+    <string name="s04_accuracy">GPS accuracy</string>
+    <string name="s04_status_ready">Ready</string>
+    <string name="s04_status_searching">Searching</string>
+    <string name="s04_status_weak">Weak</string>
+    <string name="s04_summary">%1$d segments · ≥ %2$s</string>
 
     <!-- S06 Finish & save -->
     <string name="s06_title">Finish</string>
@@ -103,6 +108,13 @@
     <string name="s06_save">Save</string>
     <string name="s06_skip">Skip</string>
     <string name="s06_discard">Discard session</string>
+    <string name="s06_saved">Session saved</string>
+    <string name="s06_optional_notes">Notes (optional)</string>
+    <string name="s06_effort">How hard did it feel? (1-10)</string>
+    <string name="s06_note_counter">%1$d/500</string>
+    <string name="s06_metric_time">Time</string>
+    <string name="s06_metric_avg_pace">Average pace</string>
+    <string name="s06_metric_pass">Segments passed</string>
     <string name="s06_loading">Saving session…</string>
 
     <!-- Tabs -->
