@@ -1,25 +1,25 @@
 package com.daniel.runcoach.ui.home
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,8 +27,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -38,28 +41,45 @@ import com.daniel.runcoach.data.RunSnapshot
 import com.daniel.runcoach.data.SessionRepository
 import com.daniel.runcoach.data.WorkoutTemplate
 import com.daniel.runcoach.data.WorkoutTemplateRepository
-import com.daniel.runcoach.engine.stats.WeeklySession
-import com.daniel.runcoach.engine.stats.WeeklyStatsAggregator
 import com.daniel.runcoach.engine.model.Limit
+import com.daniel.runcoach.engine.model.Repeat
 import com.daniel.runcoach.engine.model.Segment
+import com.daniel.runcoach.engine.model.SegmentKind
 import com.daniel.runcoach.engine.model.Workout
 import com.daniel.runcoach.engine.model.WorkoutEstimator
 import com.daniel.runcoach.engine.model.WorkoutExpander
 import com.daniel.runcoach.engine.model.WorkoutJson
+import com.daniel.runcoach.engine.stats.WeeklySession
+import com.daniel.runcoach.engine.stats.WeeklyStatsAggregator
 import com.daniel.runcoach.service.RunForegroundService
 import com.daniel.runcoach.ui.Formatters
 import com.daniel.runcoach.ui.MainBottomBar
 import com.daniel.runcoach.ui.MainTab
+import com.daniel.runcoach.ui.components.Banner
+import com.daniel.runcoach.ui.components.EmptyState
+import com.daniel.runcoach.ui.components.MetricBlock
+import com.daniel.runcoach.ui.components.RcBannerVariant
+import com.daniel.runcoach.ui.components.RcButton
+import com.daniel.runcoach.ui.components.RcButtonSize
+import com.daniel.runcoach.ui.components.RcButtonVariant
+import com.daniel.runcoach.ui.components.RcCard
+import com.daniel.runcoach.ui.components.RcDialog
+import com.daniel.runcoach.ui.components.RcIconButton
+import com.daniel.runcoach.ui.components.SectionHeader
+import com.daniel.runcoach.ui.components.SegmentStrip
+import com.daniel.runcoach.ui.components.TopBar
+import com.daniel.runcoach.ui.theme.LocalRcColors
+import com.daniel.runcoach.ui.theme.LocalRcShapes
+import com.daniel.runcoach.ui.theme.LocalRcSpacing
+import com.daniel.runcoach.ui.theme.LocalRcTypography
+import com.daniel.runcoach.ui.theme.RcIcons
 import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.launch
 
-/**
- * S02 Beranda (plan section 8): quick Free run, template list with per-template actions, the unfinished-session
- * banner, and a FAB to create a workout. The weekly summary card arrives in P2.10.
- */
+/** S02 Beranda (DESIGN.md section 8): one big Free-run card, weekly summary, template cards, create button. */
 @Composable
 fun BerandaScreen(
     debugBuild: Boolean,
@@ -81,6 +101,7 @@ fun BerandaScreen(
     var weekDistanceM by remember { mutableStateOf(0.0) }
     var weekSessions by remember { mutableStateOf(0) }
     var weekDeltaM by remember { mutableStateOf<Double?>(null) }
+    var loaded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         repository.ensureBuiltIn()
@@ -93,66 +114,69 @@ fun BerandaScreen(
         weekDistanceM = week?.totalDistanceM ?: 0.0
         weekSessions = week?.sessionCount ?: 0
         weekDeltaM = week?.deltaM
+        loaded = true
     }
 
     val freeRun = templates.firstOrNull { it.id == WorkoutTemplateRepository.FREE_RUN_ID }
     val userTemplates = templates.filterNot { it.isBuiltIn }
+    val colors = LocalRcColors.current
+    val spacing = LocalRcSpacing.current
 
     fun start(workout: Workout, templateId: String?) {
         if (templateId != null) scope.launch { repository.markUsed(templateId) }
         onOpenPrestart(workout)
     }
 
-    Scaffold(
-        bottomBar = { MainBottomBar(MainTab.WORKOUT, onSelectTab) },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(onClick = { onOpenEditor(null) }) { Text(stringResource(R.string.home_editor)) }
-        },
-    ) { padding ->
-        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    androidx.compose.material3.Scaffold(bottomBar = { MainBottomBar(MainTab.WORKOUT, onSelectTab) }) { padding ->
+        Box(modifier = Modifier.fillMaxSize().background(colors.bg).padding(padding)) {
             Column(
-                modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = spacing.screenH)
+                    .padding(bottom = 88.dp),
+                verticalArrangement = Arrangement.spacedBy(spacing.cardGap),
             ) {
-                Text(stringResource(R.string.s02_title), style = MaterialTheme.typography.headlineSmall)
+                TopBar(title = stringResource(R.string.s02_title), tabPage = true)
 
-                // Unfinished-session banner
                 snapshot?.let { snap ->
-                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)) {
-                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(stringResource(R.string.s02_resume_title), style = MaterialTheme.typography.titleMedium)
-                            val name = runCatching { WorkoutJson.decode(snap.workoutJson).name }.getOrDefault("")
-                            Text(stringResource(R.string.s02_resume_detail, name, formatTimestamp(snap.startedAtEpochMs)))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(onClick = { RunForegroundService.resume(context, snap.sessionId); onResumeRun() }) {
-                                    Text(stringResource(R.string.action_resume))
-                                }
-                                OutlinedButton(onClick = {
-                                    scope.launch { persistence.clear(snap.sessionId) }
-                                    snapshot = null
-                                }) { Text(stringResource(R.string.action_discard)) }
-                            }
-                        }
+                    val name = runCatching { WorkoutJson.decode(snap.workoutJson).name }.getOrDefault("")
+                    Banner(
+                        text = "$name · ${stringResource(R.string.s02_resume_saved, formatTimestamp(snap.startedAtEpochMs))}",
+                        variant = RcBannerVariant.Accent,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+                        RcButton(
+                            text = stringResource(R.string.action_resume),
+                            onClick = { RunForegroundService.resume(context, snap.sessionId); onResumeRun() },
+                            variant = RcButtonVariant.Tertiary,
+                        )
+                        RcButton(
+                            text = stringResource(R.string.action_discard),
+                            onClick = { scope.launch { persistence.clear(snap.sessionId) }; snapshot = null },
+                            variant = RcButtonVariant.Destructive,
+                        )
                     }
                 }
 
-                // Weekly summary card (tap -> S09)
-                Card(modifier = Modifier.fillMaxWidth().clickable { onOpenStats() }) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(stringResource(R.string.beranda_week, Formatters.distanceKm(weekDistanceM), weekSessions))
-                        weekDeltaM?.let { Text(stringResource(R.string.s09_vs_last, Formatters.distanceKm(it)), style = MaterialTheme.typography.bodySmall) }
+                FreeRunCard(onStart = { freeRun?.let { start(it.workout, null) } ?: start(WorkoutTemplateRepository.freeRunWorkout(), null) })
+
+                RcCard(interactive = true, onClick = onOpenStats) {
+                    Text(stringResource(R.string.s02_week_label).uppercase(), style = LocalRcTypography.current.label, color = colors.textSecondary)
+                    Row(modifier = Modifier.fillMaxWidth().padding(top = spacing.s2), horizontalArrangement = Arrangement.spacedBy(spacing.s5)) {
+                        MetricBlock(stringResource(R.string.s02_metric_distance), Formatters.distanceKm(weekDistanceM))
+                        MetricBlock(stringResource(R.string.s02_metric_sessions), weekSessions.toString())
+                        WeekDelta(weekDeltaM)
                     }
                 }
 
-                // Free run quick start
-                Button(
-                    onClick = { freeRun?.let { start(it.workout, null) } ?: start(WorkoutTemplateRepository.freeRunWorkout(), null) },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text(stringResource(R.string.s02_free_run), style = MaterialTheme.typography.titleMedium) }
+                SectionHeader(stringResource(R.string.s02_workouts_header))
 
-                // Template list
-                if (userTemplates.isEmpty()) {
-                    Text(stringResource(R.string.s02_create_first), style = MaterialTheme.typography.bodyMedium)
+                if (!loaded) {
+                    repeat(3) { com.daniel.runcoach.ui.components.Skeleton(modifier = Modifier.fillMaxWidth().height(88.dp)) }
+                } else if (userTemplates.isEmpty()) {
+                    EmptyState(
+                        title = stringResource(R.string.s02_empty_title),
+                        message = stringResource(R.string.s02_empty_message),
+                        action = { RcButton(stringResource(R.string.s02_empty_action), onClick = { onOpenEditor(null) }, variant = RcButtonVariant.Secondary) },
+                    )
                 } else {
                     userTemplates.forEach { template ->
                         TemplateCard(
@@ -166,26 +190,95 @@ fun BerandaScreen(
                 }
 
                 if (debugBuild) {
-                    OutlinedButton(onClick = onOpenSimulator, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.home_simulator))
-                    }
+                    RcButton(stringResource(R.string.home_simulator), onClick = onOpenSimulator, variant = RcButtonVariant.Secondary, fillWidth = true)
                 }
+            }
+
+            // Extended "create" button, not a default round FAB (DESIGN.md S02).
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(spacing.screenH)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(colors.surfaceRaised)
+                    .border(1.dp, colors.outlineStrong, RoundedCornerShape(18.dp))
+                    .clickable { onOpenEditor(null) }
+                    .padding(horizontal = spacing.s4, vertical = spacing.s3),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+            ) {
+                Icon(painterResource(RcIcons.Add), contentDescription = null, tint = colors.textPrimary, modifier = Modifier.size(20.dp))
+                Text(stringResource(R.string.s02_create), style = LocalRcTypography.current.titleS, color = colors.textPrimary)
             }
         }
     }
 
     pendingDelete?.let { template ->
-        AlertDialog(
-            onDismissRequest = { pendingDelete = null },
-            title = { Text(stringResource(R.string.s02_delete_title)) },
-            text = { Text(stringResource(R.string.s02_delete_message, template.name)) },
-            confirmButton = {
-                TextButton(onClick = { scope.launch { repository.delete(template.id) }; pendingDelete = null }) {
-                    Text(stringResource(R.string.s02_delete))
-                }
+        RcDialog(
+            onDismiss = { pendingDelete = null },
+            title = stringResource(R.string.s02_delete_title),
+            content = { Text(stringResource(R.string.s02_delete_message, template.name), style = LocalRcTypography.current.body, color = colors.textSecondary) },
+            dismiss = { RcButton(stringResource(R.string.editor_discard_keep), onClick = { pendingDelete = null }, variant = RcButtonVariant.Tertiary) },
+            confirm = {
+                RcButton(
+                    stringResource(R.string.s02_delete),
+                    onClick = { scope.launch { repository.delete(template.id) }; pendingDelete = null },
+                    variant = RcButtonVariant.DestructiveFilled,
+                )
             },
-            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text(stringResource(R.string.editor_discard_keep)) } },
         )
+    }
+}
+
+@Composable
+private fun FreeRunCard(onStart: () -> Unit) {
+    val colors = LocalRcColors.current
+    val shapes = LocalRcShapes.current
+    val spacing = LocalRcSpacing.current
+    val type = LocalRcTypography.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(96.dp)
+            .clip(RoundedCornerShape(shapes.radiusL))
+            .background(colors.accent)
+            .clickable(onClick = onStart)
+            .padding(spacing.cardPad),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column {
+            Text(stringResource(R.string.s02_free_run), style = type.titleM, color = colors.onAccent)
+            Text(stringResource(R.string.s02_free_run_sub), style = type.bodySmall, color = colors.onAccent)
+        }
+        Box(
+            modifier = Modifier.size(56.dp).clip(CircleShape).background(colors.onAccent),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(painterResource(RcIcons.PlayArrow), contentDescription = null, tint = colors.accent, modifier = Modifier.size(28.dp))
+        }
+    }
+}
+
+@Composable
+private fun WeekDelta(deltaM: Double?) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(stringResource(R.string.s02_metric_delta).uppercase(), style = type.label, color = colors.textSecondary)
+        if (deltaM == null) {
+            Text(stringResource(R.string.s02_new), style = type.numberM, color = colors.textSecondary)
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Icon(
+                    painterResource(if (deltaM >= 0) RcIcons.TrendingUp else RcIcons.TrendingDown),
+                    contentDescription = null,
+                    tint = if (deltaM >= 0) colors.pass else colors.neutral,
+                    modifier = Modifier.size(20.dp),
+                )
+                Text(Formatters.distanceKm(deltaM), style = type.numberM, color = colors.textPrimary)
+            }
+        }
     }
 }
 
@@ -197,21 +290,40 @@ private fun TemplateCard(
     onDuplicate: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(template.name, style = MaterialTheme.typography.titleMedium)
-            Text(describe(template.workout), style = MaterialTheme.typography.bodySmall)
-            if (template.isBuiltIn) {
-                Text(stringResource(R.string.s02_builtin_note), style = MaterialTheme.typography.labelSmall)
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Button(onClick = onStart) { Text(stringResource(R.string.s02_mulai)) }
-                if (!template.isBuiltIn) {
-                    TextButton(onClick = onEdit) { Text(stringResource(R.string.s02_edit)) }
-                    TextButton(onClick = onDuplicate) { Text(stringResource(R.string.s02_duplicate)) }
-                    TextButton(onClick = onDelete) { Text(stringResource(R.string.s02_delete)) }
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    val spacing = LocalRcSpacing.current
+    var menu by remember { mutableStateOf(false) }
+    RcCard(interactive = true) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(template.name, style = type.titleS, color = colors.textPrimary, modifier = Modifier.weight(1f))
+            Box {
+                RcIconButton(RcIcons.MoreVert, stringResource(R.string.s02_more), onClick = { menu = true })
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = colors.surfaceRaised) {
+                    DropdownMenuItem(text = { Text(stringResource(R.string.s02_edit)) }, onClick = { menu = false; onEdit() })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.s02_duplicate)) }, onClick = { menu = false; onDuplicate() })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.s02_delete)) }, onClick = { menu = false; onDelete() })
                 }
             }
+        }
+        SegmentStrip(kinds = segmentKinds(template.workout), modifier = Modifier.padding(vertical = spacing.s3))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+            Text(describe(template.workout), style = type.bodySmall, color = colors.textSecondary, modifier = Modifier.weight(1f))
+            RcButton(stringResource(R.string.s02_mulai), onClick = onStart, size = RcButtonSize.Small)
+        }
+        template.lastUsedAt?.let {
+            Text(stringResource(R.string.s02_last_used, formatTimestamp(it)), style = type.caption, color = colors.textTertiary)
+        }
+    }
+}
+
+private fun segmentKinds(workout: Workout): List<SegmentKind> = runCatching {
+    WorkoutExpander.expandFinite(workout.items).map { it.kind }
+}.getOrElse {
+    workout.items.flatMap { block ->
+        when (block) {
+            is Segment -> listOf(block.kind)
+            is Repeat -> block.children.map { it.kind }
         }
     }
 }
@@ -222,7 +334,7 @@ private fun describe(workout: Workout): String {
         workout.items.sumOf { block ->
             when (block) {
                 is Segment -> 1
-                is com.daniel.runcoach.engine.model.Repeat -> block.children.size
+                is Repeat -> block.children.size
             }
         }
     }
@@ -246,7 +358,7 @@ private fun collectTargets(items: List<com.daniel.runcoach.engine.model.Block>):
     items.flatMap { block ->
         when (block) {
             is Segment -> listOf(block.targetPaceSecPerKm)
-            is com.daniel.runcoach.engine.model.Repeat -> block.children.map { it.targetPaceSecPerKm }
+            is Repeat -> block.children.map { it.targetPaceSecPerKm }
         }
     }
 

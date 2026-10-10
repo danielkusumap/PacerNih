@@ -1,6 +1,8 @@
 package com.daniel.runcoach.ui.run
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,24 +11,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,18 +26,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.collectAsState
+import com.daniel.runcoach.R
 import com.daniel.runcoach.data.AppSettings
 import com.daniel.runcoach.data.SettingsRepository
-import com.daniel.runcoach.R
 import com.daniel.runcoach.engine.alert.CorrectionState
 import com.daniel.runcoach.engine.model.Limit
 import com.daniel.runcoach.engine.model.Segment
@@ -56,8 +49,28 @@ import com.daniel.runcoach.service.RunForegroundService
 import com.daniel.runcoach.service.RunStateHolder
 import com.daniel.runcoach.service.RunUiState
 import com.daniel.runcoach.ui.Formatters
+import com.daniel.runcoach.ui.components.HeroPace
+import com.daniel.runcoach.ui.components.MetricBlock
+import com.daniel.runcoach.ui.components.RcButton
+import com.daniel.runcoach.ui.components.RcButtonVariant
+import com.daniel.runcoach.ui.components.RcCard
+import com.daniel.runcoach.ui.components.RcDialog
+import com.daniel.runcoach.ui.components.RcIconButton
+import com.daniel.runcoach.ui.components.RcIconButtonVariant
+import com.daniel.runcoach.ui.components.RcStatus
+import com.daniel.runcoach.ui.components.SegmentProgressBar
+import com.daniel.runcoach.ui.components.StatusBadge
+import com.daniel.runcoach.ui.components.segmentKindColor
+import com.daniel.runcoach.ui.components.segmentKindIcon
 import com.daniel.runcoach.ui.map.RouteMapView
-import com.daniel.runcoach.ui.theme.RunCoachTheme
+import com.daniel.runcoach.ui.theme.LocalRcColors
+import com.daniel.runcoach.ui.theme.LocalRcShapes
+import com.daniel.runcoach.ui.theme.LocalRcSpacing
+import com.daniel.runcoach.ui.theme.LocalRcTypography
+import com.daniel.runcoach.ui.theme.RcIcons
+import com.daniel.runcoach.ui.theme.RcTheme
+import androidx.compose.ui.tooling.preview.Preview
+import kotlin.math.abs
 import kotlinx.coroutines.launch
 
 /** S05 route: observes the run state, keeps the screen on, and forwards controls to the service. */
@@ -78,17 +91,17 @@ fun RunRoute(onStop: () -> Unit) {
 
     BackHandler(enabled = active) { showBackDialog = true }
     if (showBackDialog) {
-        AlertDialog(
-            onDismissRequest = { showBackDialog = false },
-            title = { Text(stringResource(R.string.run_back_title)) },
-            text = { Text(stringResource(R.string.run_back_message)) },
-            confirmButton = { TextButton(onClick = { showBackDialog = false }) { Text(stringResource(R.string.run_stay)) } },
-            dismissButton = {
-                TextButton(onClick = {
-                    showBackDialog = false
-                    RunForegroundService.stop(context)
-                    onStop()
-                }) { Text(stringResource(R.string.action_stop_run)) }
+        RcDialog(
+            onDismiss = { showBackDialog = false },
+            title = stringResource(R.string.run_back_title),
+            content = { Text(stringResource(R.string.run_back_message), style = LocalRcTypography.current.body, color = LocalRcColors.current.textSecondary) },
+            dismiss = { RcButton(stringResource(R.string.run_stay), onClick = { showBackDialog = false }, variant = RcButtonVariant.Tertiary) },
+            confirm = {
+                RcButton(
+                    stringResource(R.string.action_stop_run),
+                    onClick = { showBackDialog = false; RunForegroundService.stop(context); onStop() },
+                    variant = RcButtonVariant.DestructiveFilled,
+                )
             },
         )
     }
@@ -107,10 +120,9 @@ fun RunRoute(onStop: () -> Unit) {
 }
 
 /**
- * S05 Layar Lari (plan section 8): header, segment, live-pace hero with correction badge, segment metrics,
- * totals, next-segment preview, countdown overlay, banners, and the run controls. Stateless.
+ * S05 Layar Lari (DESIGN.md section 8). Not scrollable: header, segment, hero, segment metrics, totals, next,
+ * controls. Banners overlay the header area; only one status colour at a time.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RunScreen(
     ui: RunUiState,
@@ -123,129 +135,56 @@ fun RunScreen(
     showMap: Boolean = false,
     onToggleMap: () -> Unit = {},
 ) {
+    val colors = LocalRcColors.current
+    val spacing = LocalRcSpacing.current
+    val type = LocalRcTypography.current
     val state = ui.state
     val segment = state.segment
-    val monospace = MaterialTheme.typography.displayMedium.copy(
-        fontFamily = FontFamily.Monospace,
-        fontWeight = FontWeight.Bold,
-    )
+    val paused = ui.phase == RunnerPhase.PAUSED_MANUAL || ui.phase == RunnerPhase.PAUSED_AUTO
     var showExtend by remember { mutableStateOf(false) }
     var showSegments by remember { mutableStateOf(false) }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                val segCountdown = state.segmentCountdownSec
-                val cueKind = state.distanceCueNextKind
-                if (state.phase == RunnerPhase.RUNNING && segCountdown != null) {
-                    Banner(stringResource(R.string.run_change_in, state.nextSegment?.kind?.let { kindLabel(it) } ?: "", segCountdown))
-                }
-                if (state.distanceCueActive && cueKind != null) {
-                    Banner(stringResource(R.string.run_get_ready, kindLabel(cueKind)))
-                }
+    Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(horizontal = spacing.screenH),
+        ) {
+            // A. Header
+            Header(ui)
+            // B. Segment
+            segment?.let { SegmentBlock(state, it) }
+            // Banners (do not push content, sit right under the header)
+            BannerRow(ui, onCancelCountdown)
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(ui.workoutName, style = MaterialTheme.typography.titleSmall)
-                    if (state.gpsLost) Text(stringResource(R.string.run_gps_lost), color = MaterialTheme.colorScheme.error)
-                }
-
+            Column(modifier = Modifier.weight(1f).alpha(if (paused) 0.55f else 1f)) {
+                // C. Hero
                 if (ui.phase == RunnerPhase.WAITING_GPS) {
-                    Text(stringResource(R.string.run_waiting_gps), style = MaterialTheme.typography.headlineSmall)
-                }
-                if (segment != null) {
-                    Text(
-                        stringResource(R.string.run_segment_of, state.stepIndex, state.stepCount ?: state.stepIndex) +
-                            " · ${kindLabel(segment.kind)}",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    LinearProgressIndicator(progress = { segmentProgress(state, segment) }, modifier = Modifier.fillMaxWidth())
-                    Text(segmentRemainingText(state, segment), style = MaterialTheme.typography.bodySmall)
-                }
-
-                Text(Formatters.pace(state.paceLiveSecPerKm), style = monospace)
-                Text(
-                    segment?.targetPaceSecPerKm
-                        ?.let { stringResource(R.string.run_target, Formatters.pace(it.toDouble())) }
-                        ?: stringResource(R.string.run_no_target),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                if (segment?.targetPaceSecPerKm != null) {
-                    Text(
-                        correctionLabel(ui.correction),
-                        color = when (ui.correction) {
-                            CorrectionState.STABLE -> MaterialTheme.colorScheme.primary
-                            CorrectionState.TOO_SLOW -> MaterialTheme.colorScheme.error
-                            CorrectionState.TOO_FAST -> MaterialTheme.colorScheme.tertiary
-                        },
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                }
-
-                if (segment?.targetPaceSecPerKm != null && ui.requiredPaceSecPerKm != null) {
-                    Text(
-                        stringResource(R.string.run_required, Formatters.pace(ui.requiredPaceSecPerKm)),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        TotalItem(stringResource(R.string.run_label_total), Formatters.duration(state.movingMs))
-                        TotalItem("", Formatters.distanceKm(state.totalDistanceM))
-                        TotalItem("", Formatters.pace(if (state.totalDistanceM > 0) state.movingMs / state.totalDistanceM else null))
+                    WaitingGps(Modifier.weight(1f), onPause)
+                } else {
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
+                        HeroPace(state.paceLiveSecPerKm)
+                        TargetRow(segment)
+                        Box(modifier = Modifier.height(52.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            if (segment?.targetPaceSecPerKm != null) StatusBadgeRow(ui, segment)
+                        }
                     }
                 }
-
-                Text(stringResource(R.string.run_next), style = MaterialTheme.typography.labelLarge)
-                Text(
-                    state.nextSegment?.let { describeSegment(it) } ?: stringResource(R.string.run_next_free),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-
-                if (state.planCompleted) Text(stringResource(R.string.run_plan_completed))
-                if (state.goalReached) Text(stringResource(R.string.run_goal_reached))
-                if (ui.phase == RunnerPhase.PAUSED_MANUAL || ui.phase == RunnerPhase.PAUSED_AUTO) {
-                    Text(
-                        if (ui.phase == RunnerPhase.PAUSED_AUTO) stringResource(R.string.run_paused_auto)
-                        else stringResource(R.string.run_paused),
-                        style = MaterialTheme.typography.headlineSmall,
-                    )
-                }
-
-                // H. Controls
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    if (ui.phase == RunnerPhase.PAUSED_MANUAL || ui.phase == RunnerPhase.PAUSED_AUTO) {
-                        Button(onClick = onResumeRun, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.run_resume)) }
-                    } else {
-                        OutlinedButton(onClick = onPause, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.run_pause)) }
-                    }
-                    OutlinedButton(onClick = onSkip, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.run_skip)) }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    OutlinedButton(onClick = { showExtend = true }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.run_extend)) }
-                    OutlinedButton(onClick = { showSegments = true }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.run_list_segments)) }
-                }
-                OutlinedButton(onClick = onToggleMap, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.s08_tab_map) + if (showMap) " ✓" else "")
-                }
-                if (showMap) {
-                    RouteMapView(points = ui.trackPoints, modifier = Modifier.fillMaxWidth().height(220.dp))
-                }
-                Button(onClick = onStop, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_stop_run)) }
+                // D. Segment metrics
+                SegmentMetrics(ui)
+                // E. Totals
+                Totals(state)
+                // F. Next
+                NextBlock(state.nextSegment)
             }
 
-            if (state.phase == RunnerPhase.COUNTDOWN) {
-                CountdownOverlay(ui.workoutName, state.countdownSec ?: 0, onCancelCountdown)
+            // H. Controls
+            Controls(ui, onPause, onResumeRun, onSkip, onStop, onExtend = { showExtend = true }, onSegments = { showSegments = true }, onToggleMap = onToggleMap, showMap = showMap)
+            if (showMap) {
+                RouteMapView(points = ui.trackPoints, modifier = Modifier.fillMaxWidth().height(160.dp))
             }
+        }
+
+        if (ui.phase == RunnerPhase.COUNTDOWN) {
+            CountdownOverlay(ui.workoutName, state.countdownSec ?: 0, onCancelCountdown)
         }
     }
 
@@ -257,87 +196,300 @@ fun RunScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SegmentListSheet(ui: RunUiState, onDismiss: () -> Unit) {
+private fun Header(ui: RunUiState) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
     val state = ui.state
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState()) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(stringResource(R.string.run_list_segments), style = MaterialTheme.typography.titleLarge)
-            ui.steps.forEachIndexed { index, seg ->
-                val number = index + 1
-                val marker = when {
-                    number < state.stepIndex -> stringResource(R.string.run_state_done)
-                    number == state.stepIndex -> stringResource(R.string.run_state_running)
-                    else -> stringResource(R.string.run_state_upcoming)
-                }
-                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                    Text(
-                        "$number. ${describeSegmentText(seg)}",
-                        fontWeight = if (number == state.stepIndex) FontWeight.Bold else FontWeight.Normal,
-                    )
-                    Text(marker, style = MaterialTheme.typography.labelSmall)
-                }
-                HorizontalDivider()
+    Row(
+        modifier = Modifier.fillMaxWidth().height(48.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(ui.workoutName, style = type.bodySmall, color = colors.textSecondary, maxLines = 1, modifier = Modifier.weight(1f))
+        when {
+            ui.phase == RunnerPhase.PAUSED_MANUAL -> HeaderChip(stringResource(R.string.run_paused))
+            ui.phase == RunnerPhase.PAUSED_AUTO -> HeaderChip(stringResource(R.string.run_paused_auto))
+            else -> {
+                val (icon, tint) = if (state.gpsLost) RcIcons.GpsOff to colors.fail else RcIcons.GpsFixed to colors.pass
+                Icon(painterResource(icon), contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
             }
+        }
+    }
+}
+
+@Composable
+private fun HeaderChip(text: String) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    val shapes = LocalRcShapes.current
+    Text(
+        text.uppercase(),
+        style = type.label,
+        color = colors.neutral,
+        modifier = Modifier.background(colors.neutralContainer, RoundedCornerShape(shapes.radiusS)).padding(horizontal = 8.dp, vertical = 4.dp),
+    )
+}
+
+@Composable
+private fun SegmentBlock(state: RunnerState, segment: Segment) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    val spacing = LocalRcSpacing.current
+    Column(modifier = Modifier.fillMaxWidth().height(96.dp), verticalArrangement = Arrangement.spacedBy(spacing.s1)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+            Icon(painterResource(segmentKindIcon(segment.kind)), contentDescription = null, tint = segmentKindColor(segment.kind), modifier = Modifier.size(20.dp))
+            Text(segmentLabel(segment), style = type.titleM, color = colors.textPrimary, modifier = Modifier.weight(1f))
+            Text(
+                stringResource(R.string.run_segment_of, state.stepIndex, state.stepCount ?: state.stepIndex).uppercase(),
+                style = type.label,
+                color = colors.textSecondary,
+            )
+        }
+        if (segment.limit != Limit.Open) SegmentProgressBar(segmentProgress(state, segment), segment.kind)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(segmentRemainingValue(state, segment), style = type.numberM, color = colors.textPrimary)
+                Text(stringResource(R.string.run_remaining), style = type.bodySmall, color = colors.textSecondary)
+            }
+            Text(segmentLimitCaption(segment), style = type.caption, color = colors.textTertiary)
+        }
+    }
+}
+
+@Composable
+private fun BannerRow(ui: RunUiState, onCancelCountdown: () -> Unit) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    val spacing = LocalRcSpacing.current
+    val shapes = LocalRcShapes.current
+    val state = ui.state
+    val segCountdown = state.segmentCountdownSec
+    val cueKind = state.distanceCueNextKind
+    when {
+        state.gpsLost -> BannerLine(stringResource(R.string.run_gps_lost), colors.warnContainer, colors.warn)
+        state.phase == RunnerPhase.RUNNING && segCountdown != null ->
+            BannerLine(stringResource(R.string.run_change_in, state.nextSegment?.kind?.let { kindLabel(it) } ?: "", segCountdown), colors.accentContainer, colors.accentText)
+        state.distanceCueActive && cueKind != null ->
+            BannerLine(stringResource(R.string.run_get_ready, kindLabel(cueKind)), colors.accentContainer, colors.accentText)
+        state.planCompleted -> BannerLine(stringResource(R.string.run_plan_done_keep), colors.accentContainer, colors.accentText)
+        state.goalReached -> BannerLine(stringResource(R.string.run_goal_reached), colors.passContainer, colors.pass)
+    }
+}
+
+@Composable
+private fun BannerLine(text: String, container: androidx.compose.ui.graphics.Color, content: androidx.compose.ui.graphics.Color) {
+    val type = LocalRcTypography.current
+    val shapes = LocalRcShapes.current
+    Text(
+        text,
+        style = type.bodySmall.copy(fontWeight = FontWeight.Bold),
+        color = content,
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp).background(container, RoundedCornerShape(shapes.radiusM)).padding(horizontal = 12.dp, vertical = 10.dp),
+    )
+}
+
+@Composable
+private fun TargetRow(segment: Segment?) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.run_target_label).uppercase(), style = type.label, color = colors.textSecondary)
+        val target = segment?.targetPaceSecPerKm
+        if (target != null) Text(Formatters.pace(target.toDouble()), style = type.numberL, color = colors.textPrimary)
+        else Text(stringResource(R.string.run_no_target), style = type.bodySmall, color = colors.textSecondary)
+    }
+}
+
+@Composable
+private fun StatusBadgeRow(ui: RunUiState, segment: Segment) {
+    val status = when (ui.correction) {
+        CorrectionState.STABLE -> RcStatus.Pass
+        CorrectionState.TOO_SLOW -> RcStatus.Fail
+        CorrectionState.TOO_FAST -> RcStatus.Fast
+    }
+    val label = when (ui.correction) {
+        CorrectionState.STABLE -> stringResource(R.string.run_status_stable)
+        CorrectionState.TOO_SLOW -> stringResource(R.string.run_status_too_slow)
+        CorrectionState.TOO_FAST -> stringResource(R.string.run_status_too_fast)
+    }
+    val delta = ui.state.paceLiveSecPerKm?.let { live ->
+        val d = live - segment.targetPaceSecPerKm!!.toDouble()
+        if (abs(d) < 1.0) null else (if (d > 0) "+" else "-") + Formatters.duration((abs(d) * 1000).toLong())
+    }
+    StatusBadge(status, label, delta = delta)
+}
+
+@Composable
+private fun SegmentMetrics(ui: RunUiState) {
+    val type = LocalRcTypography.current
+    val spacing = LocalRcSpacing.current
+    RcCard {
+        Row(modifier = Modifier.fillMaxWidth().height(48.dp), horizontalArrangement = Arrangement.spacedBy(spacing.s5)) {
+            MetricBlock(stringResource(R.string.run_avg_segment), Formatters.pace(ui.state.segmentAvgPaceOrNull()), valueStyle = type.numberL, modifier = Modifier.weight(1f))
+            MetricBlock(stringResource(R.string.run_need_rest), ui.requiredPaceSecPerKm?.let { Formatters.pace(it) } ?: "", valueStyle = type.numberL, modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun Totals(state: RunnerState) {
+    val colors = LocalRcColors.current
+    val spacing = LocalRcSpacing.current
+    Box(modifier = Modifier.fillMaxWidth().padding(top = spacing.s2)) {
+        Column {
+            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(colors.outline))
+            Row(modifier = Modifier.fillMaxWidth().height(63.dp).padding(top = spacing.s2), horizontalArrangement = Arrangement.spacedBy(spacing.s4)) {
+                MetricBlock(stringResource(R.string.run_label_total), Formatters.duration(state.movingMs), modifier = Modifier.weight(1f))
+                MetricBlock(stringResource(R.string.run_label_distance), Formatters.distanceKm(state.totalDistanceM), modifier = Modifier.weight(1f))
+                MetricBlock(
+                    stringResource(R.string.run_label_avg_pace),
+                    Formatters.pace(if (state.totalDistanceM > 0) state.movingMs / state.totalDistanceM else null),
+                    valueColor = colors.textSecondary,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NextBlock(next: Segment?) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    val spacing = LocalRcSpacing.current
+    RcCard {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+            if (next != null) {
+                Icon(painterResource(segmentKindIcon(next.kind)), contentDescription = null, tint = segmentKindColor(next.kind), modifier = Modifier.size(20.dp))
+            }
+            Text(stringResource(R.string.run_next).uppercase(), style = type.label, color = colors.textSecondary)
+            Text(
+                next?.let { describeSegmentText(it) } ?: stringResource(R.string.run_next_free),
+                style = type.body,
+                color = colors.textPrimary,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun WaitingGps(modifier: Modifier, onPause: () -> Unit) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Icon(painterResource(RcIcons.GpsNotFixed), contentDescription = null, tint = colors.warn, modifier = Modifier.size(64.dp))
+        Text(stringResource(R.string.run_waiting_gps), style = type.titleM, color = colors.textPrimary)
+    }
+}
+
+@Composable
+private fun Controls(
+    ui: RunUiState,
+    onPause: () -> Unit,
+    onResumeRun: () -> Unit,
+    onSkip: () -> Unit,
+    onStop: () -> Unit,
+    onExtend: () -> Unit,
+    onSegments: () -> Unit,
+    onToggleMap: () -> Unit,
+    showMap: Boolean,
+) {
+    val colors = LocalRcColors.current
+    val shapes = LocalRcShapes.current
+    val spacing = LocalRcSpacing.current
+    val paused = ui.phase == RunnerPhase.PAUSED_MANUAL || ui.phase == RunnerPhase.PAUSED_AUTO
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+            RcIconButton(RcIcons.SkipNext, stringResource(R.string.run_skip), onClick = onSkip, variant = RcIconButtonVariant.Filled)
+            Box(
+                modifier = Modifier
+                    .size(88.dp)
+                    .clip(CircleShape)
+                    .background(colors.accent)
+                    .clickable { if (paused) onResumeRun() else onPause() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painterResource(if (paused) RcIcons.PlayArrow else RcIcons.Pause),
+                    contentDescription = stringResource(if (paused) R.string.run_resume else R.string.run_pause),
+                    tint = colors.onAccent,
+                    modifier = Modifier.size(40.dp),
+                )
+            }
+            com.daniel.runcoach.ui.components.ProgressRing(onConfirm = onStop) {
+                RcIconButton(RcIcons.Stop, stringResource(R.string.action_stop_run), onClick = {}, variant = RcIconButtonVariant.Filled, tint = colors.fail)
+            }
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+            RcButton(stringResource(R.string.run_extend), onClick = onExtend, variant = RcButtonVariant.Tertiary, icon = RcIcons.Add, modifier = Modifier.weight(1f))
+            RcButton(stringResource(R.string.run_list_segments), onClick = onSegments, variant = RcButtonVariant.Tertiary, icon = RcIcons.List, modifier = Modifier.weight(1f))
+        }
+        RcButton(stringResource(R.string.s08_tab_map) + if (showMap) " ✓" else "", onClick = onToggleMap, variant = RcButtonVariant.Tertiary, icon = RcIcons.Map, fillWidth = true)
+    }
+}
+
+@Composable
+private fun CountdownOverlay(workoutName: String, seconds: Int, onCancel: () -> Unit) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    Box(modifier = Modifier.fillMaxSize().background(colors.bg.copy(alpha = 0.92f))) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(stringResource(R.string.run_countdown_starting).uppercase(), style = type.label, color = colors.textSecondary)
+            Text(
+                seconds.toString(),
+                style = type.displayHero.copy(fontSize = 160.sp, fontWeight = FontWeight.ExtraBold),
+                color = colors.accent,
+            )
+            Text(workoutName, style = type.body, color = colors.textPrimary)
+            RcButton(stringResource(R.string.run_countdown_cancel), onClick = onCancel, variant = RcButtonVariant.Tertiary)
         }
     }
 }
 
 @Composable
 private fun ExtendDialog(segment: Segment, onDismiss: () -> Unit, onExtend: (Double, Int) -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.run_extend)) },
-        text = {
+    RcDialog(
+        onDismiss = onDismiss,
+        title = stringResource(R.string.run_extend),
+        content = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (segment.limit is Limit.Distance) {
-                    Button(onClick = { onExtend(100.0, 0) }) { Text("+100 m") }
-                    Button(onClick = { onExtend(500.0, 0) }) { Text("+500 m") }
+                    RcButton("+100 m", onClick = { onExtend(100.0, 0) }, variant = RcButtonVariant.Secondary, fillWidth = true)
+                    RcButton("+500 m", onClick = { onExtend(500.0, 0) }, variant = RcButtonVariant.Secondary, fillWidth = true)
                 } else {
-                    Button(onClick = { onExtend(0.0, 30) }) { Text("+30 s") }
-                    Button(onClick = { onExtend(0.0, 60) }) { Text("+1 min") }
+                    RcButton("+30 s", onClick = { onExtend(0.0, 30) }, variant = RcButtonVariant.Secondary, fillWidth = true)
+                    RcButton("+1 min", onClick = { onExtend(0.0, 60) }, variant = RcButtonVariant.Secondary, fillWidth = true)
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.run_countdown_cancel)) } },
+        confirm = { RcButton(stringResource(R.string.run_countdown_cancel), onClick = onDismiss, variant = RcButtonVariant.Tertiary) },
     )
 }
 
 @Composable
-private fun Banner(text: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-    ) {
-        Text(text, modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.titleMedium)
-    }
-}
-
-@Composable
-private fun CountdownOverlay(workoutName: String, seconds: Int, onCancel: () -> Unit) {
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.85f)) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(workoutName, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.inverseOnSurface)
-            Text(
-                seconds.toString(),
-                style = MaterialTheme.typography.displayLarge.copy(fontFamily = FontFamily.Monospace),
-                color = MaterialTheme.colorScheme.inverseOnSurface,
-            )
-            OutlinedButton(onClick = onCancel) { Text(stringResource(R.string.run_countdown_cancel)) }
+private fun SegmentListSheet(ui: RunUiState, onDismiss: () -> Unit) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    com.daniel.runcoach.ui.components.RcSheet(onDismiss = onDismiss) {
+        Text(stringResource(R.string.run_list_segments), style = type.titleM, color = colors.textPrimary)
+        ui.steps.forEachIndexed { index, seg ->
+            val number = index + 1
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(painterResource(segmentKindIcon(seg.kind)), contentDescription = null, tint = segmentKindColor(seg.kind), modifier = Modifier.size(20.dp))
+                Text("$number. ${describeSegmentText(seg)}", style = type.titleS, color = colors.textPrimary, modifier = Modifier.weight(1f))
+            }
+            com.daniel.runcoach.ui.components.RcDivider()
         }
-    }
-}
-
-@Composable
-private fun TotalItem(label: String, value: String) {
-    Column {
-        if (label.isNotEmpty()) Text(label, style = MaterialTheme.typography.labelSmall)
-        Text(value, fontFamily = FontFamily.Monospace)
     }
 }
 
@@ -352,14 +504,7 @@ private fun kindLabel(kind: SegmentKind): String = stringResource(
     },
 )
 
-@Composable
-private fun correctionLabel(correction: CorrectionState): String = stringResource(
-    when (correction) {
-        CorrectionState.STABLE -> R.string.run_status_stable
-        CorrectionState.TOO_SLOW -> R.string.run_status_too_slow
-        CorrectionState.TOO_FAST -> R.string.run_status_too_fast
-    },
-)
+private fun segmentLabel(segment: Segment): String = segment.label
 
 @Composable
 private fun describeSegmentText(segment: Segment): String {
@@ -378,22 +523,30 @@ private fun segmentProgress(state: RunnerState, segment: Segment): Float = when 
     Limit.Open -> 0f
 }
 
-private fun segmentRemainingText(state: RunnerState, segment: Segment): String = when (val limit = segment.limit) {
+@Composable
+private fun segmentRemainingValue(state: RunnerState, segment: Segment): String = when (val limit = segment.limit) {
     is Limit.Distance -> "${state.segmentRemainingM.toInt()} m"
     is Limit.Duration -> Formatters.duration(state.segmentRemainingMs)
     Limit.Open -> Formatters.distanceKm(state.segmentDistanceM)
 }
 
 @Composable
-private fun describeSegment(segment: Segment): String = describeSegmentText(segment)
+private fun segmentLimitCaption(segment: Segment): String = when (val limit = segment.limit) {
+    is Limit.Distance -> stringResource(R.string.run_of, "${limit.meters} m")
+    is Limit.Duration -> stringResource(R.string.run_of, Formatters.duration(limit.seconds * 1000L))
+    Limit.Open -> ""
+}
+
+private fun RunnerState.segmentAvgPaceOrNull(): Double? =
+    if (segmentDistanceM > 0) segmentMovingMs / segmentDistanceM else null
 
 // --- Previews -------------------------------------------------------------------
 
-private fun sampleState(
+private fun sampleRunUi(
     phase: RunnerPhase = RunnerPhase.RUNNING,
     correction: CorrectionState = CorrectionState.STABLE,
     required: Double? = null,
-    paceLive: Double? = 360.0,
+    paceLive: Double? = 336.0,
     gpsLost: Boolean = false,
     planCompleted: Boolean = false,
     countdownSec: Int? = null,
@@ -415,11 +568,11 @@ private fun sampleState(
             stepCount = 9,
             segment = segment,
             nextSegment = Segment("Recovery", SegmentKind.RECOVERY, Limit.Distance(200), 480),
-            segmentDistanceM = 220.0,
-            segmentRemainingM = 180.0,
-            segmentMovingMs = 80_000,
-            totalDistanceM = 1820.0,
-            movingMs = 645_000,
+            segmentDistanceM = 315.0,
+            segmentRemainingM = 85.0,
+            segmentMovingMs = 126_000,
+            totalDistanceM = 2310.0,
+            movingMs = 761_000,
             paceLiveSecPerKm = paceLive,
             gpsLost = gpsLost,
             planCompleted = planCompleted,
@@ -428,39 +581,26 @@ private fun sampleState(
     )
 }
 
-@Preview(name = "Running light")
+@Preview(name = "S05 running light", showBackground = true)
 @Composable
-private fun RunRunningPreview() = RunCoachTheme { RunScreen(sampleState(), onStop = {}) }
+private fun RunRunningPreview() = RcTheme(darkTheme = false) { RunScreen(sampleRunUi(), onStop = {}) }
 
-@Preview(name = "Running dark", uiMode = 0x20)
+@Preview(name = "S05 running dark", showBackground = true)
 @Composable
-private fun RunRunningDarkPreview() = RunCoachTheme { RunScreen(sampleState(), onStop = {}) }
+private fun RunRunningDarkPreview() = RcTheme(darkTheme = true) { RunScreen(sampleRunUi(), onStop = {}) }
 
-@Preview(name = "Too slow")
+@Preview(name = "S05 too slow", showBackground = true)
 @Composable
-private fun RunTooSlowPreview() = RunCoachTheme {
-    RunScreen(sampleState(correction = CorrectionState.TOO_SLOW, required = 350.0, paceLive = 420.0), onStop = {})
+private fun RunTooSlowPreview() = RcTheme(darkTheme = true) {
+    RunScreen(sampleRunUi(correction = CorrectionState.TOO_SLOW, required = 350.0, paceLive = 420.0), onStop = {})
 }
 
-@Preview(name = "Too fast")
+@Preview(name = "S05 gps lost", showBackground = true)
 @Composable
-private fun RunTooFastPreview() =
-    RunCoachTheme { RunScreen(sampleState(correction = CorrectionState.TOO_FAST, paceLive = 340.0), onStop = {}) }
+private fun RunGpsLostPreview() = RcTheme(darkTheme = true) { RunScreen(sampleRunUi(gpsLost = true, paceLive = null), onStop = {}) }
 
-@Preview(name = "Paused")
+@Preview(name = "S05 countdown", showBackground = true)
 @Composable
-private fun RunPausedPreview() = RunCoachTheme { RunScreen(sampleState(phase = RunnerPhase.PAUSED_MANUAL), onStop = {}) }
-
-@Preview(name = "Waiting GPS")
-@Composable
-private fun RunWaitingPreview() =
-    RunCoachTheme { RunScreen(sampleState(phase = RunnerPhase.WAITING_GPS, paceLive = null), onStop = {}) }
-
-@Preview(name = "Countdown")
-@Composable
-private fun RunCountdownPreview() =
-    RunCoachTheme { RunScreen(sampleState(phase = RunnerPhase.COUNTDOWN, paceLive = null, countdownSec = 3), onStop = {}) }
-
-@Preview(name = "Plan completed")
-@Composable
-private fun RunPlanDonePreview() = RunCoachTheme { RunScreen(sampleState(planCompleted = true), onStop = {}) }
+private fun RunCountdownPreview() = RcTheme(darkTheme = true) {
+    RunScreen(sampleRunUi(phase = RunnerPhase.COUNTDOWN, paceLive = null, countdownSec = 3), onStop = {})
+}

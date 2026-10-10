@@ -61,6 +61,19 @@
     <string name="s02_duplicate">Duplikat</string>
     <string name="s02_delete">Hapus</string>
     <string name="s02_builtin_note">Template bawaan tidak bisa dihapus/diedit</string>
+    <string name="s02_free_run_sub">Tanpa target, ukur pace dan jarak</string>
+    <string name="s02_week_label">Minggu ini</string>
+    <string name="s02_metric_distance">Jarak</string>
+    <string name="s02_metric_sessions">Sesi</string>
+    <string name="s02_metric_delta">Selisih</string>
+    <string name="s02_new">Baru</string>
+    <string name="s02_create">Buat</string>
+    <string name="s02_empty_title">Belum ada workout</string>
+    <string name="s02_empty_message">Buat workout pertamamu untuk mulai berlatih terarah.</string>
+    <string name="s02_empty_action">Buat workout pertama</string>
+    <string name="s02_more">Menu workout</string>
+    <string name="s02_workouts_header">Workout saya</string>
+    <string name="s02_resume_saved">disimpan %1$s</string>
 
     <!-- S04 Pra-start -->
     <string name="s04_title">Pra-start</string>
@@ -353,4 +366,13 @@
     <!-- Foreground service notification -->
     <string name="notification_channel_run">Sesi lari</string>
     <string name="action_stop_run">Stop</string>
+    <string name="run_plan_done_keep">Rencana selesai. Lanjut atau Stop</string>
+    <string name="run_countdown_starting">Mulai dalam</string>
+    <string name="run_of">dari %1$s</string>
+    <string name="run_remaining">tersisa</string>
+    <string name="run_target_label">Target</string>
+    <string name="run_avg_segment">Rata-rata segmen</string>
+    <string name="run_need_rest">Butuh untuk sisa</string>
+    <string name="run_label_distance">Jarak</string>
+    <string name="run_label_avg_pace">Pace rata-rata</string>
 </resources>

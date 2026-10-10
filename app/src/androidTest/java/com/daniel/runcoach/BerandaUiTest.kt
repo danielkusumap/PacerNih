@@ -45,20 +45,20 @@ class BerandaUiTest {
     @Test
     fun emptyStateShownWithoutUserTemplates() {
         rule.setContent { RunCoachTheme { BerandaScreen(false, {}, {}, {}, {}, {}, {}) } }
-        rule.onNode(hasText(context.getString(R.string.s02_create_first))).assertIsDisplayed()
+        rule.onNode(hasText(context.getString(R.string.s02_empty_title))).assertIsDisplayed()
     }
 
     @Test
     fun bannerAbsentWithoutSnapshot() {
-        val title = context.getString(R.string.s02_resume_title)
+        val resume = context.getString(R.string.action_resume)
         rule.setContent { RunCoachTheme { BerandaScreen(false, {}, {}, {}, {}, {}, {}) } }
         rule.waitForIdle()
-        rule.onAllNodesWithText(title).assertCountEquals(0)
+        rule.onAllNodesWithText(resume).assertCountEquals(0)
     }
 
     @Test
     fun bannerShownWithSnapshot() {
-        val title = context.getString(R.string.s02_resume_title)
+        val resume = context.getString(R.string.action_resume)
         runBlocking {
             persistence.saveSnapshot(
                 RunSnapshot(
@@ -76,9 +76,9 @@ class BerandaUiTest {
         }
         rule.setContent { RunCoachTheme { BerandaScreen(false, {}, {}, {}, {}, {}, {}) } }
         rule.waitUntil(timeoutMillis = 5_000) {
-            rule.onAllNodesWithText(title).fetchSemanticsNodes().isNotEmpty()
+            rule.onAllNodesWithText(resume).fetchSemanticsNodes().isNotEmpty()
         }
-        rule.onNodeWithText(title).assertIsDisplayed()
+        rule.onNodeWithText(resume).assertIsDisplayed()
     }
 }
 

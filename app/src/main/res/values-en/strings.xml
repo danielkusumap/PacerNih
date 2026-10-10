@@ -61,6 +61,19 @@
     <string name="s02_duplicate">Duplicate</string>
     <string name="s02_delete">Delete</string>
     <string name="s02_builtin_note">Built-in templates can\'t be deleted/edited</string>
+    <string name="s02_free_run_sub">No target, just track pace and distance</string>
+    <string name="s02_week_label">This week</string>
+    <string name="s02_metric_distance">Distance</string>
+    <string name="s02_metric_sessions">Sessions</string>
+    <string name="s02_metric_delta">Change</string>
+    <string name="s02_new">New</string>
+    <string name="s02_create">Create</string>
+    <string name="s02_empty_title">No workouts yet</string>
+    <string name="s02_empty_message">Create your first workout to train with a plan.</string>
+    <string name="s02_empty_action">Create first workout</string>
+    <string name="s02_more">Workout menu</string>
+    <string name="s02_workouts_header">My workouts</string>
+    <string name="s02_resume_saved">saved %1$s</string>
 
     <!-- S04 Pre-start -->
     <string name="s04_title">Pre-start</string>
@@ -353,4 +366,13 @@
     <!-- Foreground service notification -->
     <string name="notification_channel_run">Run session</string>
     <string name="action_stop_run">Stop</string>
+    <string name="run_plan_done_keep">Plan complete. Keep going or Stop</string>
+    <string name="run_countdown_starting">Starting in</string>
+    <string name="run_of">of %1$s</string>
+    <string name="run_remaining">left</string>
+    <string name="run_target_label">Target</string>
+    <string name="run_avg_segment">Segment average</string>
+    <string name="run_need_rest">Needed for the rest</string>
+    <string name="run_label_distance">Distance</string>
+    <string name="run_label_avg_pace">Average pace</string>
 </resources>
