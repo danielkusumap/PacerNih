@@ -30,6 +30,7 @@ data class AppSettings(
     val keepScreenOn: Boolean = false,
     val kmMarker: Boolean = true,
     val paceAlerts: Boolean = true,
+    val liveMap: Boolean = false,
 )
 
 private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -53,6 +54,7 @@ class SettingsRepository(context: Context) {
             keepScreenOn = prefs[KEY_KEEP_SCREEN_ON] ?: false,
             kmMarker = prefs[KEY_KM_MARKER] ?: true,
             paceAlerts = prefs[KEY_PACE_ALERTS] ?: true,
+            liveMap = prefs[KEY_LIVE_MAP] ?: false,
         )
     }
 
@@ -68,6 +70,7 @@ class SettingsRepository(context: Context) {
     suspend fun setKeepScreenOn(on: Boolean) = dataStore.edit { it[KEY_KEEP_SCREEN_ON] = on }
     suspend fun setKmMarker(on: Boolean) = dataStore.edit { it[KEY_KM_MARKER] = on }
     suspend fun setPaceAlerts(on: Boolean) = dataStore.edit { it[KEY_PACE_ALERTS] = on }
+    suspend fun setLiveMap(on: Boolean) = dataStore.edit { it[KEY_LIVE_MAP] = on }
 
     private companion object {
         val KEY_THEME = stringPreferencesKey("theme")
@@ -82,5 +85,6 @@ class SettingsRepository(context: Context) {
         val KEY_KEEP_SCREEN_ON = booleanPreferencesKey("keep_screen_on")
         val KEY_KM_MARKER = booleanPreferencesKey("km_marker")
         val KEY_PACE_ALERTS = booleanPreferencesKey("pace_alerts")
+        val KEY_LIVE_MAP = booleanPreferencesKey("live_map")
     }
 }

@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P2 SELESAI (P2.1–P2.11). FASE P3 step by step (peta/export/penyempurnaan).
+- **Berikutnya:** FASE P3 step by step — P3.1–P3.2 selesai; selanjutnya P3.3 (auto-pause).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -393,6 +393,18 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
 ## Status P2 — SELESAI (2026-10-11)
 - P2.1–P2.11 selesai. **Instrumented 20/20 hijau; engine 181; app lokal 2.**
 - Berikutnya: FASE P3 (peta, export GPX, auto-pause, backup, kalibrasi, pengingat).
+
+## P3.1 Peta rute di Detail Sesi — selesai (2026-10-11)
+- osmdroid 6.1.20 (tile OpenStreetMap, **tanpa API key**); User-Agent diset di `RunCoachApp`; izin `INTERNET`.
+- `RouteMapView`: polyline rute + marker start/finish + marker batas segmen; offline tetap menggambar rute (tile kosong);
+  latar mengikuti tema. Tab **Peta** di S08 (tampil bila ada track point).
+- Test: `HistoryUiTest.detailMapTabRendersWithoutCrash` (device, osmdroid render).
+
+## P3.2 Peta live (S05) — selesai (2026-10-11)
+- Toggle **Peta** di S05 (default **mati**, setelan `liveMap`); menampilkan `RouteMapView` dengan track live (buffer 400 titik).
+- Display-only (tidak memengaruhi engine/akurasi); render berhenti saat layar mati (pause via lifecycle).
+- Test: `LiveMapTest` (render tanpa crash). **Instrumented 22/22 hijau**.
+- Gap: uji offline & mode gelap masih manual; marker batas segmen perkiraan; track live mulai kosong saat resume.
 
 
 

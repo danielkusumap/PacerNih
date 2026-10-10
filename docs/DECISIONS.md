@@ -252,3 +252,9 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - Wiring penuh baru untuk: tema, layar menyala (S05), bahasa voice + countdown awal (S04/service). Setelan lain dipersistensi
   dan akan disalurkan saat task terkait (auto-pause P3.3; cue/margin/vibrate/kmMarker/paceAlerts menyusul).
 - S13 (Data) & S14 (baterai) direferensikan; S13 masih placeholder (P3.5).
+
+## D-037 P3.1/P3.2: peta osmdroid
+- `RouteMapView` (Compose `AndroidView` + osmdroid MapView); User-Agent via `RunCoachApp`; tanpa API key.
+- Tab Peta S08 aktif bila ada track point; batas segmen dihitung dari jarak kumulatif (perkiraan terdekat).
+- Peta live S05 default mati (setelan `liveMap`); pause/render mengikuti lifecycle; display-only.
+- Gap: uji offline & dark manual; track live kosong saat resume.

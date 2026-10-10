@@ -89,6 +89,7 @@ class RunForegroundService : Service() {
     private var startCountdownSec: Int? = null
     private var voiceLanguage: VoiceLanguage = VoiceLanguage.ID
     private var expandedSteps: List<Segment> = emptyList()
+    private val liveTrack = ArrayDeque<Pair<Double, Double>>()
     private val trackBuffer = mutableListOf<com.daniel.runcoach.data.TrackPointEntity>()
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -161,6 +162,7 @@ class RunForegroundService : Service() {
         sessionId = UUID.randomUUID().toString()
         startedAtElapsedMs = SystemClock.elapsedRealtime()
         startedAtEpochMs = System.currentTimeMillis()
+        liveTrack.clear()
         val config = startCountdownSec?.let { EngineConfig(startCountdownSec = it) } ?: EngineConfig()
         launchRun(WorkoutRunner(workout, config), freshStart = true)
     }
@@ -254,6 +256,7 @@ class RunForegroundService : Service() {
                 requiredPaceSecPerKm = required,
                 keepScreenOn = false,
                 steps = expandedSteps,
+                trackPoints = liveTrack.toList(),
             ),
         )
     }
@@ -300,9 +303,12 @@ class RunForegroundService : Service() {
         )
     }
 
-    private fun handleSample(sample: LocationSample) {        val activeRunner = runner ?: return
+    private fun handleSample(sample: LocationSample) {
+        val activeRunner = runner ?: return
         activeRunner.onSample(sample)
         trackBuffer += RunPersistence.toEntity(sample, sessionId, trackIdx++, activeRunner.state.value.stepIndex)
+        liveTrack.addLast(sample.lat to sample.lon)
+        if (liveTrack.size > 400) liveTrack.removeFirst()
     }
 
     private suspend fun flush() {

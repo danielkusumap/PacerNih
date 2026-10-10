@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 class SessionRepository(context: Context) {
 
     private val dao = RunDatabase.get(context).sessionDao()
+    private val runDao = RunDatabase.get(context).runDao()
 
     val sessions: Flow<List<SessionEntity>> = dao.observeSessions()
 
@@ -39,6 +40,8 @@ class SessionRepository(context: Context) {
     suspend fun splits(id: String): List<KmSplitEntity> = dao.splits(id)
 
     suspend fun bestEfforts(id: String): List<BestEffortEntity> = dao.bestEfforts(id)
+
+    suspend fun trackPoints(id: String): List<TrackPointEntity> = runDao.trackPoints(id)
 
     suspend fun delete(id: String) = dao.deleteSessionCascade(id)
 

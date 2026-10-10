@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +30,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,18 +56,23 @@ import com.daniel.runcoach.service.RunForegroundService
 import com.daniel.runcoach.service.RunStateHolder
 import com.daniel.runcoach.service.RunUiState
 import com.daniel.runcoach.ui.Formatters
+import com.daniel.runcoach.ui.map.RouteMapView
 import com.daniel.runcoach.ui.theme.RunCoachTheme
+import kotlinx.coroutines.launch
 
 /** S05 route: observes the run state, keeps the screen on, and forwards controls to the service. */
 @Composable
 fun RunRoute(onStop: () -> Unit) {
     val ui by RunStateHolder.state.collectAsStateWithLifecycle()
     val view = LocalView.current
-    DisposableEffect(ui.keepScreenOn) {
-        view.keepScreenOn = ui.keepScreenOn
+    val context = LocalContext.current
+    val settingsRepository = remember { SettingsRepository(context) }
+    val settings by settingsRepository.settings.collectAsState(initial = AppSettings())
+    val scope = rememberCoroutineScope()
+    DisposableEffect(settings.keepScreenOn) {
+        view.keepScreenOn = settings.keepScreenOn
         onDispose { view.keepScreenOn = false }
     }
-    val context = LocalContext.current
     var showBackDialog by remember { mutableStateOf(false) }
     val active = ui.phase != RunnerPhase.IDLE && ui.phase != RunnerPhase.STOPPED
 
@@ -94,6 +101,8 @@ fun RunRoute(onStop: () -> Unit) {
         onResumeRun = { RunForegroundService.resumeRun(context) },
         onSkip = { RunForegroundService.skip(context) },
         onExtend = { meters, seconds -> RunForegroundService.extend(context, meters, seconds) },
+        showMap = settings.liveMap,
+        onToggleMap = { scope.launch { settingsRepository.setLiveMap(!settings.liveMap) } },
     )
 }
 
@@ -111,6 +120,8 @@ fun RunScreen(
     onResumeRun: () -> Unit = {},
     onSkip: () -> Unit = {},
     onExtend: (Double, Int) -> Unit = { _, _ -> },
+    showMap: Boolean = false,
+    onToggleMap: () -> Unit = {},
 ) {
     val state = ui.state
     val segment = state.segment
@@ -218,6 +229,12 @@ fun RunScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     OutlinedButton(onClick = { showExtend = true }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.run_extend)) }
                     OutlinedButton(onClick = { showSegments = true }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.run_list_segments)) }
+                }
+                OutlinedButton(onClick = onToggleMap, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.s08_tab_map) + if (showMap) " ✓" else "")
+                }
+                if (showMap) {
+                    RouteMapView(points = ui.trackPoints, modifier = Modifier.fillMaxWidth().height(220.dp))
                 }
                 Button(onClick = onStop, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_stop_run)) }
             }

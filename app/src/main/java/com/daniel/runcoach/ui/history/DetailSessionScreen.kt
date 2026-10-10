@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -32,7 +33,10 @@ import com.daniel.runcoach.data.KmSplitEntity
 import com.daniel.runcoach.data.SegmentResultEntity
 import com.daniel.runcoach.data.SessionEntity
 import com.daniel.runcoach.data.SessionRepository
+import com.daniel.runcoach.data.TrackPointEntity
+import com.daniel.runcoach.engine.gps.haversineM
 import com.daniel.runcoach.ui.Formatters
+import com.daniel.runcoach.ui.map.RouteMapView
 import com.daniel.runcoach.ui.charts.Bar
 import com.daniel.runcoach.ui.charts.BarChart
 import com.daniel.runcoach.ui.charts.LineChart
@@ -51,6 +55,7 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
     var session by remember { mutableStateOf<SessionEntity?>(null) }
     var segments by remember { mutableStateOf<List<SegmentResultEntity>>(emptyList()) }
     var splits by remember { mutableStateOf<List<KmSplitEntity>>(emptyList()) }
+    var trackPoints by remember { mutableStateOf<List<TrackPointEntity>>(emptyList()) }
     var tab by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(sessionId) {
@@ -65,6 +70,7 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
         if (loaded != null) {
             segments = repository.segments(sessionId)
             splits = repository.splits(sessionId)
+            trackPoints = repository.trackPoints(sessionId)
         }
     }
 
@@ -103,11 +109,19 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
                 Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.s08_tab_segments)) })
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.s08_tab_splits)) })
                 Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.s08_tab_charts)) })
+                if (trackPoints.size >= 2) {
+                    Tab(selected = tab == 3, onClick = { tab = 3 }, text = { Text(stringResource(R.string.s08_tab_map)) })
+                }
             }
             when (tab) {
                 0 -> SegmentsTab(segments)
                 1 -> SplitsTab(splits)
-                else -> ChartsTab(segments, splits)
+                2 -> ChartsTab(segments, splits)
+                else -> RouteMapView(
+                    points = trackPoints.map { it.lat to it.lon },
+                    boundaryIndices = boundaryIndices(trackPoints, segments),
+                    modifier = Modifier.fillMaxWidth().height(320.dp),
+                )
             }
 
             OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_back)) }
@@ -179,8 +193,24 @@ private fun ChartsTab(segments: List<SegmentResultEntity>, splits: List<KmSplitE
     }
 }
 
-private fun targetSteps(segments: List<SegmentResultEntity>): List<TargetStep> {
-    var cumulative = 0.0
+private fun boundaryIndices(trackPoints: List<TrackPointEntity>, segments: List<SegmentResultEntity>): List<Int> {
+    if (trackPoints.size < 2 || segments.size < 2) return emptyList()
+    val cumulative = DoubleArray(trackPoints.size)
+    for (i in 1 until trackPoints.size) {
+        cumulative[i] = cumulative[i - 1] +
+            haversineM(trackPoints[i - 1].lat, trackPoints[i - 1].lon, trackPoints[i].lat, trackPoints[i].lon)
+    }
+    var boundary = 0.0
+    val indices = mutableListOf<Int>()
+    segments.dropLast(1).forEach { segment ->
+        boundary += segment.distanceM
+        val index = cumulative.indexOfFirst { it >= boundary }
+        if (index >= 0) indices += index
+    }
+    return indices
+}
+
+private fun targetSteps(segments: List<SegmentResultEntity>): List<TargetStep> {    var cumulative = 0.0
     val steps = mutableListOf<TargetStep>()
     segments.forEach { segment ->
         val start = cumulative

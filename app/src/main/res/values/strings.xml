@@ -183,6 +183,7 @@
     <string name="s08_tab_segments">Segmen</string>
     <string name="s08_tab_splits">Split km</string>
     <string name="s08_tab_charts">Grafik</string>
+    <string name="s08_tab_map">Peta</string>
     <string name="s08_plan_done">Rencana selesai</string>
     <string name="s08_plan_stopped">Dihentikan sebelum selesai</string>
     <string name="s08_note_title">Catatan</string>

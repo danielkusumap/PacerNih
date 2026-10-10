@@ -19,6 +19,7 @@ data class RunUiState(
     val requiredPaceSecPerKm: Double? = null,
     val keepScreenOn: Boolean = false,
     val steps: List<Segment> = emptyList(),
+    val trackPoints: List<Pair<Double, Double>> = emptyList(),
 )
 
 /** Single source of run state for the UI. Updated by [RunForegroundService] every second. */
