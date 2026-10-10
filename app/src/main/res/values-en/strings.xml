@@ -46,6 +46,29 @@
     <string name="debug_running">Running…</string>
     <string name="action_run">Run</string>
 
+    <!-- S05 Run screen -->
+    <string name="run_waiting_gps">Waiting for GPS…</string>
+    <string name="run_segment_of">Segment %1$d/%2$d</string>
+    <string name="run_no_target">Free</string>
+    <string name="run_target">Target %1$s</string>
+    <string name="run_status_stable">STEADY</string>
+    <string name="run_status_too_slow">TOO SLOW</string>
+    <string name="run_status_too_fast">TOO FAST</string>
+    <string name="run_required">Need %1$s for the rest</string>
+    <string name="run_next">Next</string>
+    <string name="run_next_free">Free run (no target)</string>
+    <string name="run_paused">PAUSED</string>
+    <string name="run_gps_lost">GPS signal lost</string>
+    <string name="run_plan_completed">Plan complete. Keep going or Stop</string>
+    <string name="run_goal_reached">Distance goal reached</string>
+    <string name="run_label_segment_avg">Segment pace</string>
+    <string name="run_label_total">Total</string>
+    <string name="kind_warmup">Warm up</string>
+    <string name="kind_run">Run</string>
+    <string name="kind_walk">Walk</string>
+    <string name="kind_recovery">Recovery</string>
+    <string name="kind_cooldown">Cool down</string>
+
     <!-- Foreground service notification -->
     <string name="notification_channel_run">Run session</string>
     <string name="action_stop_run">Stop</string>

@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P1 — P1.7 (Layar Lari S05); P1.1–P1.6 sudah selesai (lihat bawah).
+- **Berikutnya:** FASE P1 — P1.8 (Countdown UI S05); P1.1–P1.7 selesai (lihat bawah).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -231,4 +231,16 @@ Semua task P0 selesai dan AC hijau; boleh lanjut ke FASE P1. Sisa yang sifatnya 
   ringkasan berformat sama dengan golden test. Tombol masuk hanya muncul di build debug.
 - **Uji device**: INTERVALS di **60x** → ringkasan sama persis dengan `golden/interval_intervals.txt`
   (`totalDistanceM=6375`, `movingMs=1999000`, `planCompleted=true`, hitungan event identik). **AC P1.6 terpenuhi.**
+
+## P1.7 Layar Lari (S05) — selesai (2026-10-11)
+- `RunStateHolder` (`StateFlow<RunUiState>`): jembatan in-process antara service dan UI.
+- Service kini juga menjalankan **`AlertEngine`** tiap detik (menutup catatan P1.4): status koreksi + required
+  pace ikut dipublikasikan, dan alert koreksi (TooSlow/TooFast/BackToStable) diteruskan ke announcer.
+- `RunScreen` (S05) stateless: blok A–F (header + indikator GPS, segmen + progress + sisa, hero pace live +
+  target + badge STABIL/LAMBAT/CEPAT, metrik segmen + required pace, total, preview segmen berikutnya),
+  state dsb. `@Preview` untuk tiap state (Running/Too slow/Too fast/Paused/Waiting GPS/Plan completed), light & dark.
+- `RunnerState` + `nextSegment`; `Formatters` dipakai untuk semua angka. Layar tetap menyala mengikuti setting
+  (`keepScreenOn`, default mati sampai S12/P2.11).
+- **Uji device**: mulai sesi → S05 tampil & update (header, segmen 1/1, `--:--`, total, Next, Stop), tanpa crash.
+- Catatan: `elapsedScope` untuk projected/required masih didekati dari waktu segmen penuh (bukan per-km) — lihat D-025.
 

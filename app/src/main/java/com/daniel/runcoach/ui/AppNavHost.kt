@@ -38,6 +38,7 @@ import com.daniel.runcoach.service.RunForegroundService
 import com.daniel.runcoach.ui.battery.BatteryGuideScreen
 import com.daniel.runcoach.ui.debug.SimulatorScreen
 import com.daniel.runcoach.ui.onboarding.OnboardingScreen
+import com.daniel.runcoach.ui.run.RunRoute
 import kotlinx.coroutines.launch
 
 /** Navigation routes for the screens built so far. More screens arrive in later tasks. */
@@ -45,6 +46,7 @@ object Routes {
     const val ONBOARDING = "onboarding"
     const val BATTERY = "battery"
     const val HOME = "home"
+    const val RUN = "run"
     const val DEBUG = "debug"
 }
 
@@ -66,7 +68,13 @@ fun AppNavHost() {
             BatteryGuideScreen(onBack = { navController.popBackStack() })
         }
         composable(Routes.HOME) {
-            HomePlaceholder(onOpenSimulator = { navController.navigate(Routes.DEBUG) })
+            HomePlaceholder(
+                onOpenRun = { navController.navigate(Routes.RUN) },
+                onOpenSimulator = { navController.navigate(Routes.DEBUG) },
+            )
+        }
+        composable(Routes.RUN) {
+            RunRoute(onStop = { navController.popBackStack() })
         }
         composable(Routes.DEBUG) {
             SimulatorScreen(onBack = { navController.popBackStack() })
@@ -80,7 +88,7 @@ fun AppNavHost() {
  * Replaced by S02 (Beranda) in P2.3.
  */
 @Composable
-private fun HomePlaceholder(onOpenSimulator: () -> Unit) {
+private fun HomePlaceholder(onOpenRun: () -> Unit, onOpenSimulator: () -> Unit) {
     val context = LocalContext.current
     val debugBuild = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
     val scope = rememberCoroutineScope()
@@ -100,6 +108,7 @@ private fun HomePlaceholder(onOpenSimulator: () -> Unit) {
                 TextButton(onClick = {
                     RunForegroundService.resume(context, snapshot.sessionId)
                     pendingSnapshot = null
+                    onOpenRun()
                 }) { Text(stringResource(R.string.action_resume)) }
             },
             dismissButton = {
@@ -120,7 +129,10 @@ private fun HomePlaceholder(onOpenSimulator: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(text = stringResource(R.string.home_placeholder), style = MaterialTheme.typography.titleLarge)
-            Button(onClick = { RunForegroundService.start(context, freeRun()) }) {
+            Button(onClick = {
+                RunForegroundService.start(context, freeRun())
+                onOpenRun()
+            }) {
                 Text(stringResource(R.string.action_start_test_run))
             }
             OutlinedButton(onClick = { RunForegroundService.stop(context) }) {

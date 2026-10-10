@@ -11,6 +11,7 @@ data class RunnerState(
     val stepIndex: Int = 0,
     val stepCount: Int? = null,
     val segment: Segment? = null,
+    val nextSegment: Segment? = null,
     val segmentDistanceM: Double = 0.0,
     val segmentMovingMs: Long = 0L,
     val segmentRemainingM: Double = 0.0,

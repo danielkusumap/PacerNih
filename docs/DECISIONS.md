@@ -169,3 +169,11 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
   memutar workout pada clock sintetis (`delay(1000/scale)`) sehingga 1x/10x/60x.
 - S15 hanya bisa diakses di build debug (dicek via `ApplicationInfo.FLAG_DEBUGGABLE`); tombolnya di Home placeholder.
 - Ringkasan S15 memakai format golden agar mudah dibandingkan; sudah diverifikasi identik di device (60x).
+
+## D-025 P1.7: jembatan UI + layar S05
+- `RunStateHolder` (singleton in-process) menyalurkan `RunUiState` dari service ke Compose via `StateFlow`.
+- `AlertEngine` di-wire di service tiap tick; `CorrectionInput` dibangun dari `RunnerState` memakai `PaceCalculator`.
+  **Penyederhanaan:** `elapsedScope` memakai waktu segmen penuh (bukan diinterpolasi per-km), dan sisa-ke-batas
+  jarak memakai ETA `remainingM/1000 × paceLive`. Cukup untuk gate/status, bisa diperhalus nanti bila ada kebutuhan.
+- `RunScreen` dibuat stateless (menerima `RunUiState`) agar setiap state bisa di-`@Preview` light & dark.
+- `keepScreenOn` default `false`; digerakkan dari pengaturan pada P2.11.

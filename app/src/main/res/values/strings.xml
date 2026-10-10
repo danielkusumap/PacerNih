@@ -46,6 +46,29 @@
     <string name="debug_running">Menjalankan…</string>
     <string name="action_run">Jalankan</string>
 
+    <!-- S05 Layar Lari -->
+    <string name="run_waiting_gps">Menunggu GPS…</string>
+    <string name="run_segment_of">Segmen %1$d/%2$d</string>
+    <string name="run_no_target">Bebas</string>
+    <string name="run_target">Target %1$s</string>
+    <string name="run_status_stable">STABIL</string>
+    <string name="run_status_too_slow">TERLALU LAMBAT</string>
+    <string name="run_status_too_fast">TERLALU CEPAT</string>
+    <string name="run_required">Butuh %1$s untuk sisa</string>
+    <string name="run_next">Berikutnya</string>
+    <string name="run_next_free">Lari bebas (tanpa target)</string>
+    <string name="run_paused">DIJEDA</string>
+    <string name="run_gps_lost">Sinyal GPS hilang</string>
+    <string name="run_plan_completed">Rencana selesai. Lanjut atau Stop</string>
+    <string name="run_goal_reached">Target jarak tercapai</string>
+    <string name="run_label_segment_avg">Pace segmen</string>
+    <string name="run_label_total">Total</string>
+    <string name="kind_warmup">Pemanasan</string>
+    <string name="kind_run">Lari</string>
+    <string name="kind_walk">Jalan</string>
+    <string name="kind_recovery">Pemulihan</string>
+    <string name="kind_cooldown">Pendinginan</string>
+
     <!-- Foreground service notification -->
     <string name="notification_channel_run">Sesi lari</string>
     <string name="action_stop_run">Stop</string>

@@ -345,6 +345,7 @@ class WorkoutRunner(
             stepIndex = stepIndex,
             stepCount = _state.value.stepCount,
             segment = segment,
+            nextSegment = if (planCompleted) null else cursor.peek(tracker.totalDistanceM),
             segmentDistanceM = segmentDistanceM,
             segmentMovingMs = segmentMovingMs,
             segmentRemainingM = remainingM,

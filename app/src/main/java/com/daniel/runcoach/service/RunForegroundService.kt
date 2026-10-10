@@ -18,6 +18,10 @@ import androidx.core.content.ContextCompat
 import com.daniel.runcoach.R
 import com.daniel.runcoach.data.RunPersistence
 import com.daniel.runcoach.data.RunSnapshot
+import com.daniel.runcoach.engine.alert.AlertEngine
+import com.daniel.runcoach.engine.alert.CorrectionInput
+import com.daniel.runcoach.engine.alert.CorrectionState
+import com.daniel.runcoach.engine.metrics.PaceCalculator
 import com.daniel.runcoach.engine.model.Limit
 import com.daniel.runcoach.engine.model.LocationSample
 import com.daniel.runcoach.engine.model.Segment
@@ -60,6 +64,7 @@ class RunForegroundService : Service() {
     private var runJob: Job? = null
     private var announcer: RunAnnouncer? = null
     private var persistence: RunPersistence? = null
+    private var alertEngine: AlertEngine? = null
 
     private var sessionId: String = ""
     private var workout: Workout? = null
@@ -142,6 +147,7 @@ class RunForegroundService : Service() {
         runner = activeRunner
         locationSource = LocationSourceFactory.create(this)
         lastFlushMs = SystemClock.elapsedRealtime()
+        alertEngine = AlertEngine()
 
         val activeAnnouncer = RunAnnouncer(this).also { it.start() }
         announcer = activeAnnouncer
@@ -162,6 +168,7 @@ class RunForegroundService : Service() {
             while (isActive) {
                 val now = SystemClock.elapsedRealtime()
                 activeRunner.onTick(now)
+                updateUi(activeRunner, now)
                 if (activeRunner.state.value.phase == RunnerPhase.STOPPED) {
                     stopRun()
                     break
@@ -176,8 +183,69 @@ class RunForegroundService : Service() {
         }
     }
 
-    private fun handleSample(sample: LocationSample) {
-        val activeRunner = runner ?: return
+    /** Feeds the alert engine and publishes the run state to the UI (P1.7). */
+    private fun updateUi(activeRunner: WorkoutRunner, nowMs: Long) {
+        val engine = alertEngine ?: return
+        val state = activeRunner.state.value
+        val input = correctionInput(state)
+        val event = input?.let { engine.evaluate(it, nowMs) }
+        if (event != null) runCatching { announcer?.onEvent(event) }
+        val required = if (engine.state() == CorrectionState.TOO_SLOW) input?.requiredSecPerKm else null
+        RunStateHolder.update(
+            RunUiState(
+                phase = state.phase,
+                workoutName = workout?.name ?: "",
+                state = state,
+                correction = engine.state(),
+                requiredPaceSecPerKm = required,
+                keepScreenOn = false,
+            ),
+        )
+    }
+
+    private fun correctionInput(state: RunnerState): CorrectionInput? {
+        val segment = state.segment ?: return null
+        val target = segment.targetPaceSecPerKm
+        val timeBased = segment.limit is Limit.Duration
+        val limitM = (segment.limit as? Limit.Distance)?.meters?.toDouble() ?: 0.0
+        val limitSec = (segment.limit as? Limit.Duration)?.seconds?.toDouble() ?: 0.0
+        val doneM = state.segmentDistanceM
+        val scope = PaceCalculator.scope(limitM, doneM, segment.perKmCheck && target != null)
+        val doneInScope = (doneM - scope.startM).coerceAtLeast(0.0)
+        val remainingScopeM = (scope.distanceM - doneInScope).coerceAtLeast(0.0)
+        val elapsedScopeSec = state.segmentMovingMs / 1000.0
+        val paceLive = state.paceLiveSecPerKm
+        val projected = paceLive?.let {
+            PaceCalculator.projectedPaceSecPerKm(it, elapsedScopeSec, scope.distanceM, remainingScopeM)
+        }
+        val remainingSegmentSec = when {
+            timeBased -> state.segmentRemainingMs / 1000.0
+            paceLive != null && paceLive > 0.0 -> (state.segmentRemainingM / 1000.0) * paceLive
+            else -> 0.0
+        }
+        val required = target?.let {
+            PaceCalculator.requiredPaceSecPerKm(it.toDouble(), elapsedScopeSec, scope.distanceM, remainingScopeM)
+        }
+        return CorrectionInput(
+            segmentTargetSecPerKm = target,
+            fastMarginSec = segment.fastMarginSec,
+            segmentOpen = segment.limit is Limit.Open,
+            timeBased = timeBased,
+            segmentLengthM = limitM,
+            segmentLengthSec = limitSec,
+            segmentDistanceM = doneM,
+            segmentMovingSec = elapsedScopeSec,
+            scopeDistM = scope.distanceM,
+            remainingSegmentSec = remainingSegmentSec,
+            paceLiveSecPerKm = paceLive,
+            projectedSecPerKm = projected,
+            requiredSecPerKm = required,
+            running = state.phase == RunnerPhase.RUNNING,
+            gpsLost = state.gpsLost,
+        )
+    }
+
+    private fun handleSample(sample: LocationSample) {        val activeRunner = runner ?: return
         activeRunner.onSample(sample)
         trackBuffer += RunPersistence.toEntity(sample, sessionId, trackIdx++, activeRunner.state.value.stepIndex)
     }
@@ -220,6 +288,8 @@ class RunForegroundService : Service() {
         if (stopping) return
         stopping = true
         runner?.onStop(SystemClock.elapsedRealtime())
+        RunStateHolder.reset()
+        alertEngine = null
         runJob?.cancel()
         val finishedSession = sessionId
         ioScope.launch {
