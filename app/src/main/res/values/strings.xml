@@ -59,6 +59,36 @@
     <string name="s02_duplicate">Duplikat</string>
     <string name="s02_delete">Hapus</string>
     <string name="s02_builtin_note">Template bawaan tidak bisa dihapus/diedit</string>
+
+    <!-- S04 Pra-start -->
+    <string name="s04_title">Pra-start</string>
+    <string name="s04_segments">Daftar segmen</string>
+    <string name="s04_gps_status">Status GPS</string>
+    <string name="s04_gps_ready">Siap (%1$s m)</string>
+    <string name="s04_gps_searching">Mencari sinyal</string>
+    <string name="s04_gps_weak">Lemah (%1$s m)</string>
+    <string name="s04_quick_settings">Pengaturan cepat</string>
+    <string name="s04_voice_language">Bahasa voice</string>
+    <string name="s04_countdown">Countdown awal</string>
+    <string name="s04_seconds">%1$d dtk</string>
+    <string name="s04_start">Mulai</string>
+    <string name="s04_wait_gps">Tunggu GPS</string>
+    <string name="s04_start_anyway">Mulai saja</string>
+    <string name="s04_no_permission">Izin lokasi belum diberikan.</string>
+
+    <!-- S06 Selesai & Simpan -->
+    <string name="s06_title">Selesai</string>
+    <string name="s06_summary">Ringkasan</string>
+    <string name="s06_seg_counts">%1$d lulus · %2$d gagal · %3$d borderline</string>
+    <string name="s06_record_badge">Rekor baru: %1$s %2$s</string>
+    <string name="s06_name">Nama workout (opsional)</string>
+    <string name="s06_rpe">Skala capek 1-10 (opsional)</string>
+    <string name="s06_note">Catatan (opsional, maks 500)</string>
+    <string name="s06_note_too_long">Catatan maksimal 500 karakter.</string>
+    <string name="s06_save">Simpan</string>
+    <string name="s06_skip">Lewati</string>
+    <string name="s06_discard">Buang sesi</string>
+    <string name="s06_loading">Menyimpan sesi…</string>
     <string name="debug_title">Debug / Simulator</string>
     <string name="debug_speed">Kecepatan</string>
     <string name="debug_running">Menjalankan…</string>

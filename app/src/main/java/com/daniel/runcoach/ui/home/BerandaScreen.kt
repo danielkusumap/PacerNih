@@ -56,7 +56,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun BerandaScreen(
     debugBuild: Boolean,
-    onOpenRun: () -> Unit,
+    onOpenPrestart: (Workout) -> Unit,
+    onResumeRun: () -> Unit,
     onOpenEditor: (Workout?) -> Unit,
     onOpenSimulator: () -> Unit,
 ) {
@@ -77,9 +78,8 @@ fun BerandaScreen(
     val userTemplates = templates.filterNot { it.isBuiltIn }
 
     fun start(workout: Workout, templateId: String?) {
-        RunForegroundService.start(context, workout)
         if (templateId != null) scope.launch { repository.markUsed(templateId) }
-        onOpenRun()
+        onOpenPrestart(workout)
     }
 
     Scaffold(
@@ -102,7 +102,7 @@ fun BerandaScreen(
                             val name = runCatching { WorkoutJson.decode(snap.workoutJson).name }.getOrDefault("")
                             Text(stringResource(R.string.s02_resume_detail, name, formatTimestamp(snap.startedAtEpochMs)))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(onClick = { RunForegroundService.resume(context, snap.sessionId); onOpenRun() }) {
+                                Button(onClick = { RunForegroundService.resume(context, snap.sessionId); onResumeRun() }) {
                                     Text(stringResource(R.string.action_resume))
                                 }
                                 OutlinedButton(onClick = {

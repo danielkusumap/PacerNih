@@ -39,6 +39,11 @@ class RunPersistence(context: Context) {
         dao.deleteSnapshotFor(sessionId)
     }
 
+    /** Removes only the active-run snapshot, keeping the track points for history (used at Stop, P2.5). */
+    suspend fun clearActiveSnapshot(sessionId: String) {
+        dao.deleteSnapshotFor(sessionId)
+    }
+
     companion object {
         private val json = Json { ignoreUnknownKeys = true }
 

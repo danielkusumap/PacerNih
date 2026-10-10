@@ -212,3 +212,17 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - `EditorRequestHolder` membawa Workout yang diedit ke route editor; Simpan memilih create/update.
 - Kartu ringkasan minggu ini ditunda ke P2.10 sesuai plan.
 - Catatan UX: tombol aksi editor bisa tertutup keyboard saat field nama fokus → kandidat `imePadding` (belum dikerjakan).
+
+## D-031 P2.4: Pra-start & pengaturan cepat
+- Beranda tidak lagi memulai sesi langsung; ia menuju S04 dan memilih workout via `StartRequestHolder`.
+- Countdown awal & bahasa voice diteruskan sebagai intent extra ke service (belum dipersistensi; S12/P2.11).
+- Mulai aktif hanya bila izin lokasi ada **dan** `GpsFixQuality.READY`; selain itu "Tunggu GPS" + "Mulai saja".
+
+## D-032 P2.5: sesi tersimpan & hasil
+- Hasil (SegmentResult/KmSplit/BestEffort) dihitung dari **replay track point** (`SampleFilter`+`DistanceTracker`
+  → kurva), lalu `SessionResultsCalculator`. **Moving time ≈ elapsed** (durasi pause belum didistribusikan) —
+  batas yang dicatat; jarak/segmentasi benar.
+- Session disimpan **sebelum** S06 (aturan plan); snapshot aktif dihapus, track point disimpan untuk riwayat.
+- Catatan >500 **dipotong** di repository; S06 menolak (tombol nonaktif) saat >500.
+- Lencana rekor = effort sesi ini yang lebih cepat dari minimum sesi lain yang tidak dikecualikan.
+- P2.4 & P2.5 di-commit bersama karena menyentuh file yang sama (service/AppNavHost/strings).

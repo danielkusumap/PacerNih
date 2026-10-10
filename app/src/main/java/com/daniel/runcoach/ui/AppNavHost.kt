@@ -10,16 +10,21 @@ import com.daniel.runcoach.ui.battery.BatteryGuideScreen
 import com.daniel.runcoach.ui.debug.SimulatorScreen
 import com.daniel.runcoach.ui.editor.EditorRequestHolder
 import com.daniel.runcoach.ui.editor.EditorScreen
+import com.daniel.runcoach.ui.finish.FinishedScreen
 import com.daniel.runcoach.ui.home.BerandaScreen
 import com.daniel.runcoach.ui.onboarding.OnboardingScreen
+import com.daniel.runcoach.ui.prestart.PraStartScreen
 import com.daniel.runcoach.ui.run.RunRoute
+import com.daniel.runcoach.data.WorkoutTemplateRepository
 
 /** Navigation routes. More screens arrive in later tasks. */
 object Routes {
     const val ONBOARDING = "onboarding"
     const val BATTERY = "battery"
     const val HOME = "home"
+    const val PRESTART = "prestart"
     const val RUN = "run"
+    const val FINISHED = "finished"
     const val EDITOR = "editor"
     const val DEBUG = "debug"
 }
@@ -47,7 +52,11 @@ fun AppNavHost() {
         composable(Routes.HOME) {
             BerandaScreen(
                 debugBuild = debugBuild,
-                onOpenRun = { navController.navigate(Routes.RUN) },
+                onOpenPrestart = { workout ->
+                    StartRequestHolder.workout = workout
+                    navController.navigate(Routes.PRESTART)
+                },
+                onResumeRun = { navController.navigate(Routes.RUN) },
                 onOpenEditor = { workout ->
                     EditorRequestHolder.initial = workout
                     navController.navigate(Routes.EDITOR)
@@ -55,8 +64,22 @@ fun AppNavHost() {
                 onOpenSimulator = { navController.navigate(Routes.DEBUG) },
             )
         }
+        composable(Routes.PRESTART) {
+            PraStartScreen(
+                workout = StartRequestHolder.workout ?: WorkoutTemplateRepository.freeRunWorkout(),
+                onStarted = { navController.navigate(Routes.RUN) },
+                onBack = { navController.popBackStack() },
+            )
+        }
         composable(Routes.RUN) {
-            RunRoute(onStop = { navController.popBackStack() })
+            RunRoute(
+                onStop = {
+                    navController.navigate(Routes.FINISHED) { popUpTo(Routes.HOME) }
+                },
+            )
+        }
+        composable(Routes.FINISHED) {
+            FinishedScreen(onDone = { navController.popBackStack(Routes.HOME, inclusive = false) })
         }
         composable(Routes.EDITOR) {
             EditorScreen(

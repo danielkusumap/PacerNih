@@ -18,10 +18,21 @@ import androidx.core.content.ContextCompat
 import com.daniel.runcoach.R
 import com.daniel.runcoach.data.RunPersistence
 import com.daniel.runcoach.data.RunSnapshot
+import com.daniel.runcoach.data.SessionEntity
+import com.daniel.runcoach.data.SessionRepository
 import com.daniel.runcoach.engine.alert.AlertEngine
 import com.daniel.runcoach.engine.alert.CorrectionInput
 import com.daniel.runcoach.engine.alert.CorrectionState
 import com.daniel.runcoach.engine.metrics.PaceCalculator
+import com.daniel.runcoach.engine.EngineConfig
+import com.daniel.runcoach.engine.gps.DistanceTracker
+import com.daniel.runcoach.engine.gps.GpsOutcome
+import com.daniel.runcoach.engine.gps.SampleFilter
+import com.daniel.runcoach.engine.naming.DefaultSessionNamer
+import com.daniel.runcoach.engine.result.DistTimePoint
+import com.daniel.runcoach.engine.result.SessionResultsCalculator
+import com.daniel.runcoach.engine.result.SessionResultsData
+import com.daniel.runcoach.engine.voice.VoiceLanguage
 import com.daniel.runcoach.engine.model.Limit
 import com.daniel.runcoach.engine.model.LocationSample
 import com.daniel.runcoach.engine.model.Segment
@@ -46,6 +57,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.ZoneId
+import java.util.Locale
 import java.util.UUID
 
 /**
@@ -74,6 +86,8 @@ class RunForegroundService : Service() {
     private var stopping = false
     private var trackIdx = 0
     private var lastFlushMs = 0L
+    private var startCountdownSec: Int? = null
+    private var voiceLanguage: VoiceLanguage = VoiceLanguage.ID
     private var expandedSteps: List<Segment> = emptyList()
     private val trackBuffer = mutableListOf<com.daniel.runcoach.data.TrackPointEntity>()
 
@@ -133,6 +147,11 @@ class RunForegroundService : Service() {
         }
         val workoutJson = intent?.getStringExtra(EXTRA_WORKOUT)
         val workout = workoutJson?.let { runCatching { WorkoutJson.decode(it) }.getOrNull() } ?: freeRun()
+        startCountdownSec = intent?.getIntExtra(EXTRA_START_COUNTDOWN, -1)?.takeIf { it >= 0 }
+        voiceLanguage = when (intent?.getStringExtra(EXTRA_VOICE_LANG)) {
+            "en" -> VoiceLanguage.EN
+            else -> VoiceLanguage.ID
+        }
         startNewRun(workout)
         return START_NOT_STICKY
     }
@@ -142,7 +161,8 @@ class RunForegroundService : Service() {
         sessionId = UUID.randomUUID().toString()
         startedAtElapsedMs = SystemClock.elapsedRealtime()
         startedAtEpochMs = System.currentTimeMillis()
-        launchRun(WorkoutRunner(workout), freshStart = true)
+        val config = startCountdownSec?.let { EngineConfig(startCountdownSec = it) } ?: EngineConfig()
+        launchRun(WorkoutRunner(workout, config), freshStart = true)
     }
 
     private fun resumeRun(targetSessionId: String) {
@@ -183,7 +203,7 @@ class RunForegroundService : Service() {
                 .getOrElse { WorkoutExpander.lazySteps(w.items).take(80).toList() }
         } ?: emptyList()
 
-        val activeAnnouncer = RunAnnouncer(this).also { it.start() }
+        val activeAnnouncer = RunAnnouncer(this, language = voiceLanguage).also { it.start() }
         announcer = activeAnnouncer
         scope.launch { activeRunner.events.collect { runCatching { activeAnnouncer.onEvent(it) } } }
 
@@ -322,17 +342,19 @@ class RunForegroundService : Service() {
     private fun stopRun() {
         if (stopping) return
         stopping = true
+        val stateAtStop = runner?.state?.value
         runner?.onStop(SystemClock.elapsedRealtime())
         RunStateHolder.reset()
         alertEngine = null
         runJob?.cancel()
         val finishedSession = sessionId
+        val activeWorkout = workout
         ioScope.launch {
             runCatching {
                 persistence?.appendTrackPoints(trackBuffer.toList())
-                persistence?.clear(finishedSession)
+                trackBuffer.clear()
+                finalizeSession(finishedSession, activeWorkout, stateAtStop)
             }
-            trackBuffer.clear()
             withContext(Dispatchers.Main) {
                 announcer?.shutdown()
                 announcer = null
@@ -341,6 +363,70 @@ class RunForegroundService : Service() {
                 stopSelf()
             }
         }
+    }
+
+    /** Saves the session (and its results) before S06 appears, then drops only the active snapshot. */
+    private suspend fun finalizeSession(id: String, activeWorkout: Workout?, state: RunnerState?) {
+        val store = persistence ?: return
+        val points = buildCurve(id)
+        val results = activeWorkout?.let { SessionResultsCalculator.compute(it, points) }
+            ?: SessionResultsData(emptyList(), emptyList(), emptyList())
+        val distanceM = state?.totalDistanceM ?: points.lastOrNull()?.cumulativeDistanceM ?: 0.0
+        val movingMs = state?.movingMs ?: points.lastOrNull()?.elapsedMs ?: 0L
+        val zone = ZoneId.systemDefault().id
+        val language = if (Locale.getDefault().language.startsWith("in") || Locale.getDefault().language == "id") {
+            VoiceLanguage.ID
+        } else {
+            VoiceLanguage.EN
+        }
+        val now = System.currentTimeMillis()
+        val entity = SessionEntity(
+            id = id,
+            templateId = null,
+            templateNameSnapshot = activeWorkout?.name ?: "",
+            workoutSnapshotJson = activeWorkout?.let { WorkoutJson.encode(it) } ?: "",
+            name = DefaultSessionNamer.name(startedAtEpochMs, zone, language),
+            nameIsCustom = false,
+            note = null,
+            rpe = null,
+            excludeFromRecords = false,
+            startedAtEpochMs = startedAtEpochMs,
+            zoneId = zone,
+            endedAtEpochMs = now,
+            elapsedMs = state?.elapsedMs ?: 0L,
+            movingMs = movingMs,
+            pausedMs = state?.pausedMs ?: 0L,
+            totalDistanceM = distanceM,
+            avgPaceSecPerKm = if (distanceM > 0) movingMs / distanceM else null,
+            segPass = results.segments.count { it.status == "PASS" },
+            segFail = results.segments.count { it.status == "FAIL" },
+            segBorderline = results.segments.count { it.status == "BORDERLINE" },
+            segNoTarget = results.segments.count { it.status == "NO_TARGET" },
+            planCompleted = state?.planCompleted ?: false,
+            goalReached = state?.goalReached ?: false,
+            distanceCalibrationFactorUsed = 1.0,
+            droppedSampleCount = 0,
+            updatedAt = now,
+        )
+        runCatching { SessionRepository(this@RunForegroundService).saveSession(entity, results) }
+        FinishedSessionHolder.sessionId = id
+        runCatching { store.clearActiveSnapshot(id) }
+    }
+
+    /** Rebuilds the cumulative distance/moving-time curve from the persisted track points. */
+    private suspend fun buildCurve(id: String): List<DistTimePoint> {
+        val trackPoints = persistence?.loadTrackPoints(id).orEmpty()
+        val filter = SampleFilter()
+        val tracker = DistanceTracker()
+        val curve = mutableListOf<DistTimePoint>()
+        for (point in trackPoints) {
+            val filtered = filter.accept(RunPersistence.toSample(point))
+            if (filtered.outcome == GpsOutcome.REJECTED) continue
+            val movingMs = point.timeMs - startedAtElapsedMs
+            tracker.add(movingMs, filtered)
+            curve += DistTimePoint(tracker.totalDistanceM, movingMs)
+        }
+        return curve
     }
 
     override fun onDestroy() {
@@ -411,10 +497,14 @@ class RunForegroundService : Service() {
         const val EXTRA_EXTEND_SECONDS = "extend_seconds"
         const val EXTRA_WORKOUT = "workout_json"
         const val EXTRA_SESSION_ID = "session_id"
+        const val EXTRA_START_COUNTDOWN = "start_countdown_sec"
+        const val EXTRA_VOICE_LANG = "voice_lang"
 
-        fun start(context: Context, workout: Workout) {
+        fun start(context: Context, workout: Workout, countdownSec: Int? = null, language: VoiceLanguage = VoiceLanguage.ID) {
             val intent = Intent(context, RunForegroundService::class.java)
                 .putExtra(EXTRA_WORKOUT, WorkoutJson.encode(workout))
+                .putExtra(EXTRA_VOICE_LANG, if (language == VoiceLanguage.EN) "en" else "id")
+            if (countdownSec != null) intent.putExtra(EXTRA_START_COUNTDOWN, countdownSec)
             ContextCompat.startForegroundService(context, intent)
         }
 

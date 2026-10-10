@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P2 step by step — P2.1–P2.3 selesai; selanjutnya P2.4 (Pra-start S04).
+- **Berikutnya:** FASE P2 step by step — P2.1–P2.5 selesai; selanjutnya P2.6 (Riwayat S07 + Edit Sesi D03).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -306,4 +306,26 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
 - **Uji device**: buat template lewat UI → muncul di Beranda dengan aksinya. Catatan: tombol aksi editor bisa
   tertutup keyboard saat field nama fokus (perlu scroll) — kandidat perbaikan `imePadding`.
 - Kartu ringkasan minggu ini menunggu **P2.10**. **D04** (dialog) digabung jadi banner S02 (D-030).
+
+## P2.4 Pra-start (S04) — selesai (2026-10-11)
+- `PraStartScreen`: ringkasan segmen (setelah expand), **status GPS live** (`LocationSource` → `GpsFixQuality`:
+  Siap ≤12 m / Mencari sinyal / Lemah), pengaturan cepat (**bahasa voice** ID/EN, **countdown** 0/3/5/10),
+  tombol **Mulai** (aktif hanya bila izin lokasi ada **dan** GPS siap) atau **Tunggu GPS** + **Mulai saja**.
+- Beranda kini menuju **S04** (bukan langsung start); service menerima `start_countdown_sec` dan `voice_lang`
+  via intent extra (`EngineConfig.startCountdownSec` + bahasa `RunAnnouncer`).
+- Test: `PraStartUiTest` 1/1 (render ringkasan/GPS/quick settings). Alur start & gating izin diuji manual di device.
+
+## P2.5 Selesai & Simpan (S06) + nama default — selesai (2026-10-11)
+- Engine: `DefaultSessionNamer` (6.12; batas jam 03:59…21:00 × ID/EN) + `SessionResultsCalculator`
+  (segmen/split/best effort dari kurva jarak–waktu). Engine **173 test** hijau.
+- Room **v3**: tabel `Session`, `SegmentResult`, `KmSplit`, `BestEffort` (tanpa FK; indeks `sessionId`) + `MIGRATION_2_3`.
+- `SessionRepository`: simpan bundle transaksional, `updateForm` (nama kosong → default; catatan ≤500),
+  `newRecords` (lencana), `delete` cascade (tanpa baris yatim).
+- Service saat Stop: bangun kurva dari track point → hitung hasil → **simpan Session dulu**, baru S06; snapshot
+  aktif dihapus (track point disimpan untuk riwayat).
+- **S06 `FinishedScreen`**: ringkasan, lencana rekor, form nama/RPE/catatan; Simpan/Lewati/Buang; catatan >500 ditolak.
+- Test: `SessionRepositoryTest` 2/2 (save, default name, limit 500, hapus tanpa yatim, migrasi v3).
+- **Instrumented 13/13 hijau**; engine 173; app lokal 2.
+- Catatan: P2.4 & P2.5 di-commit bersamaan karena berbagi file (service/AppNavHost/strings).
+
 

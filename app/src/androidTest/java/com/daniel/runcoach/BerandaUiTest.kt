@@ -44,14 +44,14 @@ class BerandaUiTest {
 
     @Test
     fun emptyStateShownWithoutUserTemplates() {
-        rule.setContent { RunCoachTheme { BerandaScreen(false, {}, {}, {}) } }
+        rule.setContent { RunCoachTheme { BerandaScreen(false, {}, {}, {}, {}) } }
         rule.onNode(hasText(context.getString(R.string.s02_create_first))).assertIsDisplayed()
     }
 
     @Test
     fun bannerAbsentWithoutSnapshot() {
         val title = context.getString(R.string.s02_resume_title)
-        rule.setContent { RunCoachTheme { BerandaScreen(false, {}, {}, {}) } }
+        rule.setContent { RunCoachTheme { BerandaScreen(false, {}, {}, {}, {}) } }
         rule.waitForIdle()
         rule.onAllNodesWithText(title).assertCountEquals(0)
     }
@@ -74,10 +74,11 @@ class BerandaUiTest {
             )
             repository.ensureBuiltIn()
         }
-        rule.setContent { RunCoachTheme { BerandaScreen(false, {}, {}, {}) } }
+        rule.setContent { RunCoachTheme { BerandaScreen(false, {}, {}, {}, {}) } }
         rule.waitUntil(timeoutMillis = 5_000) {
             rule.onAllNodesWithText(title).fetchSemanticsNodes().isNotEmpty()
         }
         rule.onNodeWithText(title).assertIsDisplayed()
     }
 }
+
