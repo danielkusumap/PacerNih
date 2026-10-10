@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -79,6 +80,7 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
     val context = LocalContext.current
     val repository = remember { SessionRepository(context) }
     val settingsRepository = remember { SettingsRepository(context) }
+    val settings by settingsRepository.settings.collectAsState(initial = com.daniel.runcoach.data.AppSettings())
     val scope = rememberCoroutineScope()
     var session by remember { mutableStateOf<SessionEntity?>(null) }
     var segments by remember { mutableStateOf<List<SegmentResultEntity>>(emptyList()) }
@@ -106,6 +108,10 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
         }
     }
 
+    LaunchedEffect(settings.historyMap, trackPoints.size) {
+        if (tab == 3 && (trackPoints.size < 2 || !settings.historyMap)) tab = 0
+    }
+
     val colors = LocalRcColors.current
     val spacing = LocalRcSpacing.current
     val type = LocalRcTypography.current
@@ -115,6 +121,12 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
             title = "",
             onBack = onBack,
             actions = {
+                RcIconButton(
+                    icon = RcIcons.Map,
+                    contentDescription = stringResource(R.string.s08_tab_map),
+                    onClick = { scope.launch { settingsRepository.setHistoryMap(!settings.historyMap) } },
+                    tint = if (settings.historyMap) colors.accentText else colors.textSecondary,
+                )
                 Box {
                     RcIconButton(RcIcons.MoreVert, stringResource(R.string.s08_more), onClick = { menu = true }, tint = colors.textPrimary)
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = colors.surfaceRaised) {
@@ -185,7 +197,7 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
                 if (current.rpe != null) Text(stringResource(R.string.s08_rpe, current.rpe), style = type.titleS, color = colors.textPrimary)
             }
 
-            TabRow(tab, hasMap = trackPoints.size >= 2) { tab = it }
+            TabRow(tab, hasMap = trackPoints.size >= 2 && settings.historyMap) { tab = it }
             when (tab) {
                 0 -> SegmentsTab(segments)
                 1 -> SplitsTab(splits)

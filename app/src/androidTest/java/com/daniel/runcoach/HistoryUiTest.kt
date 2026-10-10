@@ -64,6 +64,7 @@ class HistoryUiTest {
     fun detailMapTabRendersWithoutCrash() {
         val id = "map-${System.nanoTime()}"
         runBlocking {
+            com.daniel.runcoach.data.SettingsRepository(context).setHistoryMap(true)
             repository.saveSession(SessionFixtures.session(id, "Map Test"), SessionFixtures.results())
             RunPersistence(context).appendTrackPoints(
                 (0..20).map { i ->
@@ -84,6 +85,7 @@ class HistoryUiTest {
         rule.waitUntil(5_000) { rule.onAllNodesWithText("Map Test").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithText(context.getString(R.string.s08_tab_map)).performClick()
         rule.onRoot().assertExists()
+        runBlocking { com.daniel.runcoach.data.SettingsRepository(context).setHistoryMap(false) }
     }
 }
 

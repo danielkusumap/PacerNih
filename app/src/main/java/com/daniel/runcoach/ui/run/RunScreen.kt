@@ -149,7 +149,7 @@ fun RunScreen(
             modifier = Modifier.fillMaxSize().padding(horizontal = spacing.screenH),
         ) {
             // A. Header
-            Header(ui)
+            Header(ui, showMap, onToggleMap)
             // B. Segment
             segment?.let { SegmentBlock(state, it) }
             // Banners (do not push content, sit right under the header)
@@ -197,14 +197,14 @@ fun RunScreen(
 }
 
 @Composable
-private fun Header(ui: RunUiState) {
+private fun Header(ui: RunUiState, showMap: Boolean, onToggleMap: () -> Unit) {
     val colors = LocalRcColors.current
     val type = LocalRcTypography.current
     val state = ui.state
     Row(
         modifier = Modifier.fillMaxWidth().height(48.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(ui.workoutName, style = type.bodySmall, color = colors.textSecondary, maxLines = 1, modifier = Modifier.weight(1f))
         when {
@@ -215,6 +215,12 @@ private fun Header(ui: RunUiState) {
                 Icon(painterResource(icon), contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
             }
         }
+        RcIconButton(
+            icon = RcIcons.Map,
+            contentDescription = stringResource(R.string.s08_tab_map),
+            onClick = onToggleMap,
+            tint = if (showMap) colors.accentText else colors.textSecondary,
+        )
     }
 }
 
@@ -426,7 +432,6 @@ private fun Controls(
             RcButton(stringResource(R.string.run_extend), onClick = onExtend, variant = RcButtonVariant.Tertiary, icon = RcIcons.Add, modifier = Modifier.weight(1f))
             RcButton(stringResource(R.string.run_list_segments), onClick = onSegments, variant = RcButtonVariant.Tertiary, icon = RcIcons.List, modifier = Modifier.weight(1f))
         }
-        RcButton(stringResource(R.string.s08_tab_map) + if (showMap) " ✓" else "", onClick = onToggleMap, variant = RcButtonVariant.Tertiary, icon = RcIcons.Map, fillWidth = true)
     }
 }
 

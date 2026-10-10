@@ -40,6 +40,7 @@ data class AppSettings(
     val lastBackupEpochMs: Long? = null,
     val calibrationFactor: Double = 1.0,
     val backupReminderDays: Int = 0,
+    val historyMap: Boolean = false,
 )
 
 private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -67,6 +68,7 @@ class SettingsRepository(context: Context) {
             lastBackupEpochMs = prefs[KEY_LAST_BACKUP],
             calibrationFactor = prefs[KEY_CALIBRATION] ?: 1.0,
             backupReminderDays = prefs[KEY_BACKUP_REMINDER] ?: 0,
+            historyMap = prefs[KEY_HISTORY_MAP] ?: false,
         )
     }
 
@@ -93,6 +95,8 @@ class SettingsRepository(context: Context) {
 
     suspend fun setBackupReminderDays(days: Int) = dataStore.edit { it[KEY_BACKUP_REMINDER] = days }
 
+    suspend fun setHistoryMap(on: Boolean) = dataStore.edit { it[KEY_HISTORY_MAP] = on }
+
     /** Writes every field at once (used by restore). */
     suspend fun setAll(s: AppSettings) = dataStore.edit { prefs ->
         prefs[KEY_THEME] = s.theme.name
@@ -110,6 +114,7 @@ class SettingsRepository(context: Context) {
         prefs[KEY_LIVE_MAP] = s.liveMap
         prefs[KEY_CALIBRATION] = s.calibrationFactor
         prefs[KEY_BACKUP_REMINDER] = s.backupReminderDays
+        prefs[KEY_HISTORY_MAP] = s.historyMap
         s.lastBackupEpochMs?.let { prefs[KEY_LAST_BACKUP] = it }
     }
 
@@ -130,5 +135,6 @@ class SettingsRepository(context: Context) {
         val KEY_LAST_BACKUP = longPreferencesKey("last_backup")
         val KEY_CALIBRATION = doublePreferencesKey("calibration_factor")
         val KEY_BACKUP_REMINDER = intPreferencesKey("backup_reminder_days")
+        val KEY_HISTORY_MAP = booleanPreferencesKey("history_map")
     }
 }
