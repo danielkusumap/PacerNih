@@ -51,7 +51,7 @@ fun AppNavHost() {
     val context = LocalContext.current
     val debugBuild = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
-    NavHost(navController = navController, startDestination = Routes.ONBOARDING) {
+    NavHost(navController = navController, startDestination = if (com.daniel.runcoach.BuildConfig.MOCK_DATA) Routes.HOME else Routes.ONBOARDING) {
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
                 onStart = {

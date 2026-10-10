@@ -175,7 +175,7 @@ private fun SessionLine(session: SessionEntity, onClick: () -> Unit) {
         }
         ResultChip(
             status = if (targetCount == 0) RcStatus.Neutral else if (session.segFail == 0) RcStatus.Pass else RcStatus.Warn,
-            label = if (targetCount == 0) stringResource(R.string.s07_chip_no_target) else stringResource(R.string.s07_chip_short, session.segPass, targetCount),
+            label = if (targetCount == 0) stringResource(R.string.s07_chip_no_target) else stringResource(R.string.s07_chip_pass, session.segPass, targetCount),
         )
     }
 }

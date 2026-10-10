@@ -19,10 +19,22 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Mock data is only compiled in when building with -PmockData=true (used for manual exploration).
+        buildConfigField("boolean", "MOCK_DATA", (project.findProperty("mockData") ?: "false").toString())
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("../release.keystore")
+            storePassword = "runcoach123"
+            keyAlias = "runcoach"
+            keyPassword = "runcoach123"
+        }
+    }
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             optimization {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
@@ -35,6 +47,12 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+    // targetSdk 30 is intentional (chosen for the test device); Play's target-API lint must not block the build.
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
     }
 }
 

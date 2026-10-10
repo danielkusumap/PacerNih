@@ -109,7 +109,7 @@ fun FinishedScreen(onDone: () -> Unit) {
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.s5)) {
                 MetricBlock(stringResource(R.string.s06_metric_time), Formatters.duration(current.movingMs))
-                MetricBlock(stringResource(R.string.s06_metric_avg_pace), Formatters.pace(current.avgPaceSecPerKm))
+                MetricBlock(stringResource(R.string.s06_metric_avg_pace), Formatters.pace(current.avgPaceSecPerKm), unit = "/km")
                 MetricBlock(stringResource(R.string.s06_metric_pass), "${current.segPass}/${current.segPass + current.segFail + current.segBorderline}")
             }
             ResultStrip(statuses = buildList {

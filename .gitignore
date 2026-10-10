@@ -14,3 +14,7 @@ build/
 .cxx
 local.properties
 .kotlin/
+.idea/
+/release.keystore
+new_icon.png
+

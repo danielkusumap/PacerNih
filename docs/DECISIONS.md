@@ -326,3 +326,17 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - `RcTextField` memakai label bertumpuk (label kecil di atas input) sebagai bentuk sederhana "label mengambang";
   fokus/error tetap border aksen/`fail`.
 - Grafik belum dirombak di U1; akan dikerjakan bersama S08/S09/S11 di U2 sesuai 6.1/6.2.
+
+## D-048 Mock data hanya lewat flag build
+- `MockDataSeeder` ada di source set main (agar bisa dipanggil `MainActivity`), tetapi hanya berjalan saat
+  `BuildConfig.MOCK_DATA` true, yang hanya di-set dengan `-PmockData=true`. Release default false, dan R8 membuang
+  cabang tersebut, sehingga APK rilis tidak menyertakan/menjalankan mock data.
+- Saat `MOCK_DATA`, app mulai di Beranda (lewati onboarding) agar mudah dieksplorasi.
+- Mock data membuat sesi selesai (hasil per segmen, split km, best effort, track) — tidak menyentuh pelacakan live
+  (jarak saat lari tetap dari GPS nyata).
+
+## D-049 Release signing & lint
+- Ditambah `release.keystore` (gitignored) + `signingConfigs.release` agar `assembleRelease` menghasilkan APK
+  ter-sign yang bisa dipasang di ponsel lain.
+- `lint.checkReleaseBuilds = false`/`abortOnError = false`: `targetSdk 30` disengaja (dipilih untuk device uji),
+  dan lint Play "target API 33" tidak boleh memblokir build rilis lokal.

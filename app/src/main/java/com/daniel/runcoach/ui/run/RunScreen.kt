@@ -351,6 +351,7 @@ private fun Totals(state: RunnerState) {
                 MetricBlock(
                     stringResource(R.string.run_label_avg_pace),
                     Formatters.pace(if (state.totalDistanceM > 0) state.movingMs / state.totalDistanceM else null),
+                    unit = "/km",
                     valueColor = colors.textSecondary,
                     modifier = Modifier.weight(1f),
                 )

@@ -114,7 +114,7 @@ fun ResultChip(status: RcStatus, label: String, modifier: Modifier = Modifier) {
                 Icon(painterResource(it), contentDescription = null, tint = status.onColor(), modifier = Modifier.size(16.dp))
             }
         }
-        Text(label.uppercase(), style = type.label, color = status.onColor())
+        Text(label.uppercase(), style = type.label, color = status.onColor(), maxLines = 1, softWrap = false)
     }
 }
 

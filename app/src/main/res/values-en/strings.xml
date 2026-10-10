@@ -278,10 +278,15 @@
     <string name="s08_borderline_note">Within GPS error margin</string>
     <string name="s08_col_km">Km</string>
     <string name="s08_col_time">Time</string>
-    <string name="s08_col_pace">Pace</string>
+    <string name="s08_col_pace">Pace (/km)</string>
     <string name="s08_col_delta">Delta</string>
     <string name="s08_chart_per_km">Pace per km</string>
     <string name="s08_chart_over_distance">Pace over distance</string>
+    <string name="s08_km_inside">Km inside this segment</string>
+    <string name="s08_seg_limit">Limit %1$s</string>
+    <string name="s08_seg_target">Target</string>
+    <string name="s08_seg_actual">Actual</string>
+    <string name="s08_seg_delta">Delta</string>
     <string name="chart_faster">faster</string>
     <string name="result_pass">Passed</string>
     <string name="result_fail">Failed</string>

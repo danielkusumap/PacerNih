@@ -168,7 +168,7 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
             }
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = spacing.s3), horizontalArrangement = Arrangement.spacedBy(spacing.s5)) {
                 MetricBlock(stringResource(R.string.s08_metric_time), Formatters.duration(current.movingMs))
-                MetricBlock(stringResource(R.string.s08_metric_avg_pace), Formatters.pace(current.avgPaceSecPerKm))
+                MetricBlock(stringResource(R.string.s08_metric_avg_pace), Formatters.pace(current.avgPaceSecPerKm), unit = "/km")
                 MetricBlock(stringResource(R.string.s08_metric_result), stringResource(R.string.s07_chip_pass, current.segPass, current.segPass + current.segFail + current.segBorderline))
             }
             if (current.pausedMs > 0) {
@@ -199,7 +199,7 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
 
             TabRow(tab, hasMap = trackPoints.size >= 2 && settings.historyMap) { tab = it }
             when (tab) {
-                0 -> SegmentsTab(segments)
+                0 -> SegmentsTab(segments, splits)
                 1 -> SplitsTab(splits)
                 2 -> ChartsTab(segments, splits, trackPoints)
                 else -> RouteMapView(
@@ -271,25 +271,74 @@ private fun TabRow(selected: Int, hasMap: Boolean, onSelect: (Int) -> Unit) {
 }
 
 @Composable
-private fun SegmentsTab(segments: List<SegmentResultEntity>) {
+private fun SegmentsTab(segments: List<SegmentResultEntity>, splits: List<KmSplitEntity>) {
     val colors = LocalRcColors.current
     val type = LocalRcTypography.current
     val spacing = LocalRcSpacing.current
+    var expanded by remember { mutableStateOf<Set<Int>>(emptySet()) }
+    // Cumulative distance at each segment boundary, to find the km splits inside a segment.
+    val bounds = segments.runningFold(0.0) { acc, s -> acc + s.distanceM }
     Column(verticalArrangement = Arrangement.spacedBy(spacing.cardGap), modifier = Modifier.padding(top = spacing.s3)) {
         segments.forEach { segment ->
+            val start = bounds.getOrElse(segment.idx - 1) { 0.0 }
+            val end = bounds.getOrElse(segment.idx) { start + segment.distanceM }
+            val inside = splits.filter { it.idx * 1000.0 - 1000.0 < end && it.idx * 1000.0 > start }
+            val canExpand = segment.distanceM >= 1000.0 && segment.targetPace != null && inside.isNotEmpty()
             RcCard {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
                     Text("#${segment.idx} ${segment.label}", style = type.titleS, color = colors.textPrimary, modifier = Modifier.weight(1f))
                     ResultChip(statusFor(segment.status), statusLabel(segment.status))
                 }
-                Text("${limitText(segment)} · ${targetText(segment)}", style = type.bodySmall, color = colors.textSecondary)
+                Text(stringResource(R.string.s08_seg_limit, limitText(segment)), style = type.bodySmall, color = colors.textSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(spacing.s4)) {
                     MetricBlock("Jarak", Formatters.distanceKm(segment.distanceM).removeSuffix(" km"), unit = "km")
                     MetricBlock("Waktu", Formatters.duration(segment.durationMs))
-                    MetricBlock("Pace", Formatters.pace(segment.avgPace))
                 }
-                segment.deltaSec?.let { Text(Formatters.deltaSeconds(it), style = type.bodySmall, color = if (it <= 0) colors.pass else colors.fail) }
+                Row(modifier = Modifier.fillMaxWidth().padding(top = spacing.s1), horizontalArrangement = Arrangement.spacedBy(spacing.s4)) {
+                    MetricBlock(stringResource(R.string.s08_seg_target), targetText(segment))
+                    MetricBlock(
+                        stringResource(R.string.s08_seg_actual),
+                        Formatters.pace(segment.avgPace),
+                        unit = "/km",
+                        valueColor = when (segment.status) {
+                            "PASS" -> colors.pass
+                            "FAIL" -> colors.fail
+                            "BORDERLINE" -> colors.warn
+                            else -> colors.textPrimary
+                        },
+                    )
+                    segment.deltaSec?.let {
+                        MetricBlock(stringResource(R.string.s08_seg_delta), Formatters.deltaSeconds(it), valueColor = if (it <= 0) colors.pass else colors.fail)
+                    }
+                }
                 if (segment.status == "BORDERLINE") Text(stringResource(R.string.s08_borderline_note), style = type.caption, color = colors.warn)
+                if (canExpand) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = spacing.s2).clickable {
+                            expanded = if (segment.idx in expanded) expanded - segment.idx else expanded + segment.idx
+                        },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(spacing.s1),
+                    ) {
+                        Icon(
+                            painterResource(if (segment.idx in expanded) RcIcons.ChevronLeft else RcIcons.ChevronRight),
+                            contentDescription = null,
+                            tint = colors.accentText,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Text(stringResource(R.string.s08_km_inside), style = type.bodySmall, color = colors.accentText)
+                    }
+                    if (segment.idx in expanded) {
+                        inside.forEach { split ->
+                            Row(modifier = Modifier.fillMaxWidth().padding(start = spacing.s2, top = 2.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(if (split.distanceM < 1000.0) "%.2f km".format(split.distanceM / 1000.0) else "Km ${split.idx}", style = type.bodySmall, color = colors.textPrimary)
+                                Text(Formatters.duration(split.durationMs), style = type.bodySmall, color = colors.textSecondary)
+                                Text(Formatters.pace(split.paceSecPerKm), style = type.bodySmall, color = colors.textSecondary)
+                                ResultChip(statusFor(split.status ?: ""), statusLabel(split.status ?: ""))
+                            }
+                        }
+                    }
+                }
             }
         }
     }

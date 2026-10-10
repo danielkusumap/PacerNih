@@ -277,10 +277,15 @@
     <string name="s08_borderline_note">Dalam batas error GPS</string>
     <string name="s08_col_km">Km</string>
     <string name="s08_col_time">Waktu</string>
-    <string name="s08_col_pace">Pace</string>
+    <string name="s08_col_pace">Pace (/km)</string>
     <string name="s08_col_delta">Selisih</string>
     <string name="s08_chart_per_km">Pace per km</string>
     <string name="s08_chart_over_distance">Pace sepanjang jarak</string>
+    <string name="s08_km_inside">Km di dalam segmen</string>
+    <string name="s08_seg_limit">Batas %1$s</string>
+    <string name="s08_seg_target">Target</string>
+    <string name="s08_seg_actual">Aktual</string>
+    <string name="s08_seg_delta">Selisih</string>
     <string name="chart_faster">lebih cepat</string>
     <string name="result_pass">Lulus</string>
     <string name="result_fail">Gagal</string>

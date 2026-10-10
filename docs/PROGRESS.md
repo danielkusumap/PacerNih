@@ -476,6 +476,20 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
 - Test device `RcCatalogTest`. Instrumented **31/31 hijau**.
 - Grafik (`ChartBar`/`ChartLine`) menyusul di U2 saat re-skin S08/S09/S11 (aturan 6.1/6.2).
 
+## U3 Polish UI lanjutan (2026-10-11)
+- **U3.1 Grafik interaktif** (`145bdad`): `ChartBar`/`ChartLine`/`ChartBarPace` — drag indicator + tooltip, animasi masuk 300ms
+  (hormati "hapus animasi"), state kosong/satu titik, `contentDescription`, label "lebih cepat" pada sumbu pace dibalik.
+- **U3.2 Peta** (`df1cee5`): toggle peta live di header S05 (ikon) + setelan `historyMap` untuk S08; `RouteMapView`
+  dirapikan (polyline aksen 12f, dot marker start/finish/boundary, center+zoom dari rentang rute, `interactive`).
+- **U3.3 Chip hasil** (`9788644`): chip Riwayat/Mingguan menampilkan `N/M` agar tidak terpotong.
+- **U3.4 Ikon** (`aea0d97`): ikon launcher baru (RUN+) untuk semua densitas + adaptive icon (`ic_launcher_bg`, foreground PNG).
+- Detail sesi: kartu segmen kini menampilkan **TARGET vs AKTUAL** (dan DELTA) secara eksplisit; satuan pace `/km`;
+  segmen ≥ 1 km bertarget punya **"Km di dalam segmen"** yang bisa dibuka.
+- **Mock data** (debug): `MockDataSeeder` + flag Gradle `MOCK_DATA` (hanya aktif dengan `-PmockData=true`; seeder membuat
+  template + 6 sesi lengkap dengan hasil per segmen, split km, best effort, dan track untuk peta).
+- **Release**: `release.keystore` + signing config; `lint.checkReleaseBuilds=false` (targetSdk 30 disengaja).
+  APK bersih: `app/build/outputs/apk/release/app-release.apk` (MOCK_DATA=false).
+
 
 
 
