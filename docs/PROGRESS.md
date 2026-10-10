@@ -288,4 +288,10 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
 - **Uji device (parsial)**: editor terbuka; "Add segment" menambah item; sheet D01 terbuka ("Segment editor");
   Save hanya aktif bila nama terisi & tidak ada error. Verifikasi tap tombol **ⓘ** D11 via uiautomator belum tuntas
   (glyph ⓘ tidak ter-encode) → sisa uji manual.
+- **Test otomatis sesuai AC** (semua hijau):
+  - AC1 (D11 ID & EN dari strings): `EditorInfoContentTest` — 12 topik, teks ID & EN non-kosong (2/2).
+  - AC3 (tidak bisa simpan jika tidak valid): `EditorLogicTest` (lokal) + `EditorUiTest.saveIsDisabledUntilNameIsEntered`.
+  - AC2 (buat via UI): `EditorUiTest.addSegmentEnterNameAndSavePersistsTemplate` — add segmen + nama + Simpan → template tersimpan (2/2).
+  - AC4/AC5 (preset lolos validator; progressive tempo 5 km 7:30 −20 dtk): `WorkoutPresetsTest` (engine).
+  - Tombol ⓘ dipastikan ada lewat cek manual (glyph). Total: engine 168, app lokal 2, instrumented 7.
 

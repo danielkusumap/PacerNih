@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -117,7 +118,7 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(stringResource(R.string.editor_title), style = MaterialTheme.typography.headlineSmall)
-            OutlinedTextField(value = name, onValueChange = { name = it; dirty = true }, label = { Text(stringResource(R.string.editor_name)) }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = name, onValueChange = { name = it; dirty = true }, label = { Text(stringResource(R.string.editor_name)) }, modifier = Modifier.fillMaxWidth().testTag("field_name"))
             OutlinedTextField(
                 value = goal,
                 onValueChange = { goal = it.filter(Char::isDigit); dirty = true },
@@ -166,7 +167,7 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { items.add(defaultSegment()); dirty = true }) { Text(stringResource(R.string.editor_add_segment)) }
+                OutlinedButton(onClick = { items.add(defaultSegment()); dirty = true }, modifier = Modifier.testTag("btn_add_segment")) { Text(stringResource(R.string.editor_add_segment)) }
                 OutlinedButton(onClick = { items.add(defaultRepeat()); dirty = true }) { Text(stringResource(R.string.editor_add_repeat)) }
             }
             OutlinedButton(onClick = { showPresets = true }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.editor_preset)) }
@@ -200,8 +201,8 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
                             onSaved()
                         }
                     },
-                    enabled = name.isNotBlank() && errors.isEmpty(),
-                    modifier = Modifier.weight(1f),
+                    enabled = editorCanSave(name, errors.size),
+                    modifier = Modifier.weight(1f).testTag("btn_save"),
                 ) { Text(stringResource(R.string.editor_save)) }
             }
         }
@@ -504,21 +505,3 @@ private fun kindWord(kind: SegmentKind): String = stringResource(
 private fun defaultSegment() = Segment("Run", SegmentKind.RUN, Limit.Distance(1000), targetPaceSecPerKm = null)
 private fun defaultChild() = Segment("Recovery", SegmentKind.RECOVERY, Limit.Distance(400), targetPaceSecPerKm = null)
 private fun defaultRepeat() = Repeat(times = 3, children = listOf(defaultSegment(), defaultChild()))
-
-/** Parses `m:ss` (e.g. "6:30") to seconds; null when unparsable. */
-internal fun parsePace(text: String): Int? {
-    val parts = text.trim().split(":")
-    if (parts.isEmpty()) return null
-    return when (parts.size) {
-        1 -> parts[0].toIntOrNull()
-        2 -> {
-            val m = parts[0].toIntOrNull() ?: return null
-            val s = parts[1].toIntOrNull() ?: return null
-            m * 60 + s
-        }
-
-        else -> null
-    }
-}
-
-internal fun formatPace(seconds: Int): String = "%d:%02d".format(seconds / 60, seconds % 60)
