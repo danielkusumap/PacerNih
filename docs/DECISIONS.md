@@ -62,3 +62,11 @@ jarak, referensi tidak bergeser), RESET (referensi di-reset setelah 3 penolakan 
 `DistanceTracker.add(mtMs, filtered)` menerima **moving clock** (F5) dari pemanggil dan jarak mentah dari
 filter, lalu menerapkan `calibrationFactor` (F4, clamp 0.95–1.05). `BoundaryCrossing` memakai `timeMs`
 (moving clock), bukan `timeNanos`. Test P0.3/P0.4 diperbarui ke API baru, bukan dihapus.
+
+## D-012 P0.5: `roundHalfUp` bersama, ambang realisme F12, bobot pace live
+- `roundHalfUp` (6.14.0) ditaruh sekali di `engine/Rounding.kt` untuk dipakai P0.5/P0.8.
+- F12 ("tidak realistis" bila lebih cepat dari 150 s/km) memakai ulang `recordMinValidPaceSecPerKm` (150),
+  karena tabel 6.1 tidak punya konstanta terpisah; diberi komentar di kode.
+- `LivePaceEstimator` memberi bobot waktu tiap sample secara trapesium (sample tengah = setengah jarak ke
+  kedua tetangga), sehingga lima sample 1 Hz berbobot sama dan menghasilkan v̄ = 3.04 persis (vektor V5).
+  Ini konsisten dengan F8 walau F8 menulis "Δt ke sample sebelumnya".

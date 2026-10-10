@@ -3,14 +3,14 @@
 Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diketahui.
 
 ## Status P0 (diperbarui 2026-10-10, sinkron dengan Lampiran C)
-- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.4b, P0.10.
+- **Selesai & ter-commit:** P0.1, P0.2, P0.3, P0.4, P0.4b, P0.5, P0.10.
 - **Tersedia sekarang:** 6.14 (Katalog Rumus + V1–V22) dan 8.3 (Info Segmen). Q-001/Q-002/Q-003/Q-005 ditutup.
 - **Urutan yang disarankan (Lampiran C):** P0.4b -> P0.5 -> P0.6 -> P0.8 -> P0.7 -> P0.9 -> P0.11.
-- **Belum:** P0.5, P0.6, P0.7, P0.8, P0.9, P0.11.
+- **Belum:** P0.6, P0.7, P0.8, P0.9, P0.11.
 - **Gerbang P0 belum tercapai**, jadi P1 (runtime Android) belum dimulai.
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack kini menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya dicatat di `DECISIONS.md` D-010.
-- **Test:** `:engine` 69 unit test hijau; `:app:assembleDebug` sukses.
+- **Test:** `:engine` 85 unit test hijau; `:app:assembleDebug` sukses.
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -84,5 +84,18 @@ Bug diketahui: -
 - D-007 (filter & tracker terpisah) dipertahankan.
 
 Belum: P0.5 dst.
+Bug diketahui: -
+
+## P0.5 PaceCalculator — selesai (2026-10-10)
+- `PaceCalculator` (pure): konversi speed<->pace (F1), pace rata-rata (F9), lingkup evaluasi (F10),
+  projected pace (F11), required pace + aturan "tidak realistis" (F12).
+- `LivePaceEstimator` (stateful): pace live jendela 15 dtk (F8) — Metode A Doppler berbobot waktu,
+  Metode B fallback jarak/waktu dengan interpolasi; kecepatan < 0.3 m/s = berhenti (pace null).
+- `roundHalfUp` ditaruh bersama di `engine/Rounding.kt` (6.14.0).
+- Test: **85 hijau**. Vektor V5, V6, V7, V8 masuk `FormulaVectorsTest`; PaceCalculatorTest (7) dan
+  LivePaceEstimatorTest (5) termasuk uji stabilitas terhadap noise.
+- Catatan desain: bobot pace live & pemakaian ulang ambang 150 s/km — lihat `DECISIONS.md` D-012.
+
+Belum: P0.6 dst.
 Bug diketahui: -
 

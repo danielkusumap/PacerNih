@@ -1,7 +1,11 @@
 package com.daniel.runcoach.engine.gps
 
+import com.daniel.runcoach.engine.metrics.LivePaceEstimator
+import com.daniel.runcoach.engine.metrics.PaceCalculator
+import com.daniel.runcoach.engine.roundHalfUp
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 /**
  * Formula vectors from RUNCOACH_PLAN 6.14.2, each as one test named after its ID.
@@ -44,5 +48,38 @@ class FormulaVectorsTest {
         assertEquals(103_000L, crossings[1].timeMs)
         // D1 - last boundary = 1024 - 1020 = 4 m carried into the next segment.
         assertEquals(4.0, tracker.totalDistanceM - 1020.0, 1e-9)
+    }
+
+    /** V5: Doppler live pace, time-weighted over five 1 Hz samples. */
+    @Test
+    fun v05_livePaceDopplerWeighted() {
+        val estimator = LivePaceEstimator()
+        val speeds = listOf(3.2, 3.1, 3.0, 2.9, 3.0)
+        var distanceM = 0.0
+        speeds.forEachIndexed { index, speed ->
+            estimator.add(index * 1000L, distanceM, speedMps = speed)
+            distanceM += speed
+        }
+        assertEquals(3.04, estimator.liveSpeedMps()!!, 0.001)
+        assertEquals(328.95, estimator.livePaceSecPerKm()!!, 0.05)
+        assertEquals(329L, roundHalfUp(estimator.livePaceSecPerKm()!!))
+    }
+
+    /** V6: projected pace, not too slow at T=420. */
+    @Test
+    fun v06_projectedPace() {
+        assertEquals(416.0, PaceCalculator.projectedPaceSecPerKm(410.0, 170.0, 1000.0, 600.0)!!, 1e-9)
+    }
+
+    /** V7: required pace over a 5 km scope. */
+    @Test
+    fun v07_requiredPace() {
+        assertEquals(323.333, PaceCalculator.requiredPaceSecPerKm(330.0, 680.0, 5000.0, 3000.0)!!, 0.01)
+    }
+
+    /** V8: required pace when the target is already unreachable -> not realistic. */
+    @Test
+    fun v08_requiredPaceUnrealistic() {
+        assertNull(PaceCalculator.requiredPaceSecPerKm(330.0, 1700.0, 5000.0, 3000.0))
     }
 }

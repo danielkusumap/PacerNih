@@ -29,4 +29,12 @@ data class EngineConfig(
     val calibrationMin: Double = 0.95,
     /** Upper bound for the distance calibration factor (F4). */
     val calibrationMax: Double = 1.05,
+    /** Live pace averaging window in seconds (F8). */
+    val liveWindowSec: Int = 15,
+    /** Minimum Doppler samples in the window for method A (F8). */
+    val liveMinSamples: Int = 5,
+    /** Minimum seconds of data before the distance fallback (method B) may be used (F8). */
+    val liveFallbackMinSec: Int = 8,
+    /** Minimum distance before an average pace is reported (F9). */
+    val minPaceDistanceM: Double = 50.0,
 )
