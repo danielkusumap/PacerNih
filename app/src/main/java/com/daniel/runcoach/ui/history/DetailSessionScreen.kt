@@ -45,8 +45,8 @@ import com.daniel.runcoach.engine.voice.VoiceLanguage
 import com.daniel.runcoach.export.GpxExporter
 import com.daniel.runcoach.ui.Formatters
 import com.daniel.runcoach.ui.charts.Bar
-import com.daniel.runcoach.ui.charts.BarChart
-import com.daniel.runcoach.ui.charts.LineChart
+import com.daniel.runcoach.ui.charts.ChartBarPace
+import com.daniel.runcoach.ui.charts.ChartLine
 import com.daniel.runcoach.ui.charts.LinePoint
 import com.daniel.runcoach.ui.charts.TargetStep
 import com.daniel.runcoach.ui.components.MetricBlock
@@ -189,7 +189,7 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
             when (tab) {
                 0 -> SegmentsTab(segments)
                 1 -> SplitsTab(splits)
-                2 -> ChartsTab(segments, splits)
+                2 -> ChartsTab(segments, splits, trackPoints)
                 else -> RouteMapView(
                     points = trackPoints.map { it.lat to it.lon },
                     boundaryIndices = boundaryIndices(trackPoints, segments),
@@ -310,23 +310,46 @@ private fun SplitsTab(splits: List<KmSplitEntity>) {
 }
 
 @Composable
-private fun ChartsTab(segments: List<SegmentResultEntity>, splits: List<KmSplitEntity>) {
+private fun ChartsTab(segments: List<SegmentResultEntity>, splits: List<KmSplitEntity>, trackPoints: List<TrackPointEntity>) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
     Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 12.dp)) {
-        val fullSplits = splits.filter { it.distanceM >= 1000.0 && it.paceSecPerKm != null }
-        Text(stringResource(R.string.s08_chart_per_km), style = LocalRcTypography.current.titleS, color = LocalRcColors.current.textPrimary)
-        BarChart(
-            bars = fullSplits.map { Bar("Km ${it.idx}", it.paceSecPerKm, it.targetPace?.toDouble()) },
+        val fullSplits = splits.filter { it.paceSecPerKm != null }
+        Text(stringResource(R.string.s08_chart_per_km), style = type.titleS, color = colors.textPrimary)
+        ChartBarPace(
+            bars = fullSplits.map {
+                Bar(
+                    label = if (it.distanceM < 1000.0) "%.2f".format(it.distanceM / 1000.0) else "${it.idx}",
+                    value = it.paceSecPerKm,
+                    target = it.targetPace?.toDouble(),
+                    status = if (it.distanceM < 1000.0) null else statusFor(it.status ?: ""),
+                    weight = (it.distanceM / 1000.0).toFloat().coerceAtLeast(0.1f),
+                    partial = it.distanceM < 1000.0,
+                )
+            },
             valueFormatter = { Formatters.pace(it) },
         )
-        val points = fullSplits.mapIndexed { index, split -> LinePoint((index + 1) * 1000.0, split.paceSecPerKm) }
-        val steps = targetSteps(segments)
-        Text(stringResource(R.string.s08_chart_over_distance), style = LocalRcTypography.current.titleS, color = LocalRcColors.current.textPrimary)
-        LineChart(
-            points = points,
-            steps = steps,
+        Text(stringResource(R.string.s08_chart_over_distance), style = type.titleS, color = colors.textPrimary)
+        val curve = remember(trackPoints) { buildCurve(trackPoints) }
+        val buckets = remember(curve) { com.daniel.runcoach.engine.chart.ChartMath.bucketByDistance(curve, 100.0) }
+        ChartLine(
+            points = buckets.map { LinePoint(it.startM + 50.0, it.paceSecPerKm) },
+            steps = targetSteps(segments),
             boundaries = segments.runningFold(0.0) { acc, s -> acc + s.distanceM }.drop(1).dropLast(1),
             valueFormatter = { Formatters.pace(it) },
         )
+    }
+}
+
+private fun buildCurve(trackPoints: List<TrackPointEntity>): List<com.daniel.runcoach.engine.chart.DistTimePoint> {
+    if (trackPoints.isEmpty()) return emptyList()
+    var distance = 0.0
+    val start = trackPoints.first().timeMs
+    return trackPoints.mapIndexed { i, p ->
+        if (i > 0) {
+            distance += haversineM(trackPoints[i - 1].lat, trackPoints[i - 1].lon, p.lat, p.lon)
+        }
+        com.daniel.runcoach.engine.chart.DistTimePoint(distance, p.timeMs - start)
     }
 }
 
