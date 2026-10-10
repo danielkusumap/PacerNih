@@ -155,3 +155,11 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
   device. Event announcer dibungkus `runCatching` agar satu kegagalan tidak mematikan service.
 - Gaya countdown & bahasa masih default (BEEP, ID); akan disambungkan ke pengaturan S12 pada P2.11.
   `AlertEngine` (alert koreksi) dan teks `SegmentEnd` belum di-wire ke announcer.
+
+## D-023 P1.5: Room+KSP dan pemulihan berbasis replay
+- Menambah **Room 2.8.5** + **KSP 2.3.12** (whitelist). `exportSchema = true`; skema diekspor ke `app/schemas`.
+- Pemulihan memakai **replay** track point ke `WorkoutRunner` baru (deterministik), bukan menyimpan state internal
+  runner. `RunSnapshot` menyimpan workout + waktu mulai (`elapsedRealtime`) + `zoneId`; kolom DB tetap `runnerStateJson`.
+- **Batasan:** moving time saat resume ikut menghitung jeda ketika proses mati (jam dihitung dari start asli).
+  Jarak & progres segmen tetap benar. Presisi waktu bisa diperbaiki nanti bila diperlukan.
+- D04 sementara ditempatkan di layar Home (placeholder); akan dipindah ke alur "app dibuka" saat S02 ada (P2.3).

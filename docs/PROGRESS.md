@@ -10,7 +10,7 @@ Catatan kemajuan per fase. Format: apa yang jadi, apa yang belum, bug yang diket
 - **Repo:** Git di-init (`main`), `.gitignore` + `.gitattributes` (LF). Q-007 (remote) masih open.
 - **Versi:** tech stack menuntut versi **stabil**; AGP `9.5.0-alpha09` masih alpha dari template — alasannya di `DECISIONS.md` D-010.
 - **Test:** `:engine` 159 unit test hijau; coverage LINE **93.5%** (gate 85%); `:app:assembleDebug` sukses.
-- **Berikutnya:** FASE P1 — P1.5 (persistensi sesi & pemulihan); P1.1–P1.4 sudah selesai (lihat bawah).
+- **Berikutnya:** FASE P1 — P1.6 (simulator in-app S15); P1.1–P1.5 sudah selesai (lihat bawah).
 
 ## P0.1 Setup proyek — selesai (2026-10-10)
 Yang jadi:
@@ -212,4 +212,15 @@ Semua task P0 selesai dan AC hijau; boleh lanjut ke FASE P1. Sisa yang sifatnya 
 - **Uji device (Realme/Android 11):** service foreground, notifikasi update, engine TTS ter-load, **tanpa crash**;
   Stop menghentikan service. Audibilitas (ducking/getar) belum bisa diverifikasi via adb.
 - Belum: wiring `AlertEngine` (TooSlow/TooFast/BackToStable) ke announcer; teks `SegmentEnd` (butuh hasil evaluator).
+
+## P1.5 Persistensi sesi dan pemulihan — selesai (2026-10-11)
+- Room 2.8.5 + KSP 2.3.12 di `:app`: `RunDatabase` (`exportSchema=true`, skema di `app/schemas`), entitas
+  `TrackPoint` (idx, diindeks per `sessionId`, tanpa FK) dan `ActiveRunSnapshot` (id=1).
+- `RunPersistence`: snapshot + batch track point ditulis tiap ~5 dtk dari service; dibersihkan saat Stop.
+- **Pemulihan berbasis replay**: resume membangun `WorkoutRunner` baru lalu memutar ulang semua track point
+  (deterministik) → jarak & progres segmen pulih, lalu lanjut dengan sample live (D-023).
+- D04 dialog di layar Home: mendeteksi snapshot → **Lanjutkan / Buang**.
+- **Uji device**: jalan → **kill proses** → buka lagi → D04 muncul → Resume → service foreground, notifikasi
+  lanjut (`00:06` → `00:36`, jarak terbawa), tanpa crash.
+- Catatan: moving time saat resume ikut menghitung jeda proses mati (batas metode replay, D-023).
 

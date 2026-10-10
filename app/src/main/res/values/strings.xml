@@ -36,6 +36,10 @@
 
     <string name="home_placeholder">Layar utama (P1.7)</string>
     <string name="action_start_test_run">Mulai sesi uji</string>
+    <string name="dialog_resume_title">Lanjutkan sesi?</string>
+    <string name="dialog_resume_message">Ada sesi lari yang belum selesai. Lanjutkan atau buang?</string>
+    <string name="action_resume">Lanjutkan</string>
+    <string name="action_discard">Buang</string>
 
     <!-- Foreground service notification -->
     <string name="notification_channel_run">Sesi lari</string>

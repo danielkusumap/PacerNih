@@ -36,6 +36,10 @@
 
     <string name="home_placeholder">Home screen (P1.7)</string>
     <string name="action_start_test_run">Start test run</string>
+    <string name="dialog_resume_title">Resume session?</string>
+    <string name="dialog_resume_message">There is an unfinished run. Resume it or discard?</string>
+    <string name="action_resume">Resume</string>
+    <string name="action_discard">Discard</string>
 
     <!-- Foreground service notification -->
     <string name="notification_channel_run">Run session</string>
