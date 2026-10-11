@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -150,6 +151,24 @@ fun RunScreen(
     var showExtend by remember { mutableStateOf(false) }
     var showSegments by remember { mutableStateOf(false) }
 
+    // Never let the pace disappear: hold the last valid value, then fall back to the segment target.
+    val segmentTarget = segment?.targetPaceSecPerKm?.toDouble()
+    var lastLivePace by remember { mutableStateOf<Double?>(null) }
+    LaunchedEffect(state.paceLiveSecPerKm) {
+        state.paceLiveSecPerKm?.takeIf { it > 0.0 }?.let { lastLivePace = it }
+    }
+    val shownLivePace = state.paceLiveSecPerKm?.takeIf { it > 0.0 } ?: lastLivePace ?: segmentTarget
+
+    val avgPace = if (state.totalDistanceM > 0) state.movingMs / state.totalDistanceM else null
+    var lastAvgPace by remember { mutableStateOf<Double?>(null) }
+    LaunchedEffect(avgPace) { avgPace?.takeIf { it > 0.0 }?.let { lastAvgPace = it } }
+    val shownAvgPace = avgPace?.takeIf { it > 0.0 } ?: lastAvgPace ?: segmentTarget
+
+    val segAvg = state.segmentAvgPaceOrNull()
+    var lastSegAvg by remember { mutableStateOf<Double?>(null) }
+    LaunchedEffect(segAvg) { segAvg?.takeIf { it > 0.0 }?.let { lastSegAvg = it } }
+    val shownSegAvg = segAvg?.takeIf { it > 0.0 } ?: lastSegAvg ?: segmentTarget
+
     Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {
         Column(
             modifier = Modifier.fillMaxSize().padding(horizontal = spacing.screenH),
@@ -167,7 +186,7 @@ fun RunScreen(
                     WaitingGps(Modifier.weight(1f), onPause)
                 } else {
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
-                        HeroPace(state.paceLiveSecPerKm)
+                        HeroPace(shownLivePace)
                         TargetRow(segment)
                         Box(modifier = Modifier.height(52.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
                             if (segment?.targetPaceSecPerKm != null) StatusBadgeRow(ui, segment)
@@ -175,9 +194,9 @@ fun RunScreen(
                     }
                 }
                 // D. Segment metrics
-                SegmentMetrics(ui)
+                SegmentMetrics(ui, shownSegAvg)
                 // E. Totals
-                Totals(state)
+                Totals(state, shownAvgPace)
                 // F. Next
                 NextBlock(state.nextSegment)
             }
@@ -337,19 +356,19 @@ private fun StatusBadgeRow(ui: RunUiState, segment: Segment) {
 }
 
 @Composable
-private fun SegmentMetrics(ui: RunUiState) {
+private fun SegmentMetrics(ui: RunUiState, segAvgPace: Double?) {
     val type = LocalRcTypography.current
     val spacing = LocalRcSpacing.current
     RcCard {
         Row(modifier = Modifier.fillMaxWidth().height(76.dp), horizontalArrangement = Arrangement.spacedBy(spacing.s5), verticalAlignment = Alignment.CenterVertically) {
-            MetricBlock(stringResource(R.string.run_avg_segment), Formatters.pace(ui.state.segmentAvgPaceOrNull()), valueStyle = type.numberM, modifier = Modifier.weight(1f))
+            MetricBlock(stringResource(R.string.run_avg_segment), Formatters.pace(segAvgPace), valueStyle = type.numberM, modifier = Modifier.weight(1f))
             MetricBlock(stringResource(R.string.run_need_rest), ui.requiredPaceSecPerKm?.let { Formatters.pace(it) } ?: "", valueStyle = type.numberM, modifier = Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-private fun Totals(state: RunnerState) {
+private fun Totals(state: RunnerState, avgPace: Double?) {
     val colors = LocalRcColors.current
     val spacing = LocalRcSpacing.current
     Box(modifier = Modifier.fillMaxWidth().padding(top = spacing.s2)) {
@@ -360,7 +379,7 @@ private fun Totals(state: RunnerState) {
                 MetricBlock(stringResource(R.string.run_label_distance), Formatters.distanceKm(state.totalDistanceM), valueStyle = LocalRcTypography.current.numberS, modifier = Modifier.weight(1f))
                 MetricBlock(
                     stringResource(R.string.run_label_avg_pace),
-                    Formatters.pace(if (state.totalDistanceM > 0) state.movingMs / state.totalDistanceM else null),
+                    Formatters.pace(avgPace),
                     unit = "/km",
                     valueStyle = LocalRcTypography.current.numberS,
                     valueColor = colors.textSecondary,
