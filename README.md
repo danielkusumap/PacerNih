@@ -79,9 +79,9 @@ optional online part, and the route still draws without them).
 |---|---|
 | ![Home](docs/screenshots/S02-latihan.png) | ![Workout editor](docs/screenshots/S03-editor.png) |
 
-| Segment editor | History |
+| History |
 |---|---|
-| ![Segment editor](docs/screenshots/D01-segmen.png) | ![History](docs/screenshots/S07-riwayat.png) |
+| ![History](docs/screenshots/S07-riwayat.png) |
 
 | Session detail | Records |
 |---|---|
