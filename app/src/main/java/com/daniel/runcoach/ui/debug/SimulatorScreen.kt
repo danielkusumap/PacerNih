@@ -24,11 +24,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.daniel.runcoach.R
 import com.daniel.runcoach.debug.SimulationController
+import com.daniel.runcoach.debug.provideSampleDataSeeder
 import com.daniel.runcoach.engine.model.Limit
 import com.daniel.runcoach.engine.model.Repeat
 import com.daniel.runcoach.engine.model.Segment
@@ -49,6 +51,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SimulatorScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var scenario by remember { mutableStateOf(SimScenario.INTERVALS) }
     var scale by remember { mutableIntStateOf(60) }
     var running by remember { mutableStateOf(false) }
@@ -118,6 +121,22 @@ fun SimulatorScreen(onBack: () -> Unit) {
                 RcCard(modifier = Modifier.fillMaxWidth().height(200.dp)) {
                     Text(text.trimEnd(), style = type.caption, color = colors.textPrimary, fontFamily = FontFamily.Monospace)
                 }
+            }
+            Row(modifier = Modifier.fillMaxWidth().padding(top = spacing.s2), horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+                RcButton(
+                    stringResource(R.string.seed_sample),
+                    onClick = { scope.launch { runCatching { provideSampleDataSeeder().fill(context) } } },
+                    variant = com.daniel.runcoach.ui.components.RcButtonVariant.Secondary,
+                    size = com.daniel.runcoach.ui.components.RcButtonSize.Compact,
+                    modifier = Modifier.weight(1f),
+                )
+                RcButton(
+                    stringResource(R.string.clear_sample),
+                    onClick = { scope.launch { runCatching { provideSampleDataSeeder().clearSample(context) } } },
+                    variant = com.daniel.runcoach.ui.components.RcButtonVariant.Secondary,
+                    size = com.daniel.runcoach.ui.components.RcButtonSize.Compact,
+                    modifier = Modifier.weight(1f),
+                )
             }
             androidx.compose.foundation.layout.Spacer(Modifier.padding(bottom = spacing.s4))
         }

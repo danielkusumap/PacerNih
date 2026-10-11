@@ -398,3 +398,17 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
   dialog 26; chip 26; segmented 40; field 48; bottom bar 68; tombol 56 (Small 44, Large 64); kartu radius 20.
 - Ikon/simbol tidak berubah (pakai `RcIcons` existing). Warna token tidak berubah; `fastContainer` sudah ada.
 - Status bar/nav bar di-tint ke `bg` app saat runtime (sebelumnya ungu dari `Theme.MaterialComponents`).
+
+## D-057 Data contoh (mock) dipisah ke debug & tidak auto-seed
+- Semua kode/data contoh pindah ke source set **`src/debug/`** (`DebugSampleDataSeeder`). Di `main/` hanya interface
+  `SampleDataSeeder` + `NoopSampleDataSeeder`; `src/release/` menyediakan `provideSampleDataSeeder()` yang no-op.
+- **Interface sengaja dinamai tanpa kata "mock"** (`SampleDataSeeder`, method `fill`/`clearSample`) agar dex release
+  tidak memuat simbol ber-"mock" milik kita (AC `apkanalyzer dex packages | grep -i mock`). Sisa "mock" di dex hanya
+  dari internal `androidx`/`material` (MockView, LocationCompat) — tidak bisa dihilangkan tanpa membuang dependency.
+- **Auto-seed dimatikan** (permintaan pemilik): data contoh **tidak** muncul sendiri di debug. Diisi manual lewat S15
+  "Isi data contoh" dan dihapus lewat "Hapus data contoh" (hanya baris ber-id `mock_`). String/keys memakai kata
+  "contoh"/"sample", bukan "mock", agar release bebas string "mock".
+- `SessionDao.deleteSessionCascade` sudah menghapus `SegmentResult`, `KmSplit`, `TrackPoint`, **`BestEffort`** dalam
+  satu transaksi (dites di `SessionRepositoryTest`).
+- **MainActivity dikunci portrait** (`android:screenOrientation="portrait"`): app memang dirancang portrait (plan S05);
+  ini juga memperbaiki test UI yang gagal saat device landscape.

@@ -310,6 +310,8 @@
     <string name="debug_title">Debug / Simulator</string>
     <string name="debug_workout">Workout</string>
     <string name="debug_scenario">Scenario</string>
+    <string name="seed_sample">Fill sample data</string>
+    <string name="clear_sample">Clear sample data</string>
     <string name="debug_speed">Speed</string>
     <string name="debug_running">Running…</string>
     <string name="action_run">Run</string>

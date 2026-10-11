@@ -13,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.daniel.runcoach.data.AppTheme
 import com.daniel.runcoach.data.SettingsRepository
-import com.daniel.runcoach.debug.MockDataSeeder
 import com.daniel.runcoach.ui.AppNavHost
 import com.daniel.runcoach.ui.theme.RcDarkColors
 import com.daniel.runcoach.ui.theme.RcTheme
@@ -24,13 +23,6 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (BuildConfig.MOCK_DATA) {
-            val appContext = applicationContext
-            CoroutineScope(Dispatchers.IO).launch {
-                runCatching { MockDataSeeder.seedIfEmpty(appContext) }
-                    .onFailure { android.util.Log.e("MockDataSeeder", "seed failed", it) }
-            }
-        }
         setContent {
             val settingsRepository = remember { SettingsRepository(this) }
             val settings by settingsRepository.settings.collectAsState(initial = null)
@@ -46,7 +38,7 @@ class MainActivity : ComponentActivity() {
                 }
                 RcTheme(darkTheme = darkTheme) {
                     AppNavHost(
-                        startDestination = if (current.onboardingDone || BuildConfig.MOCK_DATA) "home" else "onboarding",
+                        startDestination = if (current.onboardingDone) "home" else "onboarding",
                     )
                 }
             }

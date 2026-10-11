@@ -599,3 +599,9 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 
 
 
+
+## B1 Data contoh dipisah ke debug, tidak auto-seed (2026-10-11)
+- Kode/data contoh pindah ke `src/debug/`; `main/` hanya interface + no-op. Release: dex tanpa simbol "mock" milik
+  kita (dicek `apkanalyzer dex packages app-release.apk | grep -i mock`), tanpa aset mock.
+- Auto-seed dimatikan; S15 punya tombol **Isi data contoh** / **Hapus data contoh** (hanya baris `mock_`).
+- MainActivity dikunci **portrait**. Instrumented **33/33 hijau** di Realme.

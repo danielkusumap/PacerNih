@@ -23,45 +23,25 @@ import com.daniel.runcoach.engine.result.SessionResultsData
 import java.time.ZoneId
 
 /**
- * Debug-only sample data for manual exploration. Compiled and run only when the build sets
- * `-PmockData=true`; release builds never include or run it.
+ * Debug-only sample data (B1). Lives in `src/debug/`, so release builds contain none of it. Every row uses an id
+ * starting with `mock_`. Seeding happens once per install, guarded by a flag that data wipes never clear.
  */
-object MockDataSeeder {
+object DebugSampleDataSeeder : SampleDataSeeder {
 
-    private val stable5k = Workout(
-        id = "", name = "Stable 5 km",
-        items = listOf(Segment("Lari 5 km", SegmentKind.RUN, Limit.Distance(5000), targetPaceSecPerKm = 342)),
-    )
-    private val tempo5k = Workout(
-        id = "", name = "Tempo 5 km",
-        items = listOf(
-            Segment("Pemanasan", SegmentKind.WARMUP, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
-            Segment("Tempo", SegmentKind.RUN, Limit.Distance(5000), targetPaceSecPerKm = 340),
-            Segment("Pendinginan", SegmentKind.COOLDOWN, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
-        ),
-    )
-    private val freeRun = Workout(
-        id = "", name = "Lari Bebas",
-        items = listOf(Segment("Lari Bebas", SegmentKind.RUN, Limit.Open, targetPaceSecPerKm = null)),
-    )
-    private val interval6x400 = Workout(
-        id = "", name = "Interval 6x400",
-        items = listOf(
-            Segment("Pemanasan", SegmentKind.WARMUP, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
-            Repeat(
-                times = 6,
-                children = listOf(
-                    Segment("Interval", SegmentKind.RUN, Limit.Distance(400), targetPaceSecPerKm = 300),
-                    Segment("Pemulihan", SegmentKind.RECOVERY, Limit.Distance(200), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
-                ),
-            ),
-            Segment("Pendinginan", SegmentKind.COOLDOWN, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
-        ),
-    )
+    override suspend fun fill(context: Context) {
+        clearSample(context)
+        seedAll(context)
+    }
 
-    suspend fun seedIfEmpty(context: Context) {
+    override suspend fun clearSample(context: Context) {
         val sessions = SessionRepository(context)
-        if (sessions.allSessions().isNotEmpty()) return
+        sessions.allSessions().filter { it.id.startsWith(PREFIX) }.forEach { sessions.delete(it.id) }
+        val templates = WorkoutTemplateRepository(context)
+        templates.all().filter { it.id.startsWith(PREFIX) }.forEach { templates.delete(it.id) }
+    }
+
+    private suspend fun seedAll(context: Context) {
+        val sessions = SessionRepository(context)
         seedTemplates(context)
         seedSessions(context, sessions)
     }
@@ -69,8 +49,8 @@ object MockDataSeeder {
     private suspend fun seedTemplates(context: Context) {
         val repo = WorkoutTemplateRepository(context)
         repo.ensureBuiltIn()
-        repo.create(tempo5k)
-        repo.create(interval6x400)
+        if (repo.byId("mock_tempo") == null) repo.create(tempo5k.copy(id = "mock_tempo"))
+        if (repo.byId("mock_interval") == null) repo.create(interval6x400.copy(id = "mock_interval"))
     }
 
     private suspend fun seedSessions(context: Context, repository: SessionRepository) {
@@ -94,7 +74,7 @@ object MockDataSeeder {
             val started = now - seed.daysAgo * day
             val distanceM = seed.distanceM
             val movingMs = (distanceM / 1000.0 * seed.paceSecPerKm * 1000).toLong()
-            val id = "mock-${seed.daysAgo}-$i"
+            val id = "${PREFIX}${seed.daysAgo}_$i"
             val results = resultsFor(seed.workout, distanceM, seed.paceSecPerKm, seed.failSegments)
             val entity = SessionEntity(
                 id = id,
@@ -128,6 +108,37 @@ object MockDataSeeder {
             persistence.appendTrackPoints(trackFor(id, distanceM, started, movingMs))
         }
     }
+
+    private val stable5k = Workout(
+        id = "", name = "Stable 5 km",
+        items = listOf(Segment("Lari 5 km", SegmentKind.RUN, Limit.Distance(5000), targetPaceSecPerKm = 342)),
+    )
+    private val tempo5k = Workout(
+        id = "", name = "Tempo 5 km",
+        items = listOf(
+            Segment("Pemanasan", SegmentKind.WARMUP, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
+            Segment("Tempo", SegmentKind.RUN, Limit.Distance(5000), targetPaceSecPerKm = 340),
+            Segment("Pendinginan", SegmentKind.COOLDOWN, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
+        ),
+    )
+    private val freeRun = Workout(
+        id = "", name = "Lari Bebas",
+        items = listOf(Segment("Lari Bebas", SegmentKind.RUN, Limit.Open, targetPaceSecPerKm = null)),
+    )
+    private val interval6x400 = Workout(
+        id = "", name = "Interval 6x400",
+        items = listOf(
+            Segment("Pemanasan", SegmentKind.WARMUP, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
+            Repeat(
+                times = 6,
+                children = listOf(
+                    Segment("Interval", SegmentKind.RUN, Limit.Distance(400), targetPaceSecPerKm = 300),
+                    Segment("Pemulihan", SegmentKind.RECOVERY, Limit.Distance(200), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
+                ),
+            ),
+            Segment("Pendinginan", SegmentKind.COOLDOWN, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
+        ),
+    )
 
     /** Builds one segment result per expanded segment plus km splits and best efforts for the whole session. */
     private fun resultsFor(workout: Workout, distanceM: Double, paceSecPerKm: Double, failSegments: Set<Int>): SessionResultsData {
@@ -211,4 +222,6 @@ object MockDataSeeder {
             )
         }
     }
+
+    private const val PREFIX = "mock_"
 }

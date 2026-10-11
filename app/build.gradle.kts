@@ -19,9 +19,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        // Mock data is only compiled in when building with -PmockData=true (used for manual exploration).
-        buildConfigField("boolean", "MOCK_DATA", (project.findProperty("mockData") ?: "false").toString())
     }
 
     signingConfigs {
