@@ -20,6 +20,7 @@ data class RunUiState(
     val keepScreenOn: Boolean = false,
     val steps: List<Segment> = emptyList(),
     val trackPoints: List<Pair<Double, Double>> = emptyList(),
+    val accuracyM: Double? = null,
 )
 
 /** Single source of run state for the UI. Updated by [RunForegroundService] every second. */

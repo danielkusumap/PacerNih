@@ -93,7 +93,6 @@ fun PraStartScreen(workout: Workout, onStarted: () -> Unit, onBack: () -> Unit) 
     val colors = LocalRcColors.current
     val spacing = LocalRcSpacing.current
     val type = LocalRcTypography.current
-    val ready = permissionGranted && quality == GpsFixQuality.READY
 
     Column(modifier = Modifier.fillMaxSize().background(colors.bg)) {
         TopBar(title = workout.name, onBack = onBack)
@@ -143,12 +142,14 @@ fun PraStartScreen(workout: Workout, onStarted: () -> Unit, onBack: () -> Unit) 
         }
 
         Column(modifier = Modifier.fillMaxWidth().background(colors.bg).padding(horizontal = spacing.screenH).padding(vertical = spacing.s3), verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
-            if (ready) {
-                RcButton(stringResource(R.string.s04_start).uppercase(), onClick = { start() }, icon = RcIcons.PlayArrow, fillWidth = true, modifier = Modifier.height(64.dp))
-            } else {
-                RcButton(stringResource(R.string.s04_wait_gps), onClick = {}, enabled = false, fillWidth = true, modifier = Modifier.height(64.dp))
-                RcButton(stringResource(R.string.s04_start_anyway), onClick = { if (permissionGranted) start() }, enabled = permissionGranted, variant = RcButtonVariant.Tertiary, fillWidth = true)
-            }
+            RcButton(
+                stringResource(R.string.s04_start).uppercase(),
+                onClick = { if (permissionGranted) start() },
+                enabled = permissionGranted,
+                icon = RcIcons.PlayArrow,
+                fillWidth = true,
+                modifier = Modifier.height(64.dp),
+            )
         }
     }
 }

@@ -94,6 +94,7 @@ class RunForegroundService : Service() {
     private var voiceLanguage: VoiceLanguage = VoiceLanguage.ID
     private var expandedSteps: List<Segment> = emptyList()
     private var appSettings: AppSettings = AppSettings()
+    private var lastAccuracyM: Double? = null
     private val liveTrack = ArrayDeque<Pair<Double, Double>>()
     private val trackBuffer = mutableListOf<com.daniel.runcoach.data.TrackPointEntity>()
 
@@ -272,6 +273,7 @@ class RunForegroundService : Service() {
                 keepScreenOn = false,
                 steps = expandedSteps,
                 trackPoints = liveTrack.toList(),
+                accuracyM = lastAccuracyM,
             ),
         )
     }
@@ -320,6 +322,7 @@ class RunForegroundService : Service() {
 
     private fun handleSample(sample: LocationSample) {
         val activeRunner = runner ?: return
+        lastAccuracyM = sample.accuracyM
         activeRunner.onSample(sample)
         trackBuffer += RunPersistence.toEntity(sample, sessionId, trackIdx++, activeRunner.state.value.stepIndex)
         liveTrack.addLast(sample.lat to sample.lon)

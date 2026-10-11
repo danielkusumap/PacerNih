@@ -212,7 +212,10 @@ private fun Header(ui: RunUiState, showMap: Boolean, onToggleMap: () -> Unit) {
             ui.phase == RunnerPhase.PAUSED_AUTO -> HeaderChip(stringResource(R.string.run_paused_auto))
             else -> {
                 val (icon, tint) = if (state.gpsLost) RcIcons.GpsOff to colors.fail else RcIcons.GpsFixed to colors.pass
-                Icon(painterResource(icon), contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Icon(painterResource(icon), contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
+                    Text(ui.accuracyM?.let { "${it.toInt()} m" } ?: "--", style = type.caption, color = colors.textSecondary)
+                }
             }
         }
         RcIconButton(
