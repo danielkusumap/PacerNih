@@ -223,12 +223,19 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit, onOpenShare: (Str
                 0 -> SegmentsTab(segments, splits, onCopy = { copyStructure() })
                 1 -> SplitsTab(splits, bestEfforts)
                 2 -> ChartsTab(segments, splits, trackPoints)
-                else -> RouteMapView(
-                    points = trackPoints.map { it.lat to it.lon },
-                    segments = segmentPolylines(trackPoints),
-                    boundaryIndices = boundaryIndices(trackPoints, segments),
-                    modifier = Modifier.fillMaxWidth().height(360.dp),
-                )
+                else -> {
+                    val routeSegments = segmentPolylines(trackPoints).mapIndexedNotNull { i, pts ->
+                        segments.getOrNull(i)?.let { s ->
+                            com.daniel.runcoach.ui.map.RouteSegment(pts, s.idx, s.label, s.distanceM, s.durationMs)
+                        }
+                    }
+                    RouteMapView(
+                        points = trackPoints.map { it.lat to it.lon },
+                        segments = routeSegments,
+                        boundaryIndices = boundaryIndices(trackPoints, segments),
+                        modifier = Modifier.fillMaxWidth().height(360.dp),
+                    )
+                }
             }
         }
     }

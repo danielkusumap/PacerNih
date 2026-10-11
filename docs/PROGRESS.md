@@ -656,3 +656,10 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
   ditambah (A01/A05/A16/A17/A03 tanpa target).
 - Test instrumented `RunAnnouncerTest`: A07+A03 di-join jadi satu ucapan, A08/A09 diucapkan, segmen skip senyap.
 - Engine **221 hijau**, instrumented **38/38 hijau**. Sisa: golden urutan A01-A17 penuh via simulator 60x.
+
+## F7 Tooltip segmen di peta + B2 golden (2026-10-11)
+- **F7**: ketuk polyline segmen -> segmen disorot (tebal 12) + segmen lain diredupkan (40%) + tooltip kartu
+  `#n label` / "Jarak m · Waktu mm:ss"; ketuk area kosong/segmen sama menghilangkannya.
+- **B2 golden**: `RunWalkGoldenTest` memverifikasi urutan event run/walk (A01 5..1, A02, A03, A04->A05 3-2-1, A07,
+  A11, A12, A13, tanpa A08-A10). Engine **222 hijau**.
+- Catatan: kolom `SegmentResult.startLat/Lon...` (F6) sengaja **tidak** ditambah — peta memakai `TrackPoint.segmentIdx`.
