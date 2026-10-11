@@ -541,6 +541,19 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - Catatan: D01/D02/D11 tetap memakai struktur/data existing (mock menyederhanakan D02 jadi daftar nama; data asli
   punya form parameter). Tema terang diturunkan dari token `DESIGN.md` (mock hanya gelap).
 
+## Re-skin sheet & dialog D01-D11 (2026-10-11)
+- **R4**: komponen baru `RcChoiceChip` (`.tp`: 40dp, radius 12, terpilih = border accent + accentContainer).
+  Semua aksi dialog memakai **text-button** (`RcTextButton`): Batal netral, Simpan accent, Hapus/Stop fail.
+- **D01** Editor Segmen: judul + tombol tutup; grid tipe 3+2 dengan `RcChoiceChip` + ikon ⓘ.
+- **D03** Edit Sesi: skala capek memakai **lingkaran** (dialog S07 dan sheet S08).
+- **D05/D09** Stop/Hapus: aksi text-button (Tetap lari accent, Stop/Hapus fail).
+- **D07** Perpanjang: baris label + `RcChoiceChip` (+100 m/+500 m atau +30 dtk/+1 mnt).
+- **D08** Kalibrasi: jarak terukur sebagai angka besar, baris **Faktor (0,95-1,05)** aksen.
+- **D10** Daftar Segmen: bulatan status (selesai = centang pass, berjalan = cincin accent + baris accentContainer).
+- **D11** Info Segmen: lingkaran ikon 56 + judul + isi.
+- **D02** Preset & **D04** Lanjutkan: D04 sudah jadi kartu banner di S02; D02 tetap form parameter (data APP_GUIDE).
+- Verifikasi: `:app:testDebugUnitTest` hijau; `:app:connectedDebugAndroidTest` **33/33 hijau** di Realme.
+
 
 
 
