@@ -408,7 +408,8 @@ class RunForegroundService : Service() {
     ) {
         val store = persistence ?: return
         val points = buildCurve(id)
-        val results = activeWorkout?.let { SessionResultsCalculator.compute(it, points, skipped) }
+        val stoppedFrom = if (state?.planCompleted == true) null else state?.stepIndex?.takeIf { it > 0 }
+        val results = activeWorkout?.let { SessionResultsCalculator.compute(it, points, skipped, stoppedFrom) }
             ?: SessionResultsData(emptyList(), emptyList(), emptyList())
         val distanceM = state?.totalDistanceM ?: points.lastOrNull()?.cumulativeDistanceM ?: 0.0
         val movingMs = state?.movingMs ?: points.lastOrNull()?.elapsedMs ?: 0L

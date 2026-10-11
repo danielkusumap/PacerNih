@@ -110,6 +110,7 @@ private fun SegmentResultData.toEntity(sessionId: String) = SegmentResultEntity(
     status = status,
     kmDetailJson = null,
     targetBound = targetBound.name,
+    stopped = stopped,
 )
 
 private fun com.daniel.runcoach.engine.result.KmSplit.toEntity(sessionId: String) = KmSplitEntity(

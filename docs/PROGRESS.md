@@ -605,3 +605,10 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
   kita (dicek `apkanalyzer dex packages app-release.apk | grep -i mock`), tanpa aset mock.
 - Auto-seed dimatikan; S15 punya tombol **Isi data contoh** / **Hapus data contoh** (hanya baris `mock_`).
 - MainActivity dikunci **portrait**. Instrumented **33/33 hijau** di Realme.
+
+## P1 Stop di tengah segmen (2026-10-11)
+- `SessionResultsCalculator.compute(..., stoppedFrom)`: segmen berjalan + sesudahnya ditandai `stopped`; bertarget -> GAGAL,
+  tanpa target -> TANPA TARGET (Open tidak gagal); segmen belum dimulai = 0 m / 00:00 / pace null.
+- `SegmentResultData.stopped` + kolom Room `SegmentResult.stopped` (migrasi v6). Service meneruskan `stoppedFrom`
+  dari `RunnerState.stepIndex` (null bila `planCompleted`). S08 menampilkan chip + caption "Dihentikan sebelum selesai".
+- Engine **211 hijau** (2 test baru), instrumented **33/33 hijau**.

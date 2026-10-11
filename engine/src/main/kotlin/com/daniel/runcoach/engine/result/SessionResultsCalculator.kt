@@ -21,6 +21,8 @@ data class SegmentResultData(
     val deltaSec: Long?,
     val status: String,
     val targetBound: com.daniel.runcoach.engine.model.PaceTargetBound = com.daniel.runcoach.engine.model.PaceTargetBound.MAX,
+    /** P1: true when the session was stopped during or before this segment. */
+    val stopped: Boolean = false,
 )
 
 data class SessionResultsData(
@@ -45,6 +47,7 @@ object SessionResultsCalculator {
         workout: Workout,
         points: List<DistTimePoint>,
         skipped: Map<Int, SkippedSegment> = emptyMap(),
+        stoppedFrom: Int? = null,
     ): SessionResultsData {
         if (points.size < 2) return SessionResultsData(emptyList(), emptyList(), emptyList())
         val steps = runCatching { WorkoutExpander.expandFinite(workout.items) }
@@ -84,6 +87,7 @@ object SessionResultsCalculator {
                     deltaSec = null,
                     status = SegmentStatus.SKIPPED.name,
                     targetBound = segment.targetBound,
+                    stopped = false,
                 )
                 startDist = endDist
                 startTime = endTime
@@ -134,6 +138,22 @@ object SessionResultsCalculator {
                 skipped = false,
                 bound = segment.targetBound,
             )
+            // P1: on Stop, the running segment and every planned segment after it are marked stopped. Target -> FAIL,
+            // no target -> NO_TARGET (never failed); Open segments are left as NO_TARGET.
+            val stoppedHere = stoppedFrom != null && (index + 1) >= stoppedFrom
+            val notStarted = stoppedFrom != null && (index + 1) > stoppedFrom
+            if (notStarted) {
+                distanceM = 0.0
+                durationMs = 0L
+                endDist = startDist
+                endTime = startTime
+            }
+            val hasTarget = segment.targetPaceSecPerKm != null && limit != Limit.Open
+            val status = when {
+                stoppedHere && hasTarget -> SegmentStatus.FAIL.name
+                stoppedHere && !hasTarget -> SegmentStatus.NO_TARGET.name
+                else -> evaluation.status.name
+            }
             segments += SegmentResultData(
                 idx = index + 1,
                 label = segment.label,
@@ -143,10 +163,11 @@ object SessionResultsCalculator {
                 targetPace = segment.targetPaceSecPerKm,
                 distanceM = distanceM,
                 durationMs = durationMs,
-                avgPace = evaluation.avgPaceSecPerKm,
-                deltaSec = evaluation.deltaSec,
-                status = evaluation.status.name,
+                avgPace = if (notStarted) null else evaluation.avgPaceSecPerKm,
+                deltaSec = if (notStarted) null else evaluation.deltaSec,
+                status = status,
                 targetBound = segment.targetBound,
+                stopped = stoppedHere,
             )
 
             startDist = endDist

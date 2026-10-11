@@ -70,4 +70,45 @@ class SessionResultsCalculatorTest {
         val second = results.segments[1]
         assertEquals(1000.0, second.distanceM, 1.0)
     }
+
+    @Test
+    fun stoppingMidSegmentFailsRunningAndLaterTargetSegments() {
+        val workout = Workout(
+            "w", "w",
+            listOf(
+                Segment("A", SegmentKind.RUN, Limit.Distance(1000), targetPaceSecPerKm = 420),
+                Segment("B", SegmentKind.WALK, Limit.Distance(1000), targetPaceSecPerKm = null),
+                Segment("C", SegmentKind.RUN, Limit.Distance(1000), targetPaceSecPerKm = 420),
+            ),
+        )
+        // Stop while B is running (500 m accrued): B -> TANPA TARGET, C (not started) -> FAIL, both stopped.
+        val results = SessionResultsCalculator.compute(workout, constantTrack(1500), stoppedFrom = 2)
+        val a = results.segments[0]
+        val b = results.segments[1]
+        val c = results.segments[2]
+        assertEquals("PASS", a.status)
+        assertEquals(false, a.stopped)
+        assertEquals("NO_TARGET", b.status)
+        assertEquals(true, b.stopped)
+        assertEquals(500.0, b.distanceM, 1.0)
+        assertEquals("FAIL", c.status)
+        assertEquals(true, c.stopped)
+        assertEquals(0.0, c.distanceM, 0.0)
+        assertEquals(0L, c.durationMs)
+        assertEquals(null, c.avgPace)
+    }
+
+    @Test
+    fun stoppedOpenSegmentIsNotFailed() {
+        val workout = Workout(
+            "w", "w",
+            listOf(
+                Segment("A", SegmentKind.RUN, Limit.Distance(1000), targetPaceSecPerKm = 420),
+                Segment("Lari bebas", SegmentKind.RUN, Limit.Open, targetPaceSecPerKm = null),
+            ),
+        )
+        val results = SessionResultsCalculator.compute(workout, constantTrack(1500), stoppedFrom = 2)
+        assertEquals("PASS", results.segments[0].status)
+        assertEquals("NO_TARGET", results.segments[1].status)
+    }
 }

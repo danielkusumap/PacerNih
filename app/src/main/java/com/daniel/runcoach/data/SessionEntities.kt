@@ -57,6 +57,7 @@ data class SegmentResultEntity(
     val status: String,
     val kmDetailJson: String?,
     val targetBound: String = "MAX",
+    val stopped: Boolean = false,
 )
 
 @Entity(tableName = "KmSplit", indices = [Index("sessionId")])

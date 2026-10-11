@@ -299,7 +299,11 @@ private fun SegmentsTab(segments: List<SegmentResultEntity>, splits: List<KmSpli
                     Text("#${segment.idx} ${segment.label}", style = type.titleS, color = colors.textPrimary, modifier = Modifier.weight(1f))
                     ResultChip(statusFor(segment.status), statusLabel(segment.status))
                 }
-                Text(stringResource(R.string.s08_seg_limit, limitText(segment)), style = type.bodySmall, color = colors.textSecondary)
+                Text(
+                    stringResource(R.string.s08_seg_limit, limitText(segment)) + " · " + segActualText(segment),
+                    style = type.bodySmall,
+                    color = colors.textSecondary,
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(spacing.s4)) {
                     MetricBlock("Jarak", Formatters.distanceKm(segment.distanceM).removeSuffix(" km"), unit = "km", valueStyle = type.numberS)
                     MetricBlock("Waktu", Formatters.duration(segment.durationMs), valueStyle = type.numberS)
@@ -323,6 +327,7 @@ private fun SegmentsTab(segments: List<SegmentResultEntity>, splits: List<KmSpli
                     }
                 }
                 if (segment.status == "BORDERLINE") Text(stringResource(R.string.s08_borderline_note), style = type.caption, color = colors.warn)
+                if (segment.stopped) Text(stringResource(R.string.stopped_early), style = type.caption, color = colors.textSecondary, modifier = Modifier.padding(top = spacing.s1))
                 if (canExpand) {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(top = spacing.s2).clickable {
@@ -571,6 +576,12 @@ private fun limitText(segment: SegmentResultEntity): String = when (segment.limi
     "distance" -> "${segment.limitValue.toInt()} m"
     "duration" -> Formatters.duration(segment.limitValue.toLong() * 1000L)
     else -> "Open"
+}
+
+/** Actual distance and time of a segment as one string, e.g. `210 m · 01:20`. */
+private fun segActualText(segment: SegmentResultEntity): String {
+    val distance = if (segment.distanceM < 1000.0) "${segment.distanceM.toInt()} m" else Formatters.distanceKm(segment.distanceM)
+    return "$distance · ${Formatters.duration(segment.durationMs)}"
 }
 
 private fun targetText(segment: SegmentResultEntity): String =
