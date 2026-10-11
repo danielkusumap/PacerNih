@@ -581,6 +581,11 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - **S03 bar ringkasan**: strip segmen dan teks "N segmen · X km" kini **dua baris** (strip di atas, teks di bawah).
 - **S07 kartu sesi**: chip hasil ("NO TARGET"/"N/M PASSED") dipindah ke **bawah kartu** agar tidak menumpuk.
 
+## S05 pace tidak pernah hilang (2026-10-11)
+- Hero pace, rata-rata segmen, dan rata-rata workout kini **menyimpan nilai valid terakhir** (`LaunchedEffect` +
+  `remember`) dan memakai **target pace segmen** sebagai cadangan. Jadi tidak lagi berubah ke `--:--` saat GPS
+  hilang / berhenti / data belum cukup.
+
 
 
 
