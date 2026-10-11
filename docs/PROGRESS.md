@@ -663,3 +663,6 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - **B2 golden**: `RunWalkGoldenTest` memverifikasi urutan event run/walk (A01 5..1, A02, A03, A04->A05 3-2-1, A07,
   A11, A12, A13, tanpa A08-A10). Engine **222 hijau**.
 - Catatan: kolom `SegmentResult.startLat/Lon...` (F6) sengaja **tidak** ditambah — peta memakai `TrackPoint.segmentIdx`.
+
+## F3 tweak (2026-10-11)
+- Label blok segmen lulus di PNG share: "SEGMEN LULUS" -> "SPLIT SEGMENT"; jarak label ke chart ditambah.

@@ -98,7 +98,7 @@ object ShareImageRenderer {
                 ShareItem.SPLITS -> {
                     if (data.splits.isNotEmpty()) {
                         drawText(canvas, "SPLIT KM", PAD, y + 36f, 36f, label, ink, outline, Paint.Align.LEFT, letterSpacing = 0.14f)
-                        y += 36f + 12f
+                        y += 36f + 28f
                         val h = (data.splits.size * 44f).coerceIn(120f, 360f)
                         drawSplitRows(canvas, data.splits, PAD, y, w - 2 * PAD, h, ink, outline, number)
                         y += h + 24f
@@ -106,8 +106,8 @@ object ShareImageRenderer {
                 }
                 ShareItem.SEGMENTS -> {
                     if (data.passedSegments.isNotEmpty()) {
-                        drawText(canvas, "SEGMEN LULUS", PAD, y + 36f, 36f, label, ink, outline, Paint.Align.LEFT, letterSpacing = 0.14f)
-                        y += 36f + 12f
+                        drawText(canvas, "SPLIT SEGMENT", PAD, y + 36f, 36f, label, ink, outline, Paint.Align.LEFT, letterSpacing = 0.14f)
+                        y += 36f + 28f
                         val h = 300f
                         drawBars(canvas, data.passedSegments, PAD, y, w - 2 * PAD, h, ink, outline, number)
                         y += h + 24f
