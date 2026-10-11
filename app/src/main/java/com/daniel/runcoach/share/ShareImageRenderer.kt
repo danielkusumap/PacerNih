@@ -99,8 +99,8 @@ object ShareImageRenderer {
                     if (data.splits.isNotEmpty()) {
                         drawText(canvas, "SPLIT KM", PAD, y + 36f, 36f, label, ink, outline, Paint.Align.LEFT, letterSpacing = 0.14f)
                         y += 36f + 12f
-                        val h = 300f
-                        drawBars(canvas, data.splits, PAD, y, w - 2 * PAD, h, ink, outline, number)
+                        val h = (data.splits.size * 44f).coerceIn(120f, 360f)
+                        drawSplitRows(canvas, data.splits, PAD, y, w - 2 * PAD, h, ink, outline, number)
                         y += h + 24f
                     }
                 }
@@ -124,6 +124,26 @@ object ShareImageRenderer {
             }
         }
         return bitmap
+    }
+
+    /** Split km: one thin horizontal bar per kilometre (owner request), length proportional to speed. */
+    private fun drawSplitRows(canvas: Canvas, splits: List<Pair<String, Double>>, x: Float, y: Float, width: Float, height: Float, ink: Int, outline: Int, font: Typeface) {
+        if (splits.isEmpty()) return
+        val maxSpeed = splits.map { if (it.second > 0) 1.0 / it.second else 0.0 }.maxOrNull()?.takeIf { it > 0 } ?: 1.0
+        val rowH = height / splits.size
+        val barH = min(12f, rowH * 0.5f)
+        val labelW = 96f
+        val paceW = 150f
+        val barMax = (width - labelW - paceW - 24f).coerceAtLeast(20f)
+        val accent = RcDarkColors.accent.toArgbInt()
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = accent; style = Paint.Style.FILL }
+        splits.forEachIndexed { index, (labelText, paceSec) ->
+            val cy = y + rowH * index + rowH / 2f
+            drawText(canvas, labelText, x, cy + 10f, 28f, font, ink, outline, Paint.Align.LEFT)
+            val len = ((if (paceSec > 0) 1.0 / paceSec else 0.0) / maxSpeed * barMax).toFloat().coerceAtLeast(4f)
+            canvas.drawRoundRect(RectF(x + labelW, cy - barH / 2f, x + labelW + len, cy + barH / 2f), barH / 2f, barH / 2f, paint)
+            drawText(canvas, pace(paceSec), x + width, cy + 10f, 28f, font, ink, outline, Paint.Align.RIGHT)
+        }
     }
 
     private fun drawBars(canvas: Canvas, bars: List<Pair<String, Double>>, x: Float, y: Float, width: Float, height: Float, ink: Int, outline: Int, font: Typeface) {
