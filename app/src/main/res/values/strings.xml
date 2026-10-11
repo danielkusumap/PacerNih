@@ -267,6 +267,8 @@
     <string name="s08_export_gpx">Export GPX</string>
     <string name="s08_calibrate">Kalibrasi jarak</string>
     <string name="s08_calibrate_measured">Jarak terukur: %1$s</string>
+    <string name="s08_calibrate_measured_label">Jarak terukur</string>
+    <string name="s08_calibrate_factor">Faktor (0,95–1,05)</string>
     <string name="s08_calibrate_factor_used">Faktor dipakai: %1$s</string>
     <string name="s08_calibrate_actual">Jarak sebenarnya (km)</string>
     <string name="s08_calibrate_new">Faktor baru: %1$s</string>
@@ -341,6 +343,8 @@
     <string name="run_resume">Lanjut</string>
     <string name="run_skip">Lewati segmen</string>
     <string name="run_extend">Perpanjang segmen</string>
+    <string name="d07_distance">Segmen jarak</string>
+    <string name="d07_duration">Segmen durasi</string>
     <string name="run_list_segments">Daftar segmen</string>
     <string name="run_back_title">Sesi masih berjalan</string>
     <string name="run_back_message">Tetap di layar lari atau Stop sesi?</string>

@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.daniel.runcoach.ui.theme.LocalRcColors
 import com.daniel.runcoach.ui.theme.LocalRcShapes
@@ -120,6 +121,34 @@ fun RcTextButton(
         maxLines = 1,
         modifier = modifier.alpha(if (enabled) 1f else 0.38f).clickable(enabled = enabled, onClick = onClick),
     )
+}
+
+/** Choice chip (`.tp`): 40dp, radius 12, selected = accent border + accentContainer (DESIGN-RESKIN section 2). */
+@Composable
+fun RcChoiceChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    Box(
+        modifier = modifier
+            .height(40.dp)
+            .background(if (selected) colors.accentContainer else colors.surfaceRaised, RoundedCornerShape(12.dp))
+            .border(1.5.dp, if (selected) colors.accent else colors.outlineStrong, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text,
+            style = type.bodySmall.copy(fontWeight = FontWeight.Bold),
+            color = if (selected) colors.accentText else colors.textPrimary,
+            maxLines = 1,
+        )
+    }
 }
 
 /** RcIconButton: 48dp touch area, 24dp icon (DESIGN-RESKIN section 2). */
