@@ -107,7 +107,7 @@ fun OnboardingScreen(onStart: () -> Unit, onOpenBatteryGuide: () -> Unit) {
                     Icon(painterResource(icon), contentDescription = null, tint = colors.accentText, modifier = Modifier.size(56.dp))
                 }
                 Spacer(Modifier.height(spacing.s5))
-                Text(title, style = type.titleL, color = colors.textPrimary, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(title.uppercase(), style = type.titleXL, color = colors.textPrimary, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(spacing.s3))
                 Text(body, style = type.body, color = colors.textSecondary, textAlign = TextAlign.Center, maxLines = 4, overflow = TextOverflow.Ellipsis)
 
@@ -189,12 +189,20 @@ private fun StepIndicator(step: Int, steps: Int, modifier: Modifier = Modifier) 
 private fun PermissionStatusRow(granted: Boolean) {
     val colors = LocalRcColors.current
     val type = LocalRcTypography.current
-    Row(modifier = Modifier.padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(
+        modifier = Modifier
+            .padding(top = 12.dp)
+            .fillMaxWidth()
+            .background(colors.surface, RoundedCornerShape(14.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         Icon(
             painterResource(if (granted) RcIcons.CheckCircle else RcIcons.Cancel),
             contentDescription = null,
             tint = if (granted) colors.pass else colors.fail,
-            modifier = Modifier.size(18.dp),
+            modifier = Modifier.size(20.dp),
         )
         Text(
             stringResource(if (granted) R.string.status_granted else R.string.status_denied),
