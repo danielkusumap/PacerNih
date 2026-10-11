@@ -14,7 +14,7 @@ android {
     defaultConfig {
         applicationId = "com.daniel.runcoach"
         minSdk = 26
-        targetSdk = 30
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -35,10 +35,10 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
-            optimization {
-                enable = true
-                packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
-            }
+            // No R8 optimization: it stripped reflection-based code (Room/serialization) and the app crashed on
+            // launch on some devices. Reliability over APK size.
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
     compileOptions {

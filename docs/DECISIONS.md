@@ -335,8 +335,12 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - Mock data membuat sesi selesai (hasil per segmen, split km, best effort, track) — tidak menyentuh pelacakan live
   (jarak saat lari tetap dari GPS nyata).
 
-## D-049 Release signing & lint
+## D-049 Release signing, targetSdk & lint
 - Ditambah `release.keystore` (gitignored) + `signingConfigs.release` agar `assembleRelease` menghasilkan APK
   ter-sign yang bisa dipasang di ponsel lain.
-- `lint.checkReleaseBuilds = false`/`abortOnError = false`: `targetSdk 30` disengaja (dipilih untuk device uji),
-  dan lint Play "target API 33" tidak boleh memblokir build rilis lokal.
+- `targetSdk` dinaikkan 30 → **34** agar andal di perangkat baru (Android 14/15). Permission foreground service
+  lokasi + `POST_NOTIFICATIONS` sudah ada; `PendingIntent` memakai `FLAG_IMMUTABLE`.
+- `lint.checkReleaseBuilds = false`/`abortOnError = false`: lint Play "target API 33" tidak memblokir build rilis lokal.
+- **R8/optimization dimatikan** untuk release (`isMinifyEnabled = false`): build release ber-R8 crash saat dibuka
+  (reflection Room/kotlinx.serialization ter-strip). Prioritas keandalan di atas ukuran APK (~14 MB).
+  Konsekuensi: sesi uji selalu pakai build debug/mock sehingga bug R8 ini baru muncul saat APK release dicoba.
