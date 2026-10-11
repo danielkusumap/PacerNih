@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
@@ -60,6 +61,7 @@ import com.daniel.runcoach.ui.components.RcSwitchRow
 import com.daniel.runcoach.ui.components.RcTextField
 import com.daniel.runcoach.ui.components.SegmentStrip
 import com.daniel.runcoach.ui.components.SegmentedControl
+import com.daniel.runcoach.ui.components.RcTextButton
 import com.daniel.runcoach.ui.components.TopBar
 import com.daniel.runcoach.ui.components.segmentKindColor
 import com.daniel.runcoach.ui.components.segmentKindIcon
@@ -139,10 +141,9 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
             title = stringResource(if (initial == null) R.string.editor_title else R.string.editor_title_edit),
             onBack = { if (dirty) showDiscard = true else onCancel() },
             actions = {
-                RcButton(
+                RcTextButton(
                     stringResource(R.string.editor_save),
                     onClick = { save() },
-                    variant = RcButtonVariant.Tertiary,
                     enabled = canSave,
                     modifier = Modifier.testTag("btn_save"),
                 )
@@ -154,15 +155,14 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
             RcTextField(value = goal, onValueChange = { goal = it.filter(Char::isDigit); dirty = true }, label = stringResource(R.string.editor_goal), modifier = Modifier.fillMaxWidth())
 
             // Summary bar
-            RcCard {
-                SegmentStrip(kinds = kinds)
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = spacing.s2), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s3)) {
+                Box(modifier = Modifier.weight(1f)) { SegmentStrip(kinds = kinds) }
                 Text(
                     "${stringResource(R.string.editor_seg_count, expandedCount)} · " +
                         (estimate.distanceM?.let { estimateText(Formatters.distanceKm(it), estimate.distanceIsAtLeast) } ?: "") +
                         (estimate.durationSec?.let { " · " + estimateText(Formatters.duration((it * 1000).toLong()), estimate.durationIsAtLeast) } ?: ""),
                     style = type.bodySmall,
                     color = colors.textSecondary,
-                    modifier = Modifier.padding(top = spacing.s2),
                 )
             }
 
@@ -205,10 +205,13 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
         }
 
         // Bottom action row (sticky)
-        Row(modifier = Modifier.fillMaxWidth().background(colors.bg).padding(horizontal = spacing.screenH).padding(vertical = spacing.s3), horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-            RcButton(stringResource(R.string.editor_add_segment), onClick = { items.add(defaultSegment()); dirty = true }, variant = RcButtonVariant.Secondary, modifier = Modifier.weight(1f).testTag("btn_add_segment"))
-            RcButton(stringResource(R.string.editor_add_repeat), onClick = { items.add(defaultRepeat()); dirty = true }, variant = RcButtonVariant.Secondary, modifier = Modifier.weight(1f))
-            RcButton(stringResource(R.string.editor_preset), onClick = { showPresets = true }, variant = RcButtonVariant.Secondary, modifier = Modifier.weight(1f))
+        Column(modifier = Modifier.fillMaxWidth().background(colors.surface)) {
+            Box(Modifier.fillMaxWidth().height(1.dp).background(colors.outline))
+            Row(modifier = Modifier.fillMaxWidth().height(80.dp).padding(horizontal = spacing.screenH), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+                RcButton(stringResource(R.string.editor_add_segment), onClick = { items.add(defaultSegment()); dirty = true }, variant = RcButtonVariant.Secondary, modifier = Modifier.weight(1f).testTag("btn_add_segment"))
+                RcButton(stringResource(R.string.editor_add_repeat), onClick = { items.add(defaultRepeat()); dirty = true }, variant = RcButtonVariant.Secondary, modifier = Modifier.weight(1f))
+                RcButton(stringResource(R.string.editor_preset), onClick = { showPresets = true }, variant = RcButtonVariant.Secondary, modifier = Modifier.weight(1f))
+            }
         }
     }
 
@@ -281,9 +284,12 @@ private fun SegmentCard(
     RcCard(interactive = true, onClick = onEdit) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s3)) {
             Box(Modifier.width(4.dp).height(40.dp).background(segmentKindColor(segment.kind), RoundedCornerShape(2.dp)))
-            Icon(painterResource(segmentKindIcon(segment.kind)), contentDescription = null, tint = segmentKindColor(segment.kind), modifier = Modifier.size(24.dp))
+            val kindColor = segmentKindColor(segment.kind)
+            Box(modifier = Modifier.size(32.dp).background(kindColor.copy(alpha = 0.2f), CircleShape), contentAlignment = Alignment.Center) {
+                Icon(painterResource(segmentKindIcon(segment.kind)), contentDescription = null, tint = kindColor, modifier = Modifier.size(18.dp))
+            }
             Column(modifier = Modifier.weight(1f)) {
-                Text(segment.label.ifBlank { kindWord(segment.kind) }, style = type.titleS, color = colors.textPrimary)
+                Text(segment.label.ifBlank { kindWord(segment.kind) }, style = type.titleS, color = colors.textPrimary, maxLines = 1)
                 Text(describe(segment), style = type.bodySmall, color = colors.textSecondary)
             }
             InfoIcon(topic = segment.label, onClick = onInfo)
@@ -318,11 +324,10 @@ private fun RepeatBlock(
         Box(Modifier.width(3.dp).height(if (repeat.children.isEmpty()) 56.dp else (56 * repeat.children.size).dp).background(colors.accent, RoundedCornerShape(2.dp)))
         Column(modifier = Modifier.weight(1f).padding(start = spacing.s2), verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-                Icon(painterResource(RcIcons.Repeat), contentDescription = null, tint = colors.accentText, modifier = Modifier.size(20.dp))
                 Text(
                     repeat.times?.let { stringResource(R.string.editor_repeat_times, it) } ?: stringResource(R.string.editor_repeat_until, repeat.untilTotalDistanceM ?: 0),
-                    style = type.titleS,
-                    color = colors.textPrimary,
+                    style = type.label,
+                    color = colors.accentText,
                     modifier = Modifier.weight(1f).clickable(onClick = onEditBound),
                 )
                 InfoIcon(topic = "repeat", onClick = onInfo)
@@ -336,7 +341,10 @@ private fun RepeatBlock(
             }
             repeat.children.forEachIndexed { childIndex, child ->
                 Row(modifier = Modifier.fillMaxWidth().clickable { onEditChild(childIndex) }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-                    Icon(painterResource(segmentKindIcon(child.kind)), contentDescription = null, tint = segmentKindColor(child.kind), modifier = Modifier.size(20.dp))
+                    val childColor = segmentKindColor(child.kind)
+                    Box(modifier = Modifier.size(28.dp).background(childColor.copy(alpha = 0.2f), CircleShape), contentAlignment = Alignment.Center) {
+                        Icon(painterResource(segmentKindIcon(child.kind)), contentDescription = null, tint = childColor, modifier = Modifier.size(16.dp))
+                    }
                     Text(describe(child), style = type.body, color = colors.textPrimary, modifier = Modifier.weight(1f))
                     RcIconButton(RcIcons.Delete, stringResource(R.string.editor_delete), onClick = { onDeleteChild(childIndex) }, tint = colors.fail, iconSize = 20)
                 }
