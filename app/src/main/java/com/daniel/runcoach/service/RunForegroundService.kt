@@ -508,10 +508,10 @@ class RunForegroundService : Service() {
         private const val WAKE_LOCK_TAG = "RunCoach:run"
         private const val FLUSH_INTERVAL_MS = 5000L
         const val ACTION_STOP = "com.daniel.runcoach.action.STOP_RUN"
-        const val ACTION_RESUME = "com.daniel.runcoach.action.RESUME_RUN"
+        const val ACTION_RESUME = "com.daniel.runcoach.action.RESUME_SESSION"
         const val ACTION_CANCEL_COUNTDOWN = "com.daniel.runcoach.action.CANCEL_COUNTDOWN"
         const val ACTION_PAUSE = "com.daniel.runcoach.action.PAUSE"
-        const val ACTION_RESUME_RUN = "com.daniel.runcoach.action.RESUME_RUN"
+        const val ACTION_RESUME_RUN = "com.daniel.runcoach.action.UNPAUSE"
         const val ACTION_SKIP = "com.daniel.runcoach.action.SKIP"
         const val ACTION_EXTEND = "com.daniel.runcoach.action.EXTEND"
         const val EXTRA_EXTEND_METERS = "extend_meters"

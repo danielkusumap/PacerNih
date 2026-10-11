@@ -344,3 +344,14 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - **R8/optimization dimatikan** untuk release (`isMinifyEnabled = false`): build release ber-R8 crash saat dibuka
   (reflection Room/kotlinx.serialization ter-strip). Prioritas keandalan di atas ukuran APK (~14 MB).
   Konsekuensi: sesi uji selalu pakai build debug/mock sehingga bug R8 ini baru muncul saat APK release dicoba.
+
+## D-050 Bug tombol live & onboarding (perbaikan)
+- **`ACTION_RESUME` dan `ACTION_RESUME_RUN` sempat bernilai sama** (`...action.RESUME_RUN`). Akibatnya tombol "Lanjut"
+  saat jeda memicu jalur resume-sesi (target null → `stopSelf()`), service mati, info live hilang. Nilai kini dipisah
+  (`RESUME_SESSION` vs `UNPAUSE`).
+- Tombol **Stop**: isi `ProgressRing` sebelumnya `RcIconButton` yang `clickable` sehingga gestur tekan-tahan dimakan
+  anak. Isi sekarang ikon non-klik; gestur ditangani `ProgressRing`.
+- **Daftar segmen live** kini memakai **nama segmen** (`label`) sebagai teks utama (konsisten dengan header), detail
+  tipe/batas/target sebagai baris kedua.
+- **Onboarding** tidak muncul lagi setelah selesai: flag `onboardingDone` di DataStore; `MainActivity` menunggu
+  setelan termuat lalu memilih start destination (Beranda bila sudah selesai, atau selalu di build mock).

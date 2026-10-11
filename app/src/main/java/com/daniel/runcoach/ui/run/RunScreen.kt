@@ -426,7 +426,17 @@ private fun Controls(
                 )
             }
             com.daniel.runcoach.ui.components.ProgressRing(onConfirm = onStop) {
-                RcIconButton(RcIcons.Stop, stringResource(R.string.action_stop_run), onClick = {}, variant = RcIconButtonVariant.Filled, tint = colors.fail)
+                Box(
+                    modifier = Modifier.size(56.dp).background(colors.surfaceRaised, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        painterResource(RcIcons.Stop),
+                        contentDescription = stringResource(R.string.action_stop_run),
+                        tint = colors.fail,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
             }
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
@@ -492,7 +502,10 @@ private fun SegmentListSheet(ui: RunUiState, onDismiss: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Icon(painterResource(segmentKindIcon(seg.kind)), contentDescription = null, tint = segmentKindColor(seg.kind), modifier = Modifier.size(20.dp))
-                Text("$number. ${describeSegmentText(seg)}", style = type.titleS, color = colors.textPrimary, modifier = Modifier.weight(1f))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("$number. ${seg.label}", style = type.titleS, color = colors.textPrimary)
+                    Text(describeSegmentText(seg), style = type.bodySmall, color = colors.textSecondary)
+                }
             }
             com.daniel.runcoach.ui.components.RcDivider()
         }

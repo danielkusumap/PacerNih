@@ -41,6 +41,7 @@ data class AppSettings(
     val calibrationFactor: Double = 1.0,
     val backupReminderDays: Int = 0,
     val historyMap: Boolean = false,
+    val onboardingDone: Boolean = false,
 )
 
 private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -69,6 +70,7 @@ class SettingsRepository(context: Context) {
             calibrationFactor = prefs[KEY_CALIBRATION] ?: 1.0,
             backupReminderDays = prefs[KEY_BACKUP_REMINDER] ?: 0,
             historyMap = prefs[KEY_HISTORY_MAP] ?: false,
+            onboardingDone = prefs[KEY_ONBOARDING] ?: false,
         )
     }
 
@@ -97,6 +99,8 @@ class SettingsRepository(context: Context) {
 
     suspend fun setHistoryMap(on: Boolean) = dataStore.edit { it[KEY_HISTORY_MAP] = on }
 
+    suspend fun setOnboardingDone(done: Boolean) = dataStore.edit { it[KEY_ONBOARDING] = done }
+
     /** Writes every field at once (used by restore). */
     suspend fun setAll(s: AppSettings) = dataStore.edit { prefs ->
         prefs[KEY_THEME] = s.theme.name
@@ -115,6 +119,7 @@ class SettingsRepository(context: Context) {
         prefs[KEY_CALIBRATION] = s.calibrationFactor
         prefs[KEY_BACKUP_REMINDER] = s.backupReminderDays
         prefs[KEY_HISTORY_MAP] = s.historyMap
+        prefs[KEY_ONBOARDING] = s.onboardingDone
         s.lastBackupEpochMs?.let { prefs[KEY_LAST_BACKUP] = it }
     }
 
@@ -136,5 +141,6 @@ class SettingsRepository(context: Context) {
         val KEY_CALIBRATION = doublePreferencesKey("calibration_factor")
         val KEY_BACKUP_REMINDER = intPreferencesKey("backup_reminder_days")
         val KEY_HISTORY_MAP = booleanPreferencesKey("history_map")
+        val KEY_ONBOARDING = booleanPreferencesKey("onboarding_done")
     }
 }

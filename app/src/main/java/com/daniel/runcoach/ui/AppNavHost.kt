@@ -2,12 +2,15 @@ package com.daniel.runcoach.ui
 
 import android.content.pm.ApplicationInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.daniel.runcoach.data.SettingsRepository
 import com.daniel.runcoach.data.WorkoutTemplateRepository
 import com.daniel.runcoach.ui.battery.BatteryGuideScreen
 import com.daniel.runcoach.ui.components.RcCatalogScreen
@@ -25,6 +28,7 @@ import com.daniel.runcoach.ui.settings.BackupScreen
 import com.daniel.runcoach.ui.settings.SettingsScreen
 import com.daniel.runcoach.ui.stats.RecordDetailScreen
 import com.daniel.runcoach.ui.stats.StatsScreen
+import kotlinx.coroutines.launch
 
 /** Navigation routes. More screens arrive in later tasks. */
 object Routes {
@@ -46,15 +50,18 @@ object Routes {
 }
 
 @Composable
-fun AppNavHost() {
+fun AppNavHost(startDestination: String = Routes.ONBOARDING) {
     val navController = rememberNavController()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val settingsRepository = remember(context) { SettingsRepository(context) }
     val debugBuild = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
-    NavHost(navController = navController, startDestination = if (com.daniel.runcoach.BuildConfig.MOCK_DATA) Routes.HOME else Routes.ONBOARDING) {
+    NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
                 onStart = {
+                    scope.launch { settingsRepository.setOnboardingDone(true) }
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.ONBOARDING) { inclusive = true }
                     }
