@@ -575,6 +575,12 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - **Teks tidak lagi terpotong keras**: tombol & chip memakai ellipsis (`RcButton`/`RcChoiceChip`), ukuran tombol
   punya varian **Compact** (48dp, 14px).
 
+## Perbaikan lanjutan S02/S03/S07 (2026-10-11)
+- **S02 kartu template**: teks sempat jadi vertikal karena `RcButton` dibuat `fillMaxWidth` + `weight`. Dikembalikan
+  ke **wrap-content** (hanya ellipsis), jadi layout kartu normal lagi.
+- **S03 bar ringkasan**: strip segmen dan teks "N segmen · X km" kini **dua baris** (strip di atas, teks di bawah).
+- **S07 kartu sesi**: chip hasil ("NO TARGET"/"N/M PASSED") dipindah ke **bawah kartu** agar tidak menumpuk.
+
 
 
 
