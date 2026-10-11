@@ -291,7 +291,7 @@ private fun WeekDelta(deltaM: Double?) {
                     tint = if (deltaM >= 0) colors.pass else colors.neutral,
                     modifier = Modifier.size(20.dp),
                 )
-                Text(Formatters.distanceKm(deltaM), style = type.numberM, color = colors.textPrimary)
+                Text(Formatters.distanceKm(deltaM), style = type.numberM, color = colors.accentText)
             }
         }
     }

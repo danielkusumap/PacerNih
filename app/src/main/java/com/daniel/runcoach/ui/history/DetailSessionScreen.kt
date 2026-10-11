@@ -52,6 +52,7 @@ import com.daniel.runcoach.ui.charts.ChartLine
 import com.daniel.runcoach.ui.charts.LinePoint
 import com.daniel.runcoach.ui.charts.TargetStep
 import com.daniel.runcoach.ui.components.MetricBlock
+import com.daniel.runcoach.ui.components.NumberStepper
 import com.daniel.runcoach.ui.components.RcButton
 import com.daniel.runcoach.ui.components.RcButtonVariant
 import com.daniel.runcoach.ui.components.RcCard
@@ -434,7 +435,13 @@ private fun CalibrateSheet(session: SessionEntity, onDismiss: () -> Unit, onAppl
         Text(stringResource(R.string.s08_calibrate).uppercase(), style = type.titleM, color = colors.textPrimary)
         Text(stringResource(R.string.s08_calibrate_measured_label).uppercase(), style = type.label, color = colors.textSecondary, modifier = Modifier.padding(top = 12.dp))
         Text(Formatters.distanceKm(session.totalDistanceM), style = type.numberL, color = colors.textPrimary)
-        RcTextField(value = text, onValueChange = { text = it }, label = stringResource(R.string.s08_calibrate_actual), modifier = Modifier.padding(top = 12.dp))
+        NumberStepper(
+            value = text.ifBlank { "—" },
+            onDecrement = { text = "%.1f".format(((text.trim().replace(',', '.').toDoubleOrNull() ?: 5.0) - 0.1).coerceAtLeast(0.1)) },
+            onIncrement = { text = "%.1f".format((text.trim().replace(',', '.').toDoubleOrNull() ?: 5.0) + 0.1) },
+            stepLabel = stringResource(R.string.s08_calibrate_actual),
+            modifier = Modifier.padding(top = 12.dp),
+        )
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
             verticalAlignment = Alignment.CenterVertically,

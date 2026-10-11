@@ -51,6 +51,7 @@ import com.daniel.runcoach.engine.model.WorkoutPresets
 import com.daniel.runcoach.engine.model.WorkoutValidator
 import com.daniel.runcoach.ui.Formatters
 import com.daniel.runcoach.ui.components.InfoIcon
+import com.daniel.runcoach.ui.components.NumberStepper
 import com.daniel.runcoach.ui.components.RcButton
 import com.daniel.runcoach.ui.components.RcButtonVariant
 import com.daniel.runcoach.ui.components.RcCard
@@ -371,7 +372,8 @@ private fun SegmentSheet(
     var duration by remember { mutableStateOf((initial.limit as? Limit.Duration)?.let { formatPace(it.seconds) } ?: "6:00") }
     var target by remember { mutableStateOf(initial.targetPaceSecPerKm?.let { formatPace(it) } ?: "") }
     var bound by remember { mutableStateOf(initial.targetBound) }
-    var margin by remember { mutableStateOf(initial.fastMarginSec?.toString() ?: "") }
+    var margin by remember { mutableStateOf(initial.fastMarginSec?.toString() ?: "20") }
+    var marginEnabled by remember { mutableStateOf(initial.fastMarginSec != null) }
     var perKm by remember { mutableStateOf(initial.perKmCheck) }
     val colors = LocalRcColors.current
     val spacing = LocalRcSpacing.current
@@ -410,13 +412,25 @@ private fun SegmentSheet(
             onSelect = { limitType = it },
         )
         when (limitType) {
-            0 -> RcTextField(value = distance, onValueChange = { distance = it.filter(Char::isDigit) }, label = stringResource(R.string.d01_distance_m), modifier = Modifier.padding(top = spacing.s2))
-            1 -> RcTextField(value = duration, onValueChange = { duration = it }, label = stringResource(R.string.d01_duration_ms), modifier = Modifier.padding(top = spacing.s2))
+            0 -> NumberStepper(
+                value = "${distance.toIntOrNull() ?: 0} m",
+                onDecrement = { distance = ((distance.toIntOrNull() ?: 0) - 100).coerceAtLeast(100).toString() },
+                onIncrement = { distance = ((distance.toIntOrNull() ?: 0) + 100).toString() },
+                stepLabel = stringResource(R.string.d01_distance_m),
+                modifier = Modifier.padding(top = spacing.s2),
+            )
+            1 -> NumberStepper(
+                value = Formatters.duration((parsePace(duration) ?: 0).toLong() * 1000L),
+                onDecrement = { duration = formatPace(((parsePace(duration) ?: 0) - 30).coerceAtLeast(30)) },
+                onIncrement = { duration = formatPace((parsePace(duration) ?: 0) + 30) },
+                stepLabel = stringResource(R.string.d01_duration_ms),
+                modifier = Modifier.padding(top = spacing.s2),
+            )
             else -> Text(stringResource(R.string.d01_open), style = type.body, color = colors.textSecondary, modifier = Modifier.padding(top = spacing.s2))
         }
 
         RcTextField(value = target, onValueChange = { target = it }, label = stringResource(R.string.d01_target), modifier = Modifier.padding(top = spacing.s2))
-        Text(stringResource(R.string.d01_target_bound), style = type.label, color = colors.textSecondary, modifier = Modifier.padding(top = spacing.s2))
+        Text(stringResource(R.string.d01_target_bound).uppercase(), style = type.label, color = colors.textSecondary, modifier = Modifier.padding(top = spacing.s2))
         SegmentedControl(
             options = listOf(
                 com.daniel.runcoach.engine.model.PaceTargetBound.MAX to stringResource(R.string.d01_bound_max),
@@ -425,7 +439,15 @@ private fun SegmentSheet(
             selected = bound,
             onSelect = { bound = it },
         )
-        RcTextField(value = margin, onValueChange = { margin = it.filter(Char::isDigit) }, label = stringResource(R.string.d01_fast_margin), modifier = Modifier.padding(top = spacing.s2))
+        RcSwitchRow(stringResource(R.string.d01_fast_margin), marginEnabled, onCheckedChange = { marginEnabled = it })
+        if (marginEnabled) {
+            NumberStepper(
+                value = "${margin.toIntOrNull() ?: 20} dtk",
+                onDecrement = { margin = ((margin.toIntOrNull() ?: 20) - 5).coerceAtLeast(0).toString() },
+                onIncrement = { margin = ((margin.toIntOrNull() ?: 20) + 5).toString() },
+                stepLabel = "",
+            )
+        }
         RcSwitchRow(stringResource(R.string.d01_per_km), perKm, onCheckedChange = { perKm = it })
 
         RcButton(
@@ -443,7 +465,7 @@ private fun SegmentSheet(
                         kind = kind,
                         limit = limit,
                         targetPaceSecPerKm = target.takeIf { it.isNotBlank() }?.let { parsePace(it) },
-                        fastMarginSec = if (margin.isBlank()) null else margin.toIntOrNull(),
+                        fastMarginSec = if (marginEnabled) (margin.toIntOrNull() ?: 20) else null,
                         perKmCheck = perKm,
                         targetBound = bound,
                     ),
@@ -475,43 +497,35 @@ private fun RepeatBoundSheet(initial: Repeat, onDone: (Repeat) -> Unit, onDismis
 
 @Composable
 private fun PresetSheet(onGenerate: (Workout) -> Unit, onDismiss: () -> Unit) {
-    var distance by remember { mutableStateOf("5000") }
-    var pace by remember { mutableStateOf("7:00") }
-    var km by remember { mutableStateOf("5") }
-    var step by remember { mutableStateOf("20") }
-    var reps by remember { mutableStateOf("3") }
-    var runS by remember { mutableStateOf("360") }
-    var walkS by remember { mutableStateOf("120") }
-    var goal by remember { mutableStateOf("5000") }
     val colors = LocalRcColors.current
     val type = LocalRcTypography.current
+    val spacing = LocalRcSpacing.current
+    val presets: List<Pair<String, () -> Workout>> = listOf(
+        stringResource(R.string.d02_stable) to { WorkoutPresets.stableRun(5000, 420) },
+        stringResource(R.string.d02_tempo) to { WorkoutPresets.progressiveTempo(5, 450, 20, warmUpMeters = 500, coolDownMeters = 500) },
+        stringResource(R.string.d02_interval) to {
+            WorkoutPresets.interval(
+                warmUpMeters = 1000,
+                work = Limit.Distance(400),
+                workTargetSecPerKm = 360,
+                recovery = Limit.Distance(200),
+                recoveryTargetSecPerKm = null,
+                repetitions = 3,
+                coolDownMeters = 1000,
+            )
+        },
+        stringResource(R.string.d02_runwalk) to { WorkoutPresets.runWalk(360, 120, 5000) },
+    )
     RcSheet(onDismiss = onDismiss) {
-        Text(stringResource(R.string.d02_title), style = type.titleM, color = colors.textPrimary)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 12.dp)) {
-            RcTextField(value = distance, onValueChange = { distance = it.filter(Char::isDigit) }, label = stringResource(R.string.d02_distance_m), modifier = Modifier.weight(1f))
-            RcTextField(value = pace, onValueChange = { pace = it }, label = stringResource(R.string.d02_start_pace), modifier = Modifier.weight(1f))
+        Text(stringResource(R.string.d02_title).uppercase(), style = type.titleM, color = colors.textPrimary)
+        presets.forEach { (label, generate) ->
+            RcCard(interactive = true, onClick = { onGenerate(generate()) }, modifier = Modifier.padding(top = spacing.s2)) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(label.uppercase(), style = type.titleS, color = colors.textPrimary)
+                    Icon(painterResource(RcIcons.ChevronRight), contentDescription = null, tint = colors.textSecondary, modifier = Modifier.size(20.dp))
+                }
+            }
         }
-        RcButton(stringResource(R.string.d02_stable), onClick = { onGenerate(WorkoutPresets.stableRun(distance.toIntOrNull() ?: 5000, parsePace(pace) ?: 420)) }, variant = RcButtonVariant.Secondary, fillWidth = true)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            RcTextField(value = km, onValueChange = { km = it.filter(Char::isDigit) }, label = stringResource(R.string.d02_km), modifier = Modifier.weight(1f))
-            RcTextField(value = step, onValueChange = { step = it.filter(Char::isDigit) }, label = stringResource(R.string.d02_step), modifier = Modifier.weight(1f))
-        }
-        RcButton(stringResource(R.string.d02_tempo), onClick = { onGenerate(WorkoutPresets.progressiveTempo(km.toIntOrNull() ?: 5, parsePace(pace) ?: 450, step.toIntOrNull() ?: 20, warmUpMeters = 500, coolDownMeters = 500)) }, variant = RcButtonVariant.Secondary, fillWidth = true)
-        RcTextField(value = reps, onValueChange = { reps = it.filter(Char::isDigit) }, label = stringResource(R.string.d02_reps), modifier = Modifier.fillMaxWidth())
-        RcButton(
-            stringResource(R.string.d02_interval),
-            onClick = {
-                onGenerate(WorkoutPresets.interval(warmUpMeters = 1000, work = Limit.Distance(400), workTargetSecPerKm = parsePace(pace) ?: 360, recovery = Limit.Distance(200), recoveryTargetSecPerKm = null, repetitions = reps.toIntOrNull() ?: 3, coolDownMeters = 1000))
-            },
-            variant = RcButtonVariant.Secondary,
-            fillWidth = true,
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            RcTextField(value = runS, onValueChange = { runS = it.filter(Char::isDigit) }, label = stringResource(R.string.d02_run_s), modifier = Modifier.weight(1f))
-            RcTextField(value = walkS, onValueChange = { walkS = it.filter(Char::isDigit) }, label = stringResource(R.string.d02_walk_s), modifier = Modifier.weight(1f))
-        }
-        RcTextField(value = goal, onValueChange = { goal = it.filter(Char::isDigit) }, label = stringResource(R.string.d02_goal_m), modifier = Modifier.fillMaxWidth())
-        RcButton(stringResource(R.string.d02_runwalk), onClick = { onGenerate(WorkoutPresets.runWalk(runS.toIntOrNull() ?: 360, walkS.toIntOrNull() ?: 120, goal.toIntOrNull() ?: 5000)) }, variant = RcButtonVariant.Secondary, fillWidth = true)
     }
 }
 
@@ -526,7 +540,17 @@ private fun InfoSheet(topic: InfoTopic, onDismiss: () -> Unit) {
             }
             Text(stringResource(topic.titleRes).uppercase(), style = type.titleM, color = colors.textPrimary, modifier = Modifier.weight(1f))
         }
-        Text(stringResource(topic.bodyRes), style = type.body, color = colors.textSecondary, modifier = Modifier.padding(top = 12.dp))
+        stringResource(topic.bodyRes).split("\n").filter { it.isNotBlank() }.forEach { line ->
+            val idx = line.indexOf(':')
+            Column(modifier = Modifier.padding(top = 12.dp)) {
+                if (idx in 1 until line.length) {
+                    Text(line.substring(0, idx).uppercase(), style = type.label, color = colors.accentText)
+                    Text(line.substring(idx + 1).trim(), style = type.body, color = colors.textSecondary, modifier = Modifier.padding(top = 2.dp))
+                } else {
+                    Text(line, style = type.body, color = colors.textSecondary)
+                }
+            }
+        }
         RcButton(stringResource(R.string.info_understand), onClick = onDismiss, fillWidth = true, modifier = Modifier.padding(top = 16.dp))
     }
 }

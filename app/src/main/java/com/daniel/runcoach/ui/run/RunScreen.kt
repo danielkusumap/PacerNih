@@ -120,6 +120,7 @@ fun RunRoute(onStop: () -> Unit) {
         onExtend = { meters, seconds -> RunForegroundService.extend(context, meters, seconds) },
         showMap = settings.liveMap,
         onToggleMap = { scope.launch { settingsRepository.setLiveMap(!settings.liveMap) } },
+        onBack = { showBackDialog = true },
     )
 }
 
@@ -138,6 +139,7 @@ fun RunScreen(
     onExtend: (Double, Int) -> Unit = { _, _ -> },
     showMap: Boolean = false,
     onToggleMap: () -> Unit = {},
+    onBack: () -> Unit = {},
 ) {
     val colors = LocalRcColors.current
     val spacing = LocalRcSpacing.current
@@ -153,7 +155,7 @@ fun RunScreen(
             modifier = Modifier.fillMaxSize().padding(horizontal = spacing.screenH),
         ) {
             // A. Header
-            Header(ui, showMap, onToggleMap)
+            Header(ui, showMap, onToggleMap, onBack)
             // B. Segment
             segment?.let { SegmentBlock(state, it) }
             // Banners (do not push content, sit right under the header)
@@ -201,7 +203,7 @@ fun RunScreen(
 }
 
 @Composable
-private fun Header(ui: RunUiState, showMap: Boolean, onToggleMap: () -> Unit) {
+private fun Header(ui: RunUiState, showMap: Boolean, onToggleMap: () -> Unit, onBack: () -> Unit) {
     val colors = LocalRcColors.current
     val type = LocalRcTypography.current
     val state = ui.state
@@ -210,6 +212,7 @@ private fun Header(ui: RunUiState, showMap: Boolean, onToggleMap: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        RcIconButton(RcIcons.ArrowBack, contentDescription = null, onClick = onBack, tint = colors.textSecondary)
         Text(ui.workoutName, style = type.bodySmall, color = colors.textSecondary, maxLines = 1, modifier = Modifier.weight(1f))
         when {
             ui.phase == RunnerPhase.PAUSED_MANUAL -> HeaderChip(stringResource(R.string.run_paused))
