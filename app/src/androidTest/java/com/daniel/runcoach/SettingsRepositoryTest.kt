@@ -62,4 +62,16 @@ class SettingsRepositoryTest {
             assertEquals(0, repository.settings.first().backupReminderDays)
         }
     }
+
+    /** Onboarding is remembered so it does not reappear after the first run. */
+    @Test
+    fun onboardingDonePersists() {
+        runBlocking {
+            val repository = SettingsRepository(InstrumentationRegistry.getInstrumentation().targetContext)
+            repository.setOnboardingDone(true)
+            assertEquals(true, repository.settings.first().onboardingDone)
+            repository.setOnboardingDone(false)
+            assertEquals(false, repository.settings.first().onboardingDone)
+        }
+    }
 }
