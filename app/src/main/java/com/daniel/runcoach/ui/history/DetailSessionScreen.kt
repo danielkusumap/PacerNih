@@ -156,20 +156,24 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
 
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = spacing.screenH).padding(bottom = spacing.s6)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-                Text(current.name, style = type.titleL, color = colors.textPrimary, modifier = Modifier.weight(1f))
-                RcIconButton(RcIcons.Edit, stringResource(R.string.s08_edit), onClick = { showEdit = true }, tint = colors.textSecondary)
+                Text(current.name, style = type.titleL, color = colors.textPrimary, maxLines = 1, modifier = Modifier.weight(1f))
+                RcIconButton(RcIcons.Edit, stringResource(R.string.s08_edit), onClick = { showEdit = true }, tint = colors.accentText)
             }
             Text(formatRange(current), style = type.bodySmall, color = colors.textSecondary)
             Text(current.templateNameSnapshot, style = type.caption, color = colors.textTertiary)
 
-            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = spacing.s2)) {
-                Text(Formatters.distanceKm(current.totalDistanceM).removeSuffix(" km"), style = type.numberXL, color = colors.textPrimary)
-                Text("km", style = type.titleS, color = colors.textSecondary)
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = spacing.s2)) {
+                Text(Formatters.distanceKm(current.totalDistanceM).removeSuffix(" km"), style = type.displayM, color = colors.textPrimary)
+                Text("km", style = type.numberS, color = colors.textSecondary)
             }
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = spacing.s3), horizontalArrangement = Arrangement.spacedBy(spacing.s5)) {
                 MetricBlock(stringResource(R.string.s08_metric_time), Formatters.duration(current.movingMs))
                 MetricBlock(stringResource(R.string.s08_metric_avg_pace), Formatters.pace(current.avgPaceSecPerKm), unit = "/km")
-                MetricBlock(stringResource(R.string.s08_metric_result), stringResource(R.string.s07_chip_pass, current.segPass, current.segPass + current.segFail + current.segBorderline))
+                MetricBlock(
+                    stringResource(R.string.s08_metric_result),
+                    stringResource(R.string.s07_chip_pass, current.segPass, current.segPass + current.segFail + current.segBorderline),
+                    valueColor = colors.accentText,
+                )
             }
             if (current.pausedMs > 0) {
                 Text(stringResource(R.string.s08_paused, Formatters.duration(current.pausedMs)), style = type.bodySmall, color = colors.textSecondary)
@@ -263,7 +267,7 @@ private fun TabRow(selected: Int, hasMap: Boolean, onSelect: (Int) -> Unit) {
     Row(modifier = Modifier.fillMaxWidth().padding(top = 24.dp)) {
         labels.forEachIndexed { index, label ->
             Column(modifier = Modifier.weight(1f).clickable { onSelect(index) }, horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(label, style = type.titleS, color = if (index == selected) colors.textPrimary else colors.textSecondary, modifier = Modifier.padding(vertical = 8.dp))
+                Text(label.uppercase(), style = type.tab, color = if (index == selected) colors.textPrimary else colors.textSecondary, maxLines = 1, modifier = Modifier.padding(vertical = 8.dp))
                 Box(modifier = Modifier.fillMaxWidth().height(3.dp).background(if (index == selected) colors.accent else androidx.compose.ui.graphics.Color.Transparent))
             }
         }
@@ -291,15 +295,16 @@ private fun SegmentsTab(segments: List<SegmentResultEntity>, splits: List<KmSpli
                 }
                 Text(stringResource(R.string.s08_seg_limit, limitText(segment)), style = type.bodySmall, color = colors.textSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(spacing.s4)) {
-                    MetricBlock("Jarak", Formatters.distanceKm(segment.distanceM).removeSuffix(" km"), unit = "km")
-                    MetricBlock("Waktu", Formatters.duration(segment.durationMs))
+                    MetricBlock("Jarak", Formatters.distanceKm(segment.distanceM).removeSuffix(" km"), unit = "km", valueStyle = type.numberS)
+                    MetricBlock("Waktu", Formatters.duration(segment.durationMs), valueStyle = type.numberS)
                 }
                 Row(modifier = Modifier.fillMaxWidth().padding(top = spacing.s1), horizontalArrangement = Arrangement.spacedBy(spacing.s4)) {
-                    MetricBlock(stringResource(R.string.s08_seg_target), targetText(segment))
+                    MetricBlock(stringResource(R.string.s08_seg_target), targetText(segment), valueStyle = type.numberS)
                     MetricBlock(
                         stringResource(R.string.s08_seg_actual),
                         Formatters.pace(segment.avgPace),
                         unit = "/km",
+                        valueStyle = type.numberS,
                         valueColor = when (segment.status) {
                             "PASS" -> colors.pass
                             "FAIL" -> colors.fail
@@ -308,7 +313,7 @@ private fun SegmentsTab(segments: List<SegmentResultEntity>, splits: List<KmSpli
                         },
                     )
                     segment.deltaSec?.let {
-                        MetricBlock(stringResource(R.string.s08_seg_delta), Formatters.deltaSeconds(it), valueColor = if (it <= 0) colors.pass else colors.fail)
+                        MetricBlock(stringResource(R.string.s08_seg_delta), Formatters.deltaSeconds(it), valueStyle = type.numberS, valueColor = if (it <= 0) colors.pass else colors.fail)
                     }
                 }
                 if (segment.status == "BORDERLINE") Text(stringResource(R.string.s08_borderline_note), style = type.caption, color = colors.warn)
@@ -360,8 +365,8 @@ private fun SplitsTab(splits: List<KmSplitEntity>) {
             val partial = split.distanceM < 1000.0
             Row(modifier = Modifier.fillMaxWidth().height(52.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(if (partial) "%.2f km".format(split.distanceM / 1000.0) else "Km ${split.idx}", style = type.titleS, color = colors.textPrimary, modifier = Modifier.weight(1f))
-                Text(Formatters.duration(split.durationMs), style = type.numberM, color = colors.textPrimary, modifier = Modifier.weight(1f))
-                Text(Formatters.pace(split.paceSecPerKm), style = type.numberM, color = colors.textPrimary, modifier = Modifier.weight(1f))
+                Text(Formatters.duration(split.durationMs), style = type.numberS, color = colors.textPrimary, modifier = Modifier.weight(1f))
+                Text(Formatters.pace(split.paceSecPerKm), style = type.numberS, color = colors.textPrimary, modifier = Modifier.weight(1f))
                 Text(split.deltaSec?.let { Formatters.deltaSeconds(it) } ?: "", style = type.bodySmall, color = if ((split.deltaSec ?: 0) <= 0) colors.pass else colors.fail, modifier = Modifier.weight(1f))
             }
             if (split.idx == fastestIndex) Text(stringResource(R.string.s08_fastest), style = type.caption, color = colors.accentText)
