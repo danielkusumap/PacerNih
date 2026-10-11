@@ -630,3 +630,9 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - Engine `WorkoutTextFormatter` (pure) merender nama + struktur (batas/target, repeat menjorok 2 spasi, desimal ikut
   bahasa). Golden test 5 kasus. UI S08 tab Segmen: tombol "? Salin sebagai teks" + item di menu ?; menyalin ke
   clipboard + toast "Disalin".
+
+## F2 Urut ulang Repeat & anaknya (2026-10-11)
+- Menu ? pada kartu segmen, header Repeat, dan tiap anak: **Naik/Turun/Duplikat/Hapus**. Naik/Turun nonaktif di tepi
+  (warna `menuDisabled`). Repeat bergerak utuh; anak hanya di dalam blok. Duplikat Repeat menyalin seluruh anak;
+  Hapus Repeat pakai konfirmasi dialog.
+- Helper murni `moveItem`/`duplicateRepeat` + unit test `EditorReorderTest` (4 kasus). App unit + instrumented hijau.

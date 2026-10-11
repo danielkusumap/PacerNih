@@ -115,6 +115,7 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
     var segmentEditIndex by remember { mutableStateOf(-1) }
     var repeatBoundIndex by remember { mutableStateOf(-1) }
     var childEdit by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    var pendingDeleteRepeat by remember { mutableStateOf<Int?>(null) }
 
     val workout = Workout(id = initial?.id ?: "", name = name, items = items.toList(), goalDistanceM = goal.toIntOrNull())
     val errors = WorkoutValidator.validate(workout)
@@ -174,6 +175,8 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
                 when (block) {
                     is Segment -> SegmentCard(
                         segment = block,
+                        canUp = index > 0,
+                        canDown = index < items.lastIndex,
                         onEdit = { segmentEditIndex = index },
                         onInfo = { infoTopic = kindTopic(block.kind) },
                         onUp = { if (index > 0) { val t = items[index]; items[index] = items[index - 1]; items[index - 1] = t; dirty = true } },
@@ -185,11 +188,26 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
                     is Repeat -> {
                         RepeatBlock(
                             repeat = block,
+                            canUp = index > 0,
+                            canDown = index < items.lastIndex,
                             onEditBound = { repeatBoundIndex = index },
                             onInfo = { infoTopic = InfoTopic.REPEAT },
+                            onUp = { if (index > 0) { val t = items[index]; items[index] = items[index - 1]; items[index - 1] = t; dirty = true } },
+                            onDown = { if (index < items.lastIndex) { val t = items[index]; items[index] = items[index + 1]; items[index + 1] = t; dirty = true } },
+                            onDuplicate = { items.add(index + 1, duplicateRepeat(block)); dirty = true },
                             onAddChild = { items[index] = block.copy(children = block.children + defaultChild()); dirty = true },
-                            onDelete = { items.removeAt(index); dirty = true },
+                            onDelete = { pendingDeleteRepeat = index },
                             onEditChild = { childIndex -> childEdit = index to childIndex },
+                            onMoveChild = { from, to ->
+                                items[index] = block.copy(children = moveItem(block.children, from, to))
+                                dirty = true
+                            },
+                            onDuplicateChild = { childIndex ->
+                                val newChildren = block.children.toMutableList()
+                                newChildren.add(childIndex + 1, block.children[childIndex].copy())
+                                items[index] = block.copy(children = newChildren)
+                                dirty = true
+                            },
                             onDeleteChild = { childIndex ->
                                 items[index] = block.copy(children = block.children.filterIndexed { i, _ -> i != childIndex })
                                 dirty = true
@@ -260,6 +278,22 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
     }
     infoTopic?.let { topic -> InfoSheet(topic = topic, onDismiss = { infoTopic = null }) }
 
+    pendingDeleteRepeat?.let { index ->
+        RcDialog(
+            onDismiss = { pendingDeleteRepeat = null },
+            title = stringResource(R.string.editor_delete),
+            content = { Text(stringResource(R.string.editor_delete_repeat_message), style = type.body, color = colors.textSecondary) },
+            dismiss = { RcTextButton(stringResource(R.string.editor_discard_keep), onClick = { pendingDeleteRepeat = null }, tone = RcTextButtonTone.Neutral) },
+            confirm = {
+                RcTextButton(
+                    stringResource(R.string.editor_delete),
+                    onClick = { if (index in items.indices) { items.removeAt(index); dirty = true }; pendingDeleteRepeat = null },
+                    tone = RcTextButtonTone.Destructive,
+                )
+            },
+        )
+    }
+
     if (showDiscard) {
         RcDialog(
             onDismiss = { showDiscard = false },
@@ -274,6 +308,8 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
 @Composable
 private fun SegmentCard(
     segment: Segment,
+    canUp: Boolean,
+    canDown: Boolean,
     onEdit: () -> Unit,
     onInfo: () -> Unit,
     onUp: () -> Unit,
@@ -300,10 +336,10 @@ private fun SegmentCard(
             Box {
                 RcIconButton(RcIcons.MoreVert, stringResource(R.string.editor_item_menu), onClick = { menu = true })
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = colors.surfaceRaised) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.editor_up)) }, onClick = { menu = false; onUp() })
-                    DropdownMenuItem(text = { Text(stringResource(R.string.editor_down)) }, onClick = { menu = false; onDown() })
-                    DropdownMenuItem(text = { Text(stringResource(R.string.editor_duplicate)) }, onClick = { menu = false; onDuplicate() })
-                    DropdownMenuItem(text = { Text(stringResource(R.string.editor_delete)) }, onClick = { menu = false; onDelete() })
+                    DropdownMenuItem(text = { MenuLabel(stringResource(R.string.move_up), canUp) }, enabled = canUp, onClick = { menu = false; onUp() })
+                    DropdownMenuItem(text = { MenuLabel(stringResource(R.string.move_down), canDown) }, enabled = canDown, onClick = { menu = false; onDown() })
+                    DropdownMenuItem(text = { MenuLabel(stringResource(R.string.editor_duplicate), true) }, onClick = { menu = false; onDuplicate() })
+                    DropdownMenuItem(text = { MenuLabel(stringResource(R.string.editor_delete), true) }, onClick = { menu = false; onDelete() })
                 }
             }
         }
@@ -311,13 +347,26 @@ private fun SegmentCard(
 }
 
 @Composable
+private fun MenuLabel(text: String, enabled: Boolean) {
+    val colors = LocalRcColors.current
+    Text(text, color = if (enabled) colors.textPrimary else colors.menuDisabled)
+}
+
+@Composable
 private fun RepeatBlock(
     repeat: Repeat,
+    canUp: Boolean,
+    canDown: Boolean,
     onEditBound: () -> Unit,
     onInfo: () -> Unit,
+    onUp: () -> Unit,
+    onDown: () -> Unit,
+    onDuplicate: () -> Unit,
     onAddChild: () -> Unit,
     onDelete: () -> Unit,
     onEditChild: (Int) -> Unit,
+    onMoveChild: (Int, Int) -> Unit,
+    onDuplicateChild: (Int) -> Unit,
     onDeleteChild: (Int) -> Unit,
 ) {
     val colors = LocalRcColors.current
@@ -325,7 +374,7 @@ private fun RepeatBlock(
     val type = LocalRcTypography.current
     var menu by remember { mutableStateOf(false) }
     Row {
-        Box(Modifier.width(3.dp).height(if (repeat.children.isEmpty()) 56.dp else (56 * repeat.children.size).dp).background(colors.accent, RoundedCornerShape(2.dp)))
+        Box(Modifier.width(3.dp).height(if (repeat.children.isEmpty()) 56.dp else (64 * repeat.children.size).dp).background(colors.accent, RoundedCornerShape(2.dp)))
         Column(modifier = Modifier.weight(1f).padding(start = spacing.s2), verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
                 Text(
@@ -338,12 +387,18 @@ private fun RepeatBlock(
                 Box {
                     RcIconButton(RcIcons.MoreVert, stringResource(R.string.editor_item_menu), onClick = { menu = true })
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = colors.surfaceRaised) {
-                        DropdownMenuItem(text = { Text(stringResource(R.string.editor_repeat_bound)) }, onClick = { menu = false; onEditBound() })
-                        DropdownMenuItem(text = { Text(stringResource(R.string.editor_delete)) }, onClick = { menu = false; onDelete() })
+                        DropdownMenuItem(text = { MenuLabel(stringResource(R.string.move_up), canUp) }, enabled = canUp, onClick = { menu = false; onUp() })
+                        DropdownMenuItem(text = { MenuLabel(stringResource(R.string.move_down), canDown) }, enabled = canDown, onClick = { menu = false; onDown() })
+                        DropdownMenuItem(text = { MenuLabel(stringResource(R.string.editor_duplicate), true) }, onClick = { menu = false; onDuplicate() })
+                        DropdownMenuItem(text = { MenuLabel(stringResource(R.string.editor_repeat_bound), true) }, onClick = { menu = false; onEditBound() })
+                        DropdownMenuItem(text = { MenuLabel(stringResource(R.string.editor_delete), true) }, onClick = { menu = false; onDelete() })
                     }
                 }
             }
             repeat.children.forEachIndexed { childIndex, child ->
+                var childMenu by remember { mutableStateOf(false) }
+                val canChildUp = childIndex > 0
+                val canChildDown = childIndex < repeat.children.lastIndex
                 Row(modifier = Modifier.fillMaxWidth().clickable { onEditChild(childIndex) }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
                     val childColor = segmentKindColor(child.kind)
                     Box(modifier = Modifier.size(28.dp).background(childColor.copy(alpha = 0.2f), CircleShape), contentAlignment = Alignment.Center) {
@@ -353,7 +408,15 @@ private fun RepeatBlock(
                         Text(child.label.ifBlank { kindWord(child.kind) }, style = type.titleS, color = colors.textPrimary, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         Text(describe(child), style = type.caption, color = colors.textSecondary)
                     }
-                    RcIconButton(RcIcons.Delete, stringResource(R.string.editor_delete), onClick = { onDeleteChild(childIndex) }, tint = colors.fail, iconSize = 20)
+                    Box {
+                        RcIconButton(RcIcons.MoreVert, stringResource(R.string.editor_item_menu), onClick = { childMenu = true })
+                        DropdownMenu(expanded = childMenu, onDismissRequest = { childMenu = false }, containerColor = colors.surfaceRaised) {
+                            DropdownMenuItem(text = { MenuLabel(stringResource(R.string.move_up), canChildUp) }, enabled = canChildUp, onClick = { childMenu = false; onMoveChild(childIndex, childIndex - 1) })
+                            DropdownMenuItem(text = { MenuLabel(stringResource(R.string.move_down), canChildDown) }, enabled = canChildDown, onClick = { childMenu = false; onMoveChild(childIndex, childIndex + 1) })
+                            DropdownMenuItem(text = { MenuLabel(stringResource(R.string.editor_duplicate), true) }, onClick = { childMenu = false; onDuplicateChild(childIndex) })
+                            DropdownMenuItem(text = { MenuLabel(stringResource(R.string.editor_delete), true) }, onClick = { childMenu = false; onDeleteChild(childIndex) })
+                        }
+                    }
                 }
             }
             RcButton(stringResource(R.string.editor_add_child), onClick = onAddChild, variant = RcButtonVariant.Tertiary, icon = RcIcons.Add)
