@@ -25,6 +25,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -44,6 +48,7 @@ import com.daniel.runcoach.ui.components.RcButton
 import com.daniel.runcoach.ui.components.RcButtonVariant
 import com.daniel.runcoach.ui.components.RcCard
 import com.daniel.runcoach.ui.components.RcDivider
+import com.daniel.runcoach.ui.components.RcScreenTitle
 import com.daniel.runcoach.ui.components.SectionHeader
 import com.daniel.runcoach.ui.components.SegmentedControl
 import com.daniel.runcoach.ui.components.TopBar
@@ -64,7 +69,7 @@ fun StatsScreen(onOpenRecord: (String) -> Unit, onOpenSession: (String) -> Unit,
     val spacing = LocalRcSpacing.current
     androidx.compose.material3.Scaffold(bottomBar = { MainBottomBar(MainTab.STATS, onSelectTab) }) { padding ->
         Column(modifier = Modifier.fillMaxSize().background(colors.bg).padding(padding)) {
-            TopBar(title = stringResource(R.string.s09_title), tabPage = true)
+            RcScreenTitle(stringResource(R.string.s09_title), modifier = Modifier.padding(horizontal = spacing.screenH, vertical = spacing.s2))
             SegmentedControl(
                 options = listOf(0 to stringResource(R.string.sub_weekly), 1 to stringResource(R.string.sub_records)),
                 selected = tab,
@@ -131,28 +136,50 @@ private fun RecordCard(key: BestEffortKey, row: RecordRow?, onClick: () -> Unit)
             modifier = Modifier
                 .fillMaxWidth()
                 .height(104.dp)
-                .border(1.dp, colors.outlineStrong, RoundedCornerShape(shapes.radiusL))
-                .padding(spacing.cardPad),
+                .dashedBorder(colors.outlineStrong, shapes.radiusL)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(keyLabel(key), style = type.titleS, color = colors.textTertiary, modifier = Modifier.weight(1f))
-            Text(stringResource(R.string.s10_none), style = type.body, color = colors.textTertiary)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(keyLabel(key).uppercase(), style = type.label, color = colors.textSecondary)
+                Text(stringResource(R.string.s10_none), style = type.bodySmall, color = colors.textTertiary, modifier = Modifier.padding(top = 6.dp))
+            }
+            Text("--:--", style = type.numberXL, color = colors.textTertiary)
         }
     } else {
-        RcCard(interactive = true, onClick = onClick) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(keyLabel(key), style = type.titleS, color = colors.textPrimary)
-                    Text("${formatDate(row.startedAtEpochMs)} · ${row.sessionName}", style = type.bodySmall, color = colors.textSecondary)
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(Formatters.duration(row.durationMs), style = type.numberXL, color = colors.textPrimary)
-                    Text(stringResource(R.string.s10_pace, Formatters.pace(paceOf(row))), style = type.bodySmall, color = colors.textSecondary)
-                }
-                Icon(painterResource(RcIcons.EmojiEvents), contentDescription = null, tint = colors.accentText, modifier = Modifier.padding(start = spacing.s2).size(24.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(104.dp)
+                .background(colors.surface, RoundedCornerShape(shapes.radiusL))
+                .border(1.dp, colors.outline, RoundedCornerShape(shapes.radiusL))
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(keyLabel(key).uppercase(), style = type.label, color = colors.textSecondary)
+                Text("${formatDate(row.startedAtEpochMs)} · ${row.sessionName}", style = type.bodySmall, color = colors.textSecondary, modifier = Modifier.padding(top = 6.dp))
+                Text(stringResource(R.string.s10_pace, Formatters.pace(paceOf(row))), style = type.bodySmall, color = colors.textSecondary)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+                Text(Formatters.duration(row.durationMs), style = type.numberXL, color = colors.textPrimary)
+                Icon(painterResource(RcIcons.EmojiEvents), contentDescription = null, tint = colors.accentText, modifier = Modifier.size(24.dp))
             }
         }
     }
+}
+
+/** Rounded dashed border (Compose's border() cannot dash). */
+private fun Modifier.dashedBorder(color: Color, radius: androidx.compose.ui.unit.Dp) = drawBehind {
+    drawRoundRect(
+        color = color,
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius.toPx()),
+        style = Stroke(
+            width = 1.5.dp.toPx(),
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f)),
+        ),
+    )
 }
 
 /** S11 Record detail (DESIGN.md section 8). */
@@ -186,9 +213,15 @@ fun RecordDetailScreen(keyName: String, onOpenSession: (String) -> Unit, onBack:
                 Text(stringResource(R.string.s10_none), style = type.body, color = colors.textSecondary)
             } else {
                 Text(Formatters.duration(hero.durationMs), style = type.displayL, color = colors.textPrimary)
-                Text(stringResource(R.string.s10_pace, Formatters.pace(paceOf(hero))), style = type.body, color = colors.textSecondary)
-                Text("${formatDate(hero.startedAtEpochMs)} · ${hero.sessionName}", style = type.bodySmall, color = colors.textSecondary, modifier = Modifier.clickable { onOpenSession(hero.sessionId) })
-                Text(stringResource(R.string.s11_from, "%.1f".format(hero.startOffsetM / 1000.0)), style = type.caption, color = colors.textTertiary)
+                Text(stringResource(R.string.s10_pace, Formatters.pace(paceOf(hero))) + " · " + stringResource(R.string.s11_from, "%.1f".format(hero.startOffsetM / 1000.0)), style = type.body, color = colors.textSecondary)
+                Row(
+                    modifier = Modifier.clickable { onOpenSession(hero.sessionId) },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text("${formatDate(hero.startedAtEpochMs)} · ${hero.sessionName}", style = type.titleS, color = colors.accentText)
+                    Icon(painterResource(RcIcons.ChevronRight), contentDescription = null, tint = colors.accentText, modifier = Modifier.size(18.dp))
+                }
             }
 
             SegmentedControl(

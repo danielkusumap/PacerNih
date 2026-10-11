@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -155,8 +156,8 @@ private fun NumberCard(label: String, value: String, modifier: Modifier = Modifi
     val colors = LocalRcColors.current
     val spacing = LocalRcSpacing.current
     val type = LocalRcTypography.current
-    RcCard(modifier = modifier) {
-        MetricBlock(label, value, valueStyle = type.numberL)
+    RcCard(modifier = modifier.heightIn(min = 84.dp)) {
+        MetricBlock(label, value, valueStyle = type.numberM)
         delta?.let {
             Text(stringResource(R.string.s09_vs_last, Formatters.distanceKm(it)), style = type.caption, color = colors.textTertiary, modifier = Modifier.padding(top = spacing.s1))
         }
@@ -168,15 +169,23 @@ private fun SessionLine(session: SessionEntity, onClick: () -> Unit) {
     val colors = LocalRcColors.current
     val type = LocalRcTypography.current
     val targetCount = session.segPass + session.segFail + session.segBorderline
-    Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(session.name, style = type.titleS, color = colors.textPrimary)
-            Text("${Formatters.distanceKm(session.totalDistanceM)} · ${Formatters.duration(session.movingMs)}", style = type.bodySmall, color = colors.textSecondary)
+    RcCard(interactive = true, onClick = onClick) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(session.name, style = type.titleS, color = colors.textPrimary, maxLines = 1)
+                Text("${Formatters.duration(session.movingMs)} · ${Formatters.pace(session.avgPaceSecPerKm)} /km", style = type.bodySmall, color = colors.textSecondary)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ResultChip(
+                    status = if (targetCount == 0) RcStatus.Neutral else if (session.segFail == 0) RcStatus.Pass else RcStatus.Warn,
+                    label = if (targetCount == 0) stringResource(R.string.s07_chip_no_target) else stringResource(R.string.s07_chip_pass, session.segPass, targetCount),
+                )
+                Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(Formatters.distanceKm(session.totalDistanceM).removeSuffix(" km"), style = type.numberL, color = colors.textPrimary)
+                    Text("km", style = type.bodySmall, color = colors.textSecondary)
+                }
+            }
         }
-        ResultChip(
-            status = if (targetCount == 0) RcStatus.Neutral else if (session.segFail == 0) RcStatus.Pass else RcStatus.Warn,
-            label = if (targetCount == 0) stringResource(R.string.s07_chip_no_target) else stringResource(R.string.s07_chip_pass, session.segPass, targetCount),
-        )
     }
 }
 
