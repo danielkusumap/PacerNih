@@ -48,4 +48,26 @@ class SessionResultsCalculatorTest {
         val k1 = results.bestEfforts.firstOrNull { it.key == BestEffortKey.K1 }
         assertEquals(333_333.0, k1!!.durationMs.toDouble(), 5.0)
     }
+
+    @Test
+    fun skippedSegmentIsStoredAsSkippedAndKeepsLaterAlignment() {
+        val workout = Workout(
+            "w", "w",
+            listOf(
+                Segment("Run", SegmentKind.RUN, Limit.Distance(1000), targetPaceSecPerKm = null),
+                Segment("Run", SegmentKind.RUN, Limit.Distance(1000), targetPaceSecPerKm = null),
+            ),
+        )
+        // The first segment is skipped after 300 m / 100 s; the curve still runs to 1500 m.
+        val skipped = mapOf(1 to SkippedSegment(distanceM = 300.0, durationMs = 100_000L))
+        val results = SessionResultsCalculator.compute(workout, constantTrack(1500), skipped)
+        assertEquals(2, results.segments.size)
+        val first = results.segments[0]
+        assertEquals("SKIPPED", first.status)
+        assertEquals(300.0, first.distanceM, 0.5)
+        assertEquals(100_000L, first.durationMs)
+        // The second segment starts where the skip happened, so it keeps the real curve (300 m -> 1300 m).
+        val second = results.segments[1]
+        assertEquals(1000.0, second.distanceM, 1.0)
+    }
 }

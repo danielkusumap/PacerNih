@@ -29,13 +29,23 @@ data class SessionResultsData(
     val bestEfforts: List<BestEffort>,
 )
 
+/** A segment the runner skipped: how much distance/time had accrued before it was skipped (moving clock). */
+data class SkippedSegment(val distanceM: Double, val durationMs: Long)
+
 /**
  * Turns a finished session's distance/time curve into stored results (plan 6.8, 6.9, 6.10). Pure. Segment
  * boundaries are found by interpolating the cumulative curve; time-based segments use the time limit.
+ *
+ * [skipped] maps a 1-based segment index to the amount accrued before the user skipped it, so skipped segments
+ * are stored as DILEWATI and later segments keep the right curve alignment.
  */
 object SessionResultsCalculator {
 
-    fun compute(workout: Workout, points: List<DistTimePoint>): SessionResultsData {
+    fun compute(
+        workout: Workout,
+        points: List<DistTimePoint>,
+        skipped: Map<Int, SkippedSegment> = emptyMap(),
+    ): SessionResultsData {
         if (points.size < 2) return SessionResultsData(emptyList(), emptyList(), emptyList())
         val steps = runCatching { WorkoutExpander.expandFinite(workout.items) }
             .getOrElse { WorkoutExpander.lazySteps(workout.items).take(500).toList() }
@@ -54,6 +64,31 @@ object SessionResultsCalculator {
             var distanceM = 0.0
             var durationMs = 0L
             val kmTimes = mutableListOf<Double>()
+
+            val skip = skipped[index + 1]
+            if (skip != null) {
+                distanceM = skip.distanceM
+                durationMs = skip.durationMs
+                endDist = startDist + skip.distanceM
+                endTime = startTime + skip.durationMs
+                segments += SegmentResultData(
+                    idx = index + 1,
+                    label = segment.label,
+                    kind = segment.kind.name,
+                    limitType = limitTypeOf(limit),
+                    limitValue = limitValueOf(limit),
+                    targetPace = segment.targetPaceSecPerKm,
+                    distanceM = distanceM,
+                    durationMs = durationMs,
+                    avgPace = null,
+                    deltaSec = null,
+                    status = SegmentStatus.SKIPPED.name,
+                    targetBound = segment.targetBound,
+                )
+                startDist = endDist
+                startTime = endTime
+                return@forEachIndexed
+            }
 
             when (limit) {
                 is Limit.Distance -> {
@@ -103,16 +138,8 @@ object SessionResultsCalculator {
                 idx = index + 1,
                 label = segment.label,
                 kind = segment.kind.name,
-                limitType = when (limit) {
-                    is Limit.Distance -> "distance"
-                    is Limit.Duration -> "duration"
-                    Limit.Open -> "open"
-                },
-                limitValue = when (limit) {
-                    is Limit.Distance -> limit.meters.toDouble()
-                    is Limit.Duration -> limit.seconds.toDouble()
-                    Limit.Open -> 0.0
-                },
+                limitType = limitTypeOf(limit),
+                limitValue = limitValueOf(limit),
                 targetPace = segment.targetPaceSecPerKm,
                 distanceM = distanceM,
                 durationMs = durationMs,
@@ -131,6 +158,18 @@ object SessionResultsCalculator {
             kmSplits = KmSplitCalculator.compute(points, ranges).splits,
             bestEfforts = BestEffortCalculator.compute(points),
         )
+    }
+
+    private fun limitTypeOf(limit: Limit): String = when (limit) {
+        is Limit.Distance -> "distance"
+        is Limit.Duration -> "duration"
+        Limit.Open -> "open"
+    }
+
+    private fun limitValueOf(limit: Limit): Double = when (limit) {
+        is Limit.Distance -> limit.meters.toDouble()
+        is Limit.Duration -> limit.seconds.toDouble()
+        Limit.Open -> 0.0
     }
 
     private fun timeAtDistance(points: List<DistTimePoint>, distanceM: Double): Long {

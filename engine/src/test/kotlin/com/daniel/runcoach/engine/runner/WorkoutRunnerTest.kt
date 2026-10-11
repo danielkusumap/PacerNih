@@ -223,6 +223,21 @@ class WorkoutRunnerTest {
     }
 
     @Test
+    fun `skipped segment records accrued distance and time`() {
+        val workout = Workout("s", "s", listOf(distanceSegment("A", 1000), distanceSegment("B", 500)))
+        val runner = WorkoutRunner(workout, EngineConfig(startCountdownSec = 0))
+        val sim = Sim(runner)
+        runner.onStart(0)
+        sim.run(10, 3.0)
+        runner.onSkipSegment(sim.tMs)
+
+        val skipped = runner.skippedSegments()
+        assertTrue(skipped.containsKey(1))
+        assertTrue(skipped.getValue(1).distanceM > 0.0)
+        assertTrue(skipped.getValue(1).durationMs > 0L)
+    }
+
+    @Test
     fun `gps loss is announced after the timeout and recovery after a new sample`() {
         val runner = WorkoutRunner(Samples.stable5k(), EngineConfig(startCountdownSec = 0))
         val sim = Sim(runner)

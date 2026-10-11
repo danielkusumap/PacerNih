@@ -12,6 +12,7 @@ import com.daniel.runcoach.engine.model.Segment
 import com.daniel.runcoach.engine.model.SegmentKind
 import com.daniel.runcoach.engine.model.Workout
 import com.daniel.runcoach.engine.model.WorkoutExpander
+import com.daniel.runcoach.engine.result.SkippedSegment
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,6 +58,9 @@ class WorkoutRunner(
     private var segmentStartMtMs = 0L
     private var extendedLimitM = 0.0
     private var extendedLimitMs = 0L
+
+    /** Segments skipped by the user, keyed by 1-based step index, with the distance/time accrued before the skip. */
+    private val skippedSteps = LinkedHashMap<Int, SkippedSegment>()
 
     private var tStartRunningMs: Long? = null
     private var pauseStartedMs: Long? = null
@@ -166,10 +170,17 @@ class WorkoutRunner(
     fun onSkipSegment(nowMs: Long) {
         if (phase != RunnerPhase.RUNNING && phase != RunnerPhase.PAUSED_MANUAL) return
         val segment = current ?: return
+        skippedSteps[stepIndex] = SkippedSegment(
+            distanceM = (tracker.totalDistanceM - segmentStartTotalM).coerceAtLeast(0.0),
+            durationMs = (movingMsAt(nowMs) - segmentStartMtMs).coerceAtLeast(0L),
+        )
         emit(AlertEvent.SegmentEnd(stepIndex, segment))
         advanceSegment(tracker.totalDistanceM, movingMsAt(nowMs))
         updateState(nowMs)
     }
+
+    /** Segments the user skipped this run (1-based step index -> accrued distance/time). */
+    fun skippedSegments(): Map<Int, SkippedSegment> = skippedSteps.toMap()
 
     /** Extends the current segment by metres and/or seconds (plan D07 / F27). */
     fun onExtendSegment(deltaMeters: Double = 0.0, deltaSeconds: Int = 0) {

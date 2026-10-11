@@ -34,6 +34,7 @@ import com.daniel.runcoach.engine.gps.SampleFilter
 import com.daniel.runcoach.engine.naming.DefaultSessionNamer
 import com.daniel.runcoach.engine.result.DistTimePoint
 import com.daniel.runcoach.engine.result.SessionResultsCalculator
+import com.daniel.runcoach.engine.result.SkippedSegment
 import com.daniel.runcoach.engine.result.SessionResultsData
 import com.daniel.runcoach.engine.voice.VoiceLanguage
 import com.daniel.runcoach.engine.model.Limit
@@ -369,6 +370,7 @@ class RunForegroundService : Service() {
         if (stopping) return
         stopping = true
         val stateAtStop = runner?.state?.value
+        val skippedAtStop = runner?.skippedSegments() ?: emptyMap()
         runner?.onStop(SystemClock.elapsedRealtime())
         RunStateHolder.reset()
         alertEngine = null
@@ -381,7 +383,7 @@ class RunForegroundService : Service() {
             runCatching {
                 persistence?.appendTrackPoints(trackBuffer.toList())
                 trackBuffer.clear()
-                finalizeSession(finishedSession, activeWorkout, stateAtStop)
+                finalizeSession(finishedSession, activeWorkout, stateAtStop, skippedAtStop)
             }
             withContext(Dispatchers.Main) {
                 announcer?.shutdown()
@@ -398,10 +400,15 @@ class RunForegroundService : Service() {
      * S06 decides. Track points stay in the DB; only the active snapshot is dropped so Beranda no longer offers
      * resume.
      */
-    private suspend fun finalizeSession(id: String, activeWorkout: Workout?, state: RunnerState?) {
+    private suspend fun finalizeSession(
+        id: String,
+        activeWorkout: Workout?,
+        state: RunnerState?,
+        skipped: Map<Int, SkippedSegment>,
+    ) {
         val store = persistence ?: return
         val points = buildCurve(id)
-        val results = activeWorkout?.let { SessionResultsCalculator.compute(it, points) }
+        val results = activeWorkout?.let { SessionResultsCalculator.compute(it, points, skipped) }
             ?: SessionResultsData(emptyList(), emptyList(), emptyList())
         val distanceM = state?.totalDistanceM ?: points.lastOrNull()?.cumulativeDistanceM ?: 0.0
         val movingMs = state?.movingMs ?: points.lastOrNull()?.elapsedMs ?: 0L
