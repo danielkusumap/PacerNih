@@ -80,7 +80,7 @@ import kotlinx.coroutines.launch
 
 /** S08 Session detail (DESIGN.md section 8): header, tabs, per-segment cards, splits table, charts, map. */
 @Composable
-fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
+fun DetailSessionScreen(sessionId: String, onBack: () -> Unit, onOpenShare: (String) -> Unit = {}) {
     val context = LocalContext.current
     val repository = remember { SessionRepository(context) }
     val settingsRepository = remember { SettingsRepository(context) }
@@ -147,6 +147,7 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = colors.surfaceRaised) {
                         DropdownMenuItem(text = { Text(stringResource(R.string.s08_edit)) }, onClick = { menu = false; showEdit = true })
                         DropdownMenuItem(text = { Text(stringResource(R.string.copy_text)) }, onClick = { menu = false; copyStructure() })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.share)) }, onClick = { menu = false; onOpenShare(sessionId) })
                         DropdownMenuItem(text = { Text(stringResource(R.string.s08_export_gpx)) }, onClick = {
                             menu = false
                             val current = session

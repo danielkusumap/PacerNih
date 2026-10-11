@@ -44,6 +44,7 @@ object Routes {
     const val DATA = "data"
     const val RECORD = "record/{key}"
     const val DETAIL = "detail/{sessionId}"
+    const val SHARE = "share/{sessionId}"
     const val PRESTART = "prestart"
     const val RUN = "run"
     const val FINISHED = "finished"
@@ -170,6 +171,16 @@ fun AppNavHost(startDestination: String = Routes.ONBOARDING) {
             arguments = listOf(navArgument("sessionId") { type = NavType.StringType }),
         ) { entry ->
             DetailSessionScreen(
+                sessionId = entry.arguments?.getString("sessionId").orEmpty(),
+                onOpenShare = { sessionId -> navController.navigate("share/$sessionId") },
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(
+            route = Routes.SHARE,
+            arguments = listOf(navArgument("sessionId") { type = NavType.StringType }),
+        ) { entry ->
+            com.daniel.runcoach.ui.share.ShareScreen(
                 sessionId = entry.arguments?.getString("sessionId").orEmpty(),
                 onBack = { navController.popBackStack() },
             )

@@ -641,3 +641,11 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - Fix akar masalah: A07 (SegmentEnd) + A08/A09/A10 (TooSlow/TooFast/BackToStable) kini diucapkan; A07 di-join dengan
   A03. `AlertEvent.SegmentEnd` membawa avg pace + status; tick service 250 ms.
 - Engine **218 hijau** (2 test baru), instrumented **33/33 hijau**. Sisa: SpeechSink + snapshot A01-A17 + golden.
+
+## F3/F4/F5 Bagikan/Simpan PNG (2026-10-11)
+- Halaman **Bagikan sesi** (S08 menu ?): pilih data (nama/jarak/waktu/pace/split/segmen lulus/rute), pilih template
+  (Ringkas 1080x1080, Split 1080x1350, Lengkap 1080x1920), warna teks Putih/Hitam, pratinjau transparan.
+- `ShareImageRenderer` (Canvas) menghasilkan PNG **ARGB_8888 transparan** (sudut alpha 0), teks ber-kontur, bar chart
+  (F5 hanya segmen **LULUS**), polyline rute (F6) — **tanpa** titik batas/marker (permintaan pemilik).
+- `ShareImageStore`: share via FileProvider `shared_images/`, simpan ke `Pictures/PacerNih/` via MediaStore.
+- Instrumented **35/35 hijau** (2 test baru: transparansi + ukuran template).
