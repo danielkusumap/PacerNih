@@ -554,6 +554,17 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - **D02** Preset & **D04** Lanjutkan: D04 sudah jadi kartu banner di S02; D02 tetap form parameter (data APP_GUIDE).
 - Verifikasi: `:app:testDebugUnitTest` hijau; `:app:connectedDebugAndroidTest` **33/33 hijau** di Realme.
 
+## Re-skin penutup deviasi (2026-10-11)
+- **S05**: header menambah tombol **kembali** (membuka dialog back yang sama).
+- **S02**: angka **Selisih** pada kartu minggu ini kini berwarna aksen.
+- **D01**: Batas jarak/durasi memakai **stepper** (langkah 100 m / 30 dtk); **Margin terlalu cepat** = switch aktif +
+  stepper (mati = `fastMarginSec = null`).
+- **D02**: Preset menjadi **4 kartu nama + chevron** (Stable run, Progressive tempo, Interval, Run/walk) yang
+  menghasilkan workout dengan parameter default (parameter form lama dihapus sesuai mock).
+- **D08**: "Jarak sebenarnya (km)" memakai **stepper** (langkah 0,1 km).
+- **D11**: isi Info Segmen dipecah per bagian (KEGUNAAN, KAPAN, CONTOH, PERILAKU, TIPS) dengan label aksen.
+- Verifikasi ulang: unit + **33/33 instrumented hijau** di Realme; release APK dibangun ulang; build mock terpasang.
+
 
 
 
