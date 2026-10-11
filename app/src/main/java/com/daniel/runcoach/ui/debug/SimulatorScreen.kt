@@ -5,10 +5,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,6 +40,7 @@ import com.daniel.runcoach.ui.components.RcCard
 import com.daniel.runcoach.ui.components.SegmentedControl
 import com.daniel.runcoach.ui.components.TopBar
 import com.daniel.runcoach.ui.theme.LocalRcColors
+import com.daniel.runcoach.ui.theme.LocalRcShapes
 import com.daniel.runcoach.ui.theme.LocalRcSpacing
 import com.daniel.runcoach.ui.theme.LocalRcTypography
 import kotlinx.coroutines.launch
@@ -60,21 +63,32 @@ fun SimulatorScreen(onBack: () -> Unit) {
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = spacing.screenH),
             verticalArrangement = Arrangement.spacedBy(spacing.cardGap),
         ) {
-            Text("Workout: ${intervalWorkout().name}", style = type.titleS, color = colors.textPrimary)
-            Text("Scenario", style = type.label, color = colors.textSecondary)
+            Text(stringResource(R.string.debug_workout).uppercase(), style = type.label, color = colors.textSecondary)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .background(colors.surfaceRaised, RoundedCornerShape(LocalRcShapes.current.radiusM))
+                    .border(1.5.dp, colors.outlineStrong, RoundedCornerShape(LocalRcShapes.current.radiusM))
+                    .padding(horizontal = 14.dp),
+                contentAlignment = androidx.compose.ui.Alignment.CenterStart,
+            ) {
+                Text(intervalWorkout().name, style = type.body, color = colors.textPrimary)
+            }
+            Text(stringResource(R.string.debug_scenario).uppercase(), style = type.label, color = colors.textSecondary)
             Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
                 SimScenario.entries.forEach { value ->
                     val active = value == scenario
-                    Text(
-                        value.name,
-                        style = type.titleS,
-                        color = if (active) colors.onAccent else colors.textSecondary,
+                    Box(
                         modifier = Modifier
-                            .background(if (active) colors.accent else colors.surfaceRaised, RoundedCornerShape(spacing.s5))
-                            .border(1.dp, colors.outlineStrong, RoundedCornerShape(spacing.s5))
+                            .height(34.dp)
+                            .background(if (active) colors.accent else colors.neutralContainer, RoundedCornerShape(8.dp))
                             .clickable { scenario = value }
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                    )
+                            .padding(horizontal = 12.dp),
+                        contentAlignment = androidx.compose.ui.Alignment.Center,
+                    ) {
+                        Text(value.name, style = type.chip, color = if (active) colors.onAccent else colors.textSecondary, maxLines = 1)
+                    }
                 }
             }
 
@@ -101,7 +115,7 @@ fun SimulatorScreen(onBack: () -> Unit) {
             )
 
             summary?.let { text ->
-                RcCard {
+                RcCard(modifier = Modifier.fillMaxWidth().height(200.dp)) {
                     Text(text.trimEnd(), style = type.caption, color = colors.textPrimary, fontFamily = FontFamily.Monospace)
                 }
             }

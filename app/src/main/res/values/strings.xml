@@ -305,6 +305,8 @@
     <string name="result_no_target">Tanpa target</string>
     <string name="s08_loading">Memuat sesi…</string>
     <string name="debug_title">Debug / Simulator</string>
+    <string name="debug_workout">Workout</string>
+    <string name="debug_scenario">Skenario</string>
     <string name="debug_speed">Kecepatan</string>
     <string name="debug_running">Menjalankan…</string>
     <string name="action_run">Jalankan</string>
