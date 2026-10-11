@@ -75,13 +75,10 @@ optional online part, and the route still draws without them).
 
 ## Screenshots
 
-| Home | Workout editor |
-|---|---|
-| ![Home](docs/screenshots/S02-latihan.png) | ![Workout editor](docs/screenshots/S03-editor.png) |
+| Home | Workout editor | History |
+|---|---|---|
+| ![Home](docs/screenshots/S02-latihan.png) | ![Workout editor](docs/screenshots/S03-editor.png) | ![History](docs/screenshots/S07-riwayat.png) |
 
-| History |
-|---|---|
-| ![History](docs/screenshots/S07-riwayat.png) |
 
 | Session detail | Records |
 |---|---|
