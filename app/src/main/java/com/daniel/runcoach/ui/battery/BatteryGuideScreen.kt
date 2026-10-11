@@ -10,14 +10,18 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -69,11 +74,20 @@ fun BatteryGuideScreen(onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(spacing.cardGap),
         ) {
             Text(stringResource(R.string.battery_intro), style = type.body, color = colors.textSecondary)
-            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-                ResultChip(
-                    status = if (exempt) RcStatus.Pass else RcStatus.Warn,
-                    label = if (exempt) stringResource(R.string.battery_exempt_yes) else stringResource(R.string.battery_exempt_no),
-                )
+            RcCard {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+                    Icon(
+                        painterResource(if (exempt) com.daniel.runcoach.ui.theme.RcIcons.CheckCircle else com.daniel.runcoach.ui.theme.RcIcons.Warning),
+                        contentDescription = null,
+                        tint = if (exempt) colors.pass else colors.warn,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Text(
+                        if (exempt) stringResource(R.string.battery_exempt_yes) else stringResource(R.string.battery_exempt_no),
+                        style = type.bodySmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                        color = if (exempt) colors.pass else colors.warn,
+                    )
+                }
             }
 
             Row(
@@ -82,22 +96,22 @@ fun BatteryGuideScreen(onBack: () -> Unit) {
             ) {
                 brands.forEachIndexed { index, (label, _) ->
                     val active = index == brand
-                    Text(
-                        label,
-                        style = type.titleS,
-                        color = if (active) colors.onAccent else colors.textSecondary,
+                    Box(
                         modifier = Modifier
-                            .background(if (active) colors.accent else colors.surfaceRaised, RoundedCornerShape(spacing.s5))
-                            .border(1.dp, colors.outlineStrong, RoundedCornerShape(spacing.s5))
+                            .height(36.dp)
+                            .background(if (active) colors.accent else colors.neutralContainer, RoundedCornerShape(8.dp))
                             .clickable { brand = index }
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                    )
+                            .padding(horizontal = 16.dp),
+                        contentAlignment = androidx.compose.ui.Alignment.Center,
+                    ) {
+                        Text(label.uppercase(), style = type.chip, color = if (active) colors.onAccent else colors.textSecondary, maxLines = 1)
+                    }
                 }
             }
 
             RcCard {
-                Text(brands[brand].first, style = type.titleS, color = colors.textPrimary)
-                Text(brands[brand].second, style = type.body, color = colors.textSecondary, modifier = Modifier.padding(top = spacing.s2))
+                Text(brands[brand].first.uppercase(), style = type.label, color = colors.textSecondary)
+                Text(brands[brand].second, style = type.body, color = colors.textPrimary, modifier = Modifier.padding(top = spacing.s2))
             }
             androidx.compose.foundation.layout.Spacer(Modifier.padding(bottom = spacing.s4))
         }
