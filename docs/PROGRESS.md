@@ -636,3 +636,8 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
   (warna `menuDisabled`). Repeat bergerak utuh; anak hanya di dalam blok. Duplikat Repeat menyalin seluruh anak;
   Hapus Repeat pakai konfirmasi dialog.
 - Helper murni `moveItem`/`duplicateRepeat` + unit test `EditorReorderTest` (4 kasus). App unit + instrumented hijau.
+
+## B2 Voice alert (sebagian, 2026-10-11)
+- Fix akar masalah: A07 (SegmentEnd) + A08/A09/A10 (TooSlow/TooFast/BackToStable) kini diucapkan; A07 di-join dengan
+  A03. `AlertEvent.SegmentEnd` membawa avg pace + status; tick service 250 ms.
+- Engine **218 hijau** (2 test baru), instrumented **33/33 hijau**. Sisa: SpeechSink + snapshot A01-A17 + golden.

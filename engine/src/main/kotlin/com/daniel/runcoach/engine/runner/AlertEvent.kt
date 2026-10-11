@@ -13,7 +13,12 @@ sealed interface AlertEvent {
     data object WorkoutStarted : AlertEvent
     data class SegmentStart(val index: Int, val total: Int?, val segment: Segment) : AlertEvent
     data class PreSegmentWarning(val nextKind: SegmentKind) : AlertEvent
-    data class SegmentEnd(val index: Int, val segment: Segment) : AlertEvent
+    data class SegmentEnd(
+        val index: Int,
+        val segment: Segment,
+        val avgPaceSecPerKm: Double? = null,
+        val status: com.daniel.runcoach.engine.result.SegmentStatus? = null,
+    ) : AlertEvent
     data class KmMarker(val km: Int, val timeSec: Double, val paceSecPerKm: Double) : AlertEvent
     data object GoalDistanceReached : AlertEvent
     data object WorkoutPlanCompleted : AlertEvent

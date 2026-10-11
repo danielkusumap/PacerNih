@@ -418,3 +418,12 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
   1 km tercepat di mana pun dalam sesi (F19), bukan split sejajar. Jadi **bukan bug** (kategori "Cocok").
 - Diterapkan **I1-UI**: di S08 tab Split km, baris "1 km tercepat di sesi ini" (`6:20 · km 2,3-3,3`) dari `BestEffort` K1
   (`startOffsetM`), hanya bila ada K1. S11 sudah menampilkan "dari km y".
+
+## D-059 B2 voice alert: akar masalah & perbaikan
+- Akar masalah: `RunAnnouncer` tidak menangani `AlertEvent.SegmentEnd` (A07) dan `TooSlow/TooFast/BackToStable`
+  (A08-A10) -> jatuh ke `else -> Unit`, jadi tidak pernah diucapkan. Loop tick service juga 1000 ms (kasar untuk
+  countdown/pre-warning).
+- Perbaikan: `AlertEvent.SegmentEnd` membawa `avgPaceSecPerKm` + `status` (dihitung runner di `finishSegment`);
+  announcer mengucapkan A07 (di-join dengan A03 berikutnya jadi satu ucapan), A08/A09/A10 (dengan pace/target
+  terakhir untuk BackToStable), dan menandai skip tanpa A07. Tick service 250 ms.
+- Sisa (belum): `SpeechSink`/`RecordingSpeechSink`, snapshot test A01-A17 lengkap, golden urutan ucapan 60x.

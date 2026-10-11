@@ -50,7 +50,19 @@ class RunAnnouncer(
 
     fun isLanguageAvailable(): Boolean = tts.isLanguageAvailable(language)
 
+    private var pendingSegmentEnd: String? = null
+    private var lastPaceSecPerKm: Double? = null
+    private var lastTargetSecPerKm: Int? = null
+
+    private fun flushPending() {
+        val text = pendingSegmentEnd ?: return
+        pendingSegmentEnd = null
+        tts.speak(text, flush = false)
+    }
+
     fun onEvent(event: AlertEvent) {
+        // A07 (segment end) is held briefly so it can be joined with the next A03 into one utterance.
+        if (event !is AlertEvent.SegmentStart && event !is AlertEvent.SegmentEnd) flushPending()
         when (event) {
             is AlertEvent.Countdown -> {
                 vibrateCountdown()
@@ -67,13 +79,22 @@ class RunAnnouncer(
                 tts.speak(PhraseBuilder.workoutStarted(language), flush = true)
             }
 
+            is AlertEvent.SegmentEnd -> {
+                // A07: spoken only when there is a measured pace; skipped segments are silent.
+                val status = event.status
+                val avg = event.avgPaceSecPerKm
+                if (avg != null && status != com.daniel.runcoach.engine.result.SegmentStatus.SKIPPED) {
+                    pendingSegmentEnd = PhraseBuilder.segmentEnd(avg, status ?: com.daniel.runcoach.engine.result.SegmentStatus.NO_TARGET, language)
+                }
+            }
+
             is AlertEvent.SegmentStart -> {
                 vibrateSegmentChange()
                 beep.tick()
-                tts.speak(
-                    PhraseBuilder.segmentStart(event.index, event.total ?: event.index, event.segment, language),
-                    flush = false,
-                )
+                val a03 = PhraseBuilder.segmentStart(event.index, event.total ?: event.index, event.segment, language)
+                val combined = pendingSegmentEnd?.let { "$it $a03" } ?: a03
+                pendingSegmentEnd = null
+                tts.speak(combined, flush = false)
             }
 
             is AlertEvent.PreSegmentWarning -> {
@@ -93,13 +114,32 @@ class RunAnnouncer(
                 tts.speak(PhraseBuilder.kmMarker(event.km, event.timeSec, event.paceSecPerKm, language), flush = false)
             }
 
+            is AlertEvent.TooSlow -> {
+                lastPaceSecPerKm = event.paceLiveSecPerKm
+                lastTargetSecPerKm = event.targetSecPerKm
+                tts.speak(PhraseBuilder.tooSlow(event.paceLiveSecPerKm, event.targetSecPerKm, event.requiredSecPerKm, language), flush = false)
+            }
+
+            is AlertEvent.TooFast -> {
+                lastPaceSecPerKm = event.paceLiveSecPerKm
+                lastTargetSecPerKm = event.targetSecPerKm
+                tts.speak(PhraseBuilder.tooFast(event.paceLiveSecPerKm, event.targetSecPerKm, language), flush = false)
+            }
+
+            AlertEvent.BackToStable -> {
+                val pace = lastPaceSecPerKm
+                val target = lastTargetSecPerKm
+                if (pace != null && target != null) {
+                    tts.speak(PhraseBuilder.backToStable(pace, target, language), flush = false)
+                }
+            }
+
             AlertEvent.GoalDistanceReached -> tts.speak(PhraseBuilder.goalDistanceReached(language), flush = false)
             AlertEvent.WorkoutPlanCompleted -> tts.speak(PhraseBuilder.workoutPlanCompleted(language), flush = false)
             AlertEvent.AutoPaused -> tts.speak(PhraseBuilder.autoPaused(language), flush = false)
             AlertEvent.AutoResumed -> tts.speak(PhraseBuilder.autoResumed(language), flush = false)
             AlertEvent.GpsLost -> tts.speak(PhraseBuilder.gpsLost(language), flush = false)
             AlertEvent.GpsRecovered -> tts.speak(PhraseBuilder.gpsRecovered(language), flush = false)
-            else -> Unit
         }
     }
 

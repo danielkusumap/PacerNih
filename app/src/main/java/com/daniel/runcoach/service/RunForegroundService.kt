@@ -252,7 +252,7 @@ class RunForegroundService : Service() {
                     lastFlushMs = now
                     flush()
                 }
-                delay(1000L)
+                delay(250L)
             }
         }
     }

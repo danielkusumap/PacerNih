@@ -12,6 +12,7 @@ import com.daniel.runcoach.engine.model.Segment
 import com.daniel.runcoach.engine.model.SegmentKind
 import com.daniel.runcoach.engine.model.Workout
 import com.daniel.runcoach.engine.model.WorkoutExpander
+import com.daniel.runcoach.engine.result.SegmentEvaluator
 import com.daniel.runcoach.engine.result.SkippedSegment
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -174,7 +175,7 @@ class WorkoutRunner(
             distanceM = (tracker.totalDistanceM - segmentStartTotalM).coerceAtLeast(0.0),
             durationMs = (movingMsAt(nowMs) - segmentStartMtMs).coerceAtLeast(0L),
         )
-        emit(AlertEvent.SegmentEnd(stepIndex, segment))
+        emit(AlertEvent.SegmentEnd(stepIndex, segment, null, com.daniel.runcoach.engine.result.SegmentStatus.SKIPPED))
         advanceSegment(tracker.totalDistanceM, movingMsAt(nowMs))
         updateState(nowMs)
     }
@@ -227,8 +228,31 @@ class WorkoutRunner(
 
     private fun finishSegment(boundaryTotalM: Double, boundaryMtMs: Long) {
         val segment = current ?: return
-        emit(AlertEvent.SegmentEnd(stepIndex, segment))
+        emit(AlertEvent.SegmentEnd(stepIndex, segment, segmentAvgPace(boundaryTotalM, boundaryMtMs), segmentStatus(boundaryTotalM, boundaryMtMs)))
         advanceSegment(boundaryTotalM, boundaryMtMs)
+    }
+
+    /** Average pace of the segment that just finished (F9), for the A07 announcement. */
+    private fun segmentAvgPace(boundaryTotalM: Double, boundaryMtMs: Long): Double? {
+        val dist = boundaryTotalM - segmentStartTotalM
+        if (dist < 50.0) return null
+        val sec = (boundaryMtMs - segmentStartMtMs) / 1000.0
+        return sec / (dist / 1000.0)
+    }
+
+    /** Grade of the segment that just finished (F17), for the A07 announcement. */
+    private fun segmentStatus(boundaryTotalM: Double, boundaryMtMs: Long): com.daniel.runcoach.engine.result.SegmentStatus? {
+        val segment = current ?: return null
+        val dist = boundaryTotalM - segmentStartTotalM
+        val sec = (boundaryMtMs - segmentStartMtMs) / 1000.0
+        return SegmentEvaluator.evaluate(
+            targetSecPerKm = segment.targetPaceSecPerKm,
+            perKmCheck = segment.perKmCheck,
+            distanceM = dist,
+            movingSec = sec,
+            bound = segment.targetBound,
+            config = config,
+        ).status
     }
 
     private fun handleCountdownTick(nowMs: Long) {

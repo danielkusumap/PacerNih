@@ -210,6 +210,30 @@ class WorkoutRunnerTest {
     }
 
     @Test
+    fun `segment end carries average pace for the announcement`() {
+        val workout = Workout("s", "s", listOf(distanceSegment("A", 60), distanceSegment("B", 60)))
+        val runner = WorkoutRunner(workout, EngineConfig(startCountdownSec = 0))
+        val sim = Sim(runner)
+        runner.onStart(0)
+        sim.run(30, 3.0)
+        val end = runner.lastOf<AlertEvent.SegmentEnd>()
+        assertTrue(end != null)
+        assertTrue((end!!.avgPaceSecPerKm ?: 0.0) > 0.0, "avg pace present")
+    }
+
+    @Test
+    fun `skipped segment end is marked SKIPPED`() {
+        val workout = Workout("s", "s", listOf(distanceSegment("A", 1000), distanceSegment("B", 500)))
+        val runner = WorkoutRunner(workout, EngineConfig(startCountdownSec = 0))
+        val sim = Sim(runner)
+        runner.onStart(0)
+        sim.run(10, 3.0)
+        runner.onSkipSegment(sim.tMs)
+        val end = runner.lastOf<AlertEvent.SegmentEnd>()
+        assertEquals(com.daniel.runcoach.engine.result.SegmentStatus.SKIPPED, end?.status)
+    }
+
+    @Test
     fun `skip moves to the next segment`() {
         val workout = Workout("s", "s", listOf(distanceSegment("A", 1000), distanceSegment("B", 500)))
         val runner = WorkoutRunner(workout, EngineConfig(startCountdownSec = 0))
