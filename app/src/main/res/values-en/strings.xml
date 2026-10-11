@@ -207,6 +207,7 @@
     <string name="s12_dev">Developer</string>
     <string name="s12_off">Off</string>
     <string name="s12_calibration_value">Distance calibration (factor): %1$s</string>
+    <string name="s12_calibration">Calibration factor</string>
     <string name="s12_calibration_reset">Reset to 1.0</string>
 
     <!-- S13 Backup & data -->

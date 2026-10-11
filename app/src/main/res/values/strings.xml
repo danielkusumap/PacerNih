@@ -206,6 +206,7 @@
     <string name="s12_dev">Pengembang</string>
     <string name="s12_off">Mati</string>
     <string name="s12_calibration_value">Kalibrasi jarak (faktor): %1$s</string>
+    <string name="s12_calibration">Faktor kalibrasi</string>
     <string name="s12_calibration_reset">Reset ke 1,0</string>
 
     <!-- S13 Cadangan & Data -->

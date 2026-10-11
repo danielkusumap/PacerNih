@@ -75,7 +75,7 @@ fun <T> SegmentedControl(
     }
 }
 
-/** RcSwitchRow: ListRow with a custom switch, no Material pill (DESIGN.md section 6). */
+/** RcSwitchRow: setting row with a custom switch, no Material pill (DESIGN-RESKIN section 2). */
 @Composable
 fun RcSwitchRow(
     label: String,
@@ -84,24 +84,27 @@ fun RcSwitchRow(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     enabled: Boolean = true,
+    showDivider: Boolean = false,
 ) {
     val colors = LocalRcColors.current
     val type = LocalRcTypography.current
-    val spacing = LocalRcSpacing.current
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .alpha(if (enabled) 1f else 0.38f)
-            .clickable(enabled = enabled) { onCheckedChange(!checked) }
-            .padding(vertical = spacing.s2),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(label, style = type.titleS, color = colors.textPrimary)
-            if (subtitle != null) Text(subtitle, style = type.bodySmall, color = colors.textSecondary)
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 52.dp)
+                .alpha(if (enabled) 1f else 0.38f)
+                .clickable(enabled = enabled) { onCheckedChange(!checked) },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(label, style = type.body, color = colors.textPrimary)
+                if (subtitle != null) Text(subtitle, style = type.bodySmall, color = colors.textSecondary)
+            }
+            Switch(checked = checked)
         }
-        Switch(checked = checked)
+        if (showDivider) Box(Modifier.fillMaxWidth().height(1.dp).background(colors.outline))
     }
 }
 
