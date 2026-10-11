@@ -129,21 +129,21 @@ fun FinishedScreen(onDone: () -> Unit) {
             modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = spacing.screenH),
             verticalArrangement = Arrangement.spacedBy(spacing.cardGap),
         ) {
-            Row(modifier = Modifier.padding(top = spacing.s4), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-                Box(modifier = Modifier.size(48.dp).background(colors.accentContainer, CircleShape), contentAlignment = Alignment.Center) {
-                    Icon(painterResource(RcIcons.Check), contentDescription = null, tint = colors.accentText, modifier = Modifier.size(24.dp))
-                }
-                Text(stringResource(R.string.s06_saved_pending), style = type.bodySmall, color = colors.textSecondary)
-            }
+            Text(
+                stringResource(R.string.s06_saved_pending).uppercase(),
+                style = type.label,
+                color = colors.textSecondary,
+                modifier = Modifier.padding(top = spacing.s4),
+            )
 
             if (current == null) {
                 Text(stringResource(R.string.s06_loading), color = colors.textSecondary)
                 return@Column
             }
 
-            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(Formatters.distanceKm(current.totalDistanceM).removeSuffix(" km"), style = type.displayL, color = colors.textPrimary)
-                Text("km", style = type.titleS, color = colors.textSecondary)
+                Text("km", style = type.numberS, color = colors.textSecondary)
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.s5)) {
                 MetricBlock(stringResource(R.string.s06_metric_time), Formatters.duration(current.movingMs))
@@ -151,6 +151,7 @@ fun FinishedScreen(onDone: () -> Unit) {
                 MetricBlock(
                     stringResource(R.string.s06_metric_pass),
                     "${current.segPass}/${current.segPass + current.segFail + current.segBorderline}",
+                    valueColor = colors.accentText,
                 )
             }
             ResultStrip(statuses = buildList {
@@ -171,7 +172,6 @@ fun FinishedScreen(onDone: () -> Unit) {
                 )
             }
 
-            SectionHeader(stringResource(R.string.s06_optional_notes))
             RcTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -179,7 +179,7 @@ fun FinishedScreen(onDone: () -> Unit) {
                 placeholder = current.name,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Text(stringResource(R.string.s06_effort), style = type.bodySmall, color = colors.textSecondary)
+            Text(stringResource(R.string.s06_effort).uppercase(), style = type.label, color = colors.textSecondary)
             EffortRow(rpe) { rpe = it }
             RcTextField(
                 value = note,
@@ -205,6 +205,7 @@ fun FinishedScreen(onDone: () -> Unit) {
                 text = stringResource(R.string.s06_discard),
                 onClick = { showDiscard = true },
                 variant = RcButtonVariant.Destructive,
+                size = com.daniel.runcoach.ui.components.RcButtonSize.Small,
                 fillWidth = true,
             )
         }
@@ -232,11 +233,11 @@ private fun EffortRow(selected: Int?, onSelect: (Int?) -> Unit) {
                 modifier = Modifier
                     .size(28.dp)
                     .background(if (active) colors.accent else Color.Transparent, CircleShape)
-                    .border(1.dp, if (active) colors.accent else colors.outlineStrong, CircleShape)
+                    .border(1.5.dp, if (active) colors.accent else colors.outlineStrong, CircleShape)
                     .clickable { onSelect(if (active) null else value) },
                 contentAlignment = Alignment.Center,
             ) {
-                Text(value.toString(), style = type.caption, color = if (active) colors.onAccent else colors.textSecondary)
+                Text(value.toString(), style = type.bodySmall, color = if (active) colors.onAccent else colors.textSecondary)
             }
         }
     }
