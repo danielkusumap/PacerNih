@@ -27,7 +27,7 @@ every segment (PASS / BORDERLINE / FAIL), and keeps history, personal records an
 
 ## What it is
 
-PacerNih is a personal Android app (think *Strava × Runna*, but offline) for running and walking with
+PacerNih is a personal Android app for running and walking with
 **structured workouts**. You build a workout as an ordered list of segments, each with a **limit**
 (distance or duration) and an optional **target pace**, then press Start. The app counts you down, drives
 the workout automatically, tracks GPS, computes pace, speaks corrections ("too slow", "too fast", "steady"),
