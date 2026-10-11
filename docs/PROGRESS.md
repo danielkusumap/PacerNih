@@ -565,6 +565,16 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - **D11**: isi Info Segmen dipecah per bagian (KEGUNAAN, KAPAN, CONTOH, PERILAKU, TIPS) dengan label aksen.
 - Verifikasi ulang: unit + **33/33 instrumented hijau** di Realme; release APK dibangun ulang; build mock terpasang.
 
+## S03/D01 perbaikan UX (2026-10-11, masukan pengguna)
+- **Limit (jarak & durasi) = input manual** (field angka / `m:ss`), bukan stepper (pengguna ingin nilai spesifik).
+- **Sheet D01 bisa di-scroll** (konten `RcSheet` memakai `verticalScroll`), jadi tombol **Simpan** tidak ketutupan.
+- **Blok Repeat**: baris anak kini menampilkan **label segmen** + detail (sebelumnya hanya detail).
+- **Tipe segmen di D01 pakai ikon lagi** (kotak 32 tipe@20% → ikon di chip `.tp`).
+- **Baris bawah S03** (compact 48dp, 14px): label jelas **"+ Segmen / + Repeat / Preset"** (sebelumnya terpotong jadi
+  "ADD" pada locale EN). String ID/EN diperpendek.
+- **Teks tidak lagi terpotong keras**: tombol & chip memakai ellipsis (`RcButton`/`RcChoiceChip`), ukuran tombol
+  punya varian **Compact** (48dp, 14px).
+
 
 
 
