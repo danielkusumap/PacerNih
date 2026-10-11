@@ -616,3 +616,12 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 ## B3 Pace aktual untuk semua segmen (2026-10-11)
 - `SegmentEvaluator`: NO_TARGET kini mengembalikan `avgPace` bila `Ds >= 50 m` (null bila lebih pendek). S08 kartu segmen
   menampilkan Target `—`, Aktual pace, Selisih `—` untuk segmen tanpa target.
+
+## P2 + B4 + F6 Peta (2026-10-11)
+- Token baru `route` (#FF7A1A/#E5600A), `routeHalo`, `markerStart`, `markerEnd`, `markerEndCore`, `boundaryDot`,
+  `menuDisabled`. Polyline memakai `route` + halo (P2).
+- **B4**: marker start (hijau, cincin putih) dan end (terang + inti gelap) + label "Start"/"Finish" (teks statis 12px).
+- **F6**: rute digambar **per segmen** (dari `TrackPoint.segmentIdx`, titik batas dibagikan) sehingga tampak satu rute;
+  titik batas putih + cincin route.
+- Catatan: kolom `SegmentResult.startLat/Lon...` belum ditambah; F6 memakai `segmentIdx` langsung (dicatat di DECISIONS).
+- Instrumented **33/33 hijau**.

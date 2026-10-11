@@ -41,6 +41,14 @@ data class RcColors(
     val kindWalk: Color,
     val kindRecovery: Color,
     val kindWarmCool: Color,
+    // Route/map tokens (P2, B4, F6).
+    val route: Color,
+    val routeHalo: Color,
+    val markerStart: Color,
+    val markerEnd: Color,
+    val markerEndCore: Color,
+    val boundaryDot: Color,
+    val menuDisabled: Color,
 )
 
 val RcDarkColors = RcColors(
@@ -72,6 +80,13 @@ val RcDarkColors = RcColors(
     kindWalk = Color(0xFF8FA3B8),
     kindRecovery = Color(0xFF6FB7C4),
     kindWarmCool = Color(0xFFB8A6E8),
+    route = Color(0xFFFF7A1A),
+    routeHalo = Color(0x73FFFFFF),
+    markerStart = Color(0xFF34D399),
+    markerEnd = Color(0xFFF2F5F7),
+    markerEndCore = Color(0xFF0B0D0F),
+    boundaryDot = Color(0xFFFFFFFF),
+    menuDisabled = Color(0xFF5A646E),
 )
 
 val RcLightColors = RcColors(
@@ -103,6 +118,13 @@ val RcLightColors = RcColors(
     kindWalk = Color(0xFF6F8499),
     kindRecovery = Color(0xFF3E93A3),
     kindWarmCool = Color(0xFF8C77D4),
+    route = Color(0xFFE5600A),
+    routeHalo = Color(0x73000000),
+    markerStart = Color(0xFF0B7A55),
+    markerEnd = Color(0xFF0E1114),
+    markerEndCore = Color(0xFFFFFFFF),
+    boundaryDot = Color(0xFFFFFFFF),
+    menuDisabled = Color(0xFFA3ADB7),
 )
 
 val LocalRcColors = staticCompositionLocalOf { RcDarkColors }

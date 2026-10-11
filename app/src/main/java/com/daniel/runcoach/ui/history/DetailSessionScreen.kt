@@ -214,6 +214,7 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
                 2 -> ChartsTab(segments, splits, trackPoints)
                 else -> RouteMapView(
                     points = trackPoints.map { it.lat to it.lon },
+                    segments = segmentPolylines(trackPoints),
                     boundaryIndices = boundaryIndices(trackPoints, segments),
                     modifier = Modifier.fillMaxWidth().height(360.dp),
                 )
@@ -543,6 +544,24 @@ private fun statusLabel(status: String): String = stringResource(
         else -> R.string.result_no_target
     },
 )
+
+/** F6: split the track into per-segment polylines, sharing the boundary point so there is no visual gap. */
+private fun segmentPolylines(trackPoints: List<TrackPointEntity>): List<List<Pair<Double, Double>>> {
+    if (trackPoints.size < 2) return emptyList()
+    val out = mutableListOf<List<Pair<Double, Double>>>()
+    var current = mutableListOf<Pair<Double, Double>>()
+    var lastIdx = trackPoints.first().segmentIdx
+    for (point in trackPoints) {
+        if (point.segmentIdx != lastIdx && current.isNotEmpty()) {
+            out.add(current.toList())
+            current = mutableListOf(current.last())
+            lastIdx = point.segmentIdx
+        }
+        current.add(point.lat to point.lon)
+    }
+    if (current.size >= 2) out.add(current.toList())
+    return out
+}
 
 private fun boundaryIndices(trackPoints: List<TrackPointEntity>, segments: List<SegmentResultEntity>): List<Int> {
     if (trackPoints.size < 2 || segments.size < 2) return emptyList()
