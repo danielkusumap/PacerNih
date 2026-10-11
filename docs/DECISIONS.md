@@ -412,3 +412,9 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
   satu transaksi (dites di `SessionRepositoryTest`).
 - **MainActivity dikunci portrait** (`android:screenOrientation="portrait"`): app memang dirancang portrait (plan S05);
   ini juga memperbaiki test UI yang gagal saat device landscape.
+
+## D-058 I1 rekor 1 km vs split km
+- Pemilik memastikan sesi pemegang rekor ada dan tidak ada split km 6:20. Ini konsisten dengan desain: rekor = window
+  1 km tercepat di mana pun dalam sesi (F19), bukan split sejajar. Jadi **bukan bug** (kategori "Cocok").
+- Diterapkan **I1-UI**: di S08 tab Split km, baris "1 km tercepat di sesi ini" (`6:20 · km 2,3-3,3`) dari `BestEffort` K1
+  (`startOffsetM`), hanya bila ada K1. S11 sudah menampilkan "dari km y".

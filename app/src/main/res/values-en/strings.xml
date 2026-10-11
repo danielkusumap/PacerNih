@@ -280,6 +280,7 @@
     <string name="s08_note_title">Note</string>
     <string name="s08_no_note">Add note</string>
     <string name="s08_fastest">Fastest km</string>
+    <string name="fastest_km">Fastest 1 km in this session</string>
     <string name="s08_more">Session menu</string>
     <string name="s08_edit">Edit</string>
     <string name="s08_metric_time">Moving time</string>

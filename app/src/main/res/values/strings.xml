@@ -279,6 +279,7 @@
     <string name="s08_note_title">Catatan</string>
     <string name="s08_no_note">Tambah catatan</string>
     <string name="s08_fastest">Km tercepat</string>
+    <string name="fastest_km">1 km tercepat di sesi ini</string>
     <string name="s08_more">Menu sesi</string>
     <string name="s08_edit">Edit</string>
     <string name="s08_metric_time">Waktu berjalan</string>

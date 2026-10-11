@@ -90,6 +90,7 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
     var segments by remember { mutableStateOf<List<SegmentResultEntity>>(emptyList()) }
     var splits by remember { mutableStateOf<List<KmSplitEntity>>(emptyList()) }
     var trackPoints by remember { mutableStateOf<List<TrackPointEntity>>(emptyList()) }
+    var bestEfforts by remember { mutableStateOf<List<com.daniel.runcoach.data.BestEffortEntity>>(emptyList()) }
     var tab by remember { mutableIntStateOf(0) }
     var menu by remember { mutableStateOf(false) }
     var showCalibrate by remember { mutableStateOf(false) }
@@ -109,6 +110,7 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
             segments = repository.segments(sessionId)
             splits = repository.splits(sessionId)
             trackPoints = repository.trackPoints(sessionId)
+            bestEfforts = repository.bestEfforts(sessionId)
         }
     }
 
@@ -208,7 +210,7 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
             TabRow(tab, hasMap = trackPoints.size >= 2 && settings.historyMap) { tab = it }
             when (tab) {
                 0 -> SegmentsTab(segments, splits)
-                1 -> SplitsTab(splits)
+                1 -> SplitsTab(splits, bestEfforts)
                 2 -> ChartsTab(segments, splits, trackPoints)
                 else -> RouteMapView(
                     points = trackPoints.map { it.lat to it.lon },
@@ -354,7 +356,7 @@ private fun SegmentsTab(segments: List<SegmentResultEntity>, splits: List<KmSpli
 }
 
 @Composable
-private fun SplitsTab(splits: List<KmSplitEntity>) {
+private fun SplitsTab(splits: List<KmSplitEntity>, bestEfforts: List<com.daniel.runcoach.data.BestEffortEntity>) {
     val colors = LocalRcColors.current
     val type = LocalRcTypography.current
     val spacing = LocalRcSpacing.current
@@ -376,8 +378,28 @@ private fun SplitsTab(splits: List<KmSplitEntity>) {
             if (split.idx == fastestIndex) Text(stringResource(R.string.s08_fastest), style = type.caption, color = colors.accentText)
             Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(colors.outline))
         }
+        // I1: the fastest 1 km may start anywhere in the session (sliding window), not only at a km boundary.
+        val k1 = bestEfforts.firstOrNull { it.distanceKey == "K1" }
+        if (k1 != null) {
+            val startKm = k1.startOffsetM / 1000.0
+            val endKm = startKm + 1.0
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = spacing.s3),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(stringResource(R.string.fastest_km), style = type.bodySmall, color = colors.textSecondary)
+                Text(
+                    "${Formatters.duration(k1.durationMs)} · km ${oneDecimal(startKm)}–${oneDecimal(endKm)}",
+                    style = type.numberS,
+                    color = colors.accentText,
+                )
+            }
+        }
     }
 }
+
+private fun oneDecimal(km: Double): String = String.format(java.util.Locale.getDefault(), "%.1f", km)
 
 @Composable
 private fun ChartsTab(segments: List<SegmentResultEntity>, splits: List<KmSplitEntity>, trackPoints: List<TrackPointEntity>) {
