@@ -300,8 +300,7 @@ private fun SegmentsTab(segments: List<SegmentResultEntity>, splits: List<KmSpli
     // Cumulative distance at each segment boundary, to find the km splits inside a segment.
     val bounds = segments.runningFold(0.0) { acc, s -> acc + s.distanceM }
     Column(verticalArrangement = Arrangement.spacedBy(spacing.cardGap), modifier = Modifier.padding(top = spacing.s3)) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(stringResource(R.string.s08_tab_segments).uppercase(), style = type.label, color = colors.textSecondary)
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
             RcTextButton(stringResource(R.string.copy_text), onClick = onCopy, tone = RcTextButtonTone.Accent)
         }
         segments.forEach { segment ->
