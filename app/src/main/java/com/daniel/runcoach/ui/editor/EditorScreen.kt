@@ -158,14 +158,15 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
             RcTextField(value = goal, onValueChange = { goal = it.filter(Char::isDigit); dirty = true }, label = stringResource(R.string.editor_goal), modifier = Modifier.fillMaxWidth())
 
             // Summary bar
-            Row(modifier = Modifier.fillMaxWidth().padding(vertical = spacing.s2), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s3)) {
-                Box(modifier = Modifier.weight(1f)) { SegmentStrip(kinds = kinds) }
+            Column(modifier = Modifier.fillMaxWidth().padding(vertical = spacing.s2)) {
+                SegmentStrip(kinds = kinds)
                 Text(
                     "${stringResource(R.string.editor_seg_count, expandedCount)} · " +
                         (estimate.distanceM?.let { estimateText(Formatters.distanceKm(it), estimate.distanceIsAtLeast) } ?: "") +
                         (estimate.durationSec?.let { " · " + estimateText(Formatters.duration((it * 1000).toLong()), estimate.durationIsAtLeast) } ?: ""),
                     style = type.bodySmall,
                     color = colors.textSecondary,
+                    modifier = Modifier.padding(top = spacing.s2),
                 )
             }
 

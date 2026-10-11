@@ -178,15 +178,8 @@ private fun SessionRow(session: SessionEntity, onOpen: () -> Unit, onEdit: () ->
     RcCard(interactive = true, onClick = onOpen) {
         Row(verticalAlignment = Alignment.Top) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(session.name, style = type.titleS, color = colors.textPrimary, maxLines = 1)
+                Text(session.name, style = type.titleS, color = colors.textPrimary, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                 Text(formatDateTime(session.startedAtEpochMs), style = type.bodySmall, color = colors.textSecondary)
-                Row(modifier = Modifier.fillMaxWidth().padding(top = spacing.s2), horizontalArrangement = Arrangement.spacedBy(spacing.s2), verticalAlignment = Alignment.CenterVertically) {
-                    Text(Formatters.duration(session.movingMs) + " · " + Formatters.pace(session.avgPaceSecPerKm) + " /km", style = type.bodySmall, color = colors.textSecondary, modifier = Modifier.weight(1f))
-                    ResultChip(
-                        status = if (targetCount == 0) RcStatus.Neutral else if (session.segFail == 0) RcStatus.Pass else RcStatus.Warn,
-                        label = if (targetCount == 0) stringResource(R.string.s07_chip_no_target) else stringResource(R.string.s07_chip_pass, session.segPass, targetCount),
-                    )
-                }
             }
             Column(horizontalAlignment = Alignment.End) {
                 Box {
@@ -202,6 +195,17 @@ private fun SessionRow(session: SessionEntity, onOpen: () -> Unit, onEdit: () ->
                 }
             }
         }
+        Text(
+            Formatters.duration(session.movingMs) + " · " + Formatters.pace(session.avgPaceSecPerKm) + " /km",
+            style = type.bodySmall,
+            color = colors.textSecondary,
+            modifier = Modifier.padding(top = spacing.s2),
+        )
+        ResultChip(
+            status = if (targetCount == 0) RcStatus.Neutral else if (session.segFail == 0) RcStatus.Pass else RcStatus.Warn,
+            label = if (targetCount == 0) stringResource(R.string.s07_chip_no_target) else stringResource(R.string.s07_chip_pass, session.segPass, targetCount),
+            modifier = Modifier.padding(top = spacing.s2),
+        )
     }
 }
 

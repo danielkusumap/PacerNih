@@ -92,7 +92,7 @@ fun RcButton(
             .padding(horizontal = spacing.s4),
         contentAlignment = Alignment.Center,
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
             if (loading) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), color = content, strokeWidth = 2.dp)
             } else if (icon != null) {
@@ -105,7 +105,6 @@ fun RcButton(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f, fill = false),
             )
         }
     }
