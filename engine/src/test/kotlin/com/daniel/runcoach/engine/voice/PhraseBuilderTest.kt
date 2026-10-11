@@ -6,6 +6,7 @@ import com.daniel.runcoach.engine.model.SegmentKind
 import com.daniel.runcoach.engine.result.SegmentStatus
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class PhraseBuilderTest {
 
@@ -129,5 +130,29 @@ class PhraseBuilderTest {
         assertEquals("GPS signal lost.", PhraseBuilder.gpsLost(VoiceLanguage.EN))
         assertEquals("Sinyal GPS pulih.", PhraseBuilder.gpsRecovered(VoiceLanguage.ID))
         assertEquals("GPS signal recovered.", PhraseBuilder.gpsRecovered(VoiceLanguage.EN))
+    }
+
+    @Test
+    fun `countdown words A01 and A05`() {
+        assertEquals("Tiga", PhraseBuilder.countdownWord(3, VoiceLanguage.ID))
+        assertEquals("Three", PhraseBuilder.countdownWord(3, VoiceLanguage.EN))
+        assertEquals("Lima", PhraseBuilder.countdownWord(5, VoiceLanguage.ID))
+    }
+
+    @Test
+    fun `auto pause and resume phrases A16 A17`() {
+        assertEquals("Dijeda otomatis.", PhraseBuilder.autoPaused(VoiceLanguage.ID))
+        assertEquals("Auto-paused.", PhraseBuilder.autoPaused(VoiceLanguage.EN))
+        assertEquals("Dilanjutkan.", PhraseBuilder.autoResumed(VoiceLanguage.ID))
+        assertEquals("Resumed.", PhraseBuilder.autoResumed(VoiceLanguage.EN))
+    }
+
+    @Test
+    fun `segment start without target omits the target A03`() {
+        val noTarget = Segment("Jalan", SegmentKind.WALK, Limit.Duration(120), null)
+        val id = PhraseBuilder.segmentStart(2, 5, noTarget, VoiceLanguage.ID)
+        assertTrue(!id.contains("Target pace"), "no target-pace phrase")
+        val en = PhraseBuilder.segmentStart(2, 5, noTarget, VoiceLanguage.EN)
+        assertTrue(!en.contains("Target pace"), "no target-pace phrase")
     }
 }

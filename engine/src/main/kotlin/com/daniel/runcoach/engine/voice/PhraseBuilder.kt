@@ -102,7 +102,7 @@ object PhraseBuilder {
         else "Get ready. Switching to ${segmentKind(nextKind, language)} soon."
 
     fun autoPaused(language: VoiceLanguage): String =
-        if (language == VoiceLanguage.ID) "Dijeda." else "Paused."
+        if (language == VoiceLanguage.ID) "Dijeda otomatis." else "Auto-paused."
 
     fun autoResumed(language: VoiceLanguage): String =
         if (language == VoiceLanguage.ID) "Dilanjutkan." else "Resumed."
@@ -117,7 +117,7 @@ object PhraseBuilder {
         val id = listOf("nol", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh")
         val en = listOf("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
         val table = if (language == VoiceLanguage.ID) id else en
-        return table.getOrElse(n) { n.toString() }
+        return capitalize(table.getOrElse(n) { n.toString() })
     }
 
     /** A pace or duration in seconds: "{m} menit pas", "{m} menit {y} detik", "{m} menit {y}" (F20). */

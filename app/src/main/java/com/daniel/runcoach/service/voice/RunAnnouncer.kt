@@ -20,9 +20,10 @@ class RunAnnouncer(
     private var countdownStyle: CountdownStyle = CountdownStyle.BEEP,
     private var vibrateEnabled: Boolean = true,
     private val config: EngineConfig = EngineConfig(),
+    speechSink: SpeechSink = TtsSpeaker(context),
 ) {
 
-    private val tts = TtsSpeaker(context)
+    private val tts: SpeechSink = speechSink
     private val beep = BeepPlayer()
     private val haptics = Haptics(context)
 

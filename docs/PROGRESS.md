@@ -649,3 +649,10 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
   (F5 hanya segmen **LULUS**), polyline rute (F6) — **tanpa** titik batas/marker (permintaan pemilik).
 - `ShareImageStore`: share via FileProvider `shared_images/`, simpan ke `Pictures/PacerNih/` via MediaStore.
 - Instrumented **35/35 hijau** (2 test baru: transparansi + ukuran template).
+
+## B2 Voice alert (lanjutan, 2026-10-11)
+- `SpeechSink` + `RecordingSpeechSink`; `TtsSpeaker` mengimplementasikan sink; `RunAnnouncer` menerima sink (bisa dites).
+- PhraseBuilder: `autoPaused` ID "Dijeda otomatis." (A16), `countdownWord` dikapitalkan (A01/A05). Snapshot test
+  ditambah (A01/A05/A16/A17/A03 tanpa target).
+- Test instrumented `RunAnnouncerTest`: A07+A03 di-join jadi satu ucapan, A08/A09 diucapkan, segmen skip senyap.
+- Engine **221 hijau**, instrumented **38/38 hijau**. Sisa: golden urutan A01-A17 penuh via simulator 60x.

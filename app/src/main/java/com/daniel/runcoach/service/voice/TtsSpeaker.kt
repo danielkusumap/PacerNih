@@ -12,7 +12,7 @@ import java.util.Locale
  * dips instead of stopping, and speaks through the TTS queue (single queue). [flush] preempts whatever is
  * being spoken, used for the countdown. Language falls back to English when the requested voice is missing.
  */
-class TtsSpeaker(context: Context) {
+class TtsSpeaker(context: Context) : SpeechSink {
 
     private val appContext = context.applicationContext
     private val audioManager: AudioManager? = appContext.getSystemService(AudioManager::class.java)
@@ -21,14 +21,14 @@ class TtsSpeaker(context: Context) {
     private var ready = false
     private var focusRequest: AudioFocusRequest? = null
 
-    fun init() {
+    override fun init() {
         if (tts != null) return
         tts = TextToSpeech(appContext) { status -> ready = status == TextToSpeech.SUCCESS }
     }
 
     fun isReady(): Boolean = ready
 
-    fun setLanguage(language: VoiceLanguage) {
+    override fun setLanguage(language: VoiceLanguage) {
         val desired = if (language == VoiceLanguage.ID) Locale.forLanguageTag("id-ID") else Locale.ENGLISH
         val engine = tts ?: return
         val result = engine.setLanguage(desired)
@@ -37,12 +37,12 @@ class TtsSpeaker(context: Context) {
         }
     }
 
-    fun isLanguageAvailable(language: VoiceLanguage): Boolean {
+    override fun isLanguageAvailable(language: VoiceLanguage): Boolean {
         val locale = if (language == VoiceLanguage.ID) Locale.forLanguageTag("id-ID") else Locale.ENGLISH
         return tts?.isLanguageAvailable(locale) ?: TextToSpeech.LANG_NOT_SUPPORTED >= TextToSpeech.LANG_AVAILABLE
     }
 
-    fun speak(text: String, flush: Boolean) {
+    override fun speak(text: String, flush: Boolean) {
         val engine = tts ?: return
         if (!ready || text.isBlank()) return
         requestFocus()
@@ -53,7 +53,7 @@ class TtsSpeaker(context: Context) {
         tts?.stop()
     }
 
-    fun shutdown() {
+    override fun shutdown() {
         tts?.stop()
         tts?.shutdown()
         tts = null
