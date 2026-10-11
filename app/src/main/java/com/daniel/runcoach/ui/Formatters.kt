@@ -39,4 +39,10 @@ object Formatters {
         val magnitude = kotlin.math.abs(seconds)
         return "%s%d:%02d".format(sign, magnitude / 60, magnitude % 60)
     }
+
+    /** Target pace with its bound: `≤ 6:30` (must not be slower) or `≥ 8:25` (must not be faster). */
+    fun targetPace(secPerKm: Int?, bound: com.daniel.runcoach.engine.model.PaceTargetBound): String {
+        val symbol = if (bound == com.daniel.runcoach.engine.model.PaceTargetBound.MIN) "≥" else "≤"
+        return "$symbol ${pace(secPerKm?.toDouble())}"
+    }
 }

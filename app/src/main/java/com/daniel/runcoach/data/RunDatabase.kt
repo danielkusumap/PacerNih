@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         KmSplitEntity::class,
         BestEffortEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class RunDatabase : RoomDatabase() {
@@ -86,10 +86,16 @@ abstract class RunDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `SegmentResult` ADD COLUMN `targetBound` TEXT NOT NULL DEFAULT 'MAX'")
+            }
+        }
+
         fun get(context: Context): RunDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(context.applicationContext, RunDatabase::class.java, "runcoach.db")
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                     .also { instance = it }
             }

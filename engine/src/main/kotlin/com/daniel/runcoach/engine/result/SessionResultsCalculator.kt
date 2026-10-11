@@ -20,6 +20,7 @@ data class SegmentResultData(
     val avgPace: Double?,
     val deltaSec: Long?,
     val status: String,
+    val targetBound: com.daniel.runcoach.engine.model.PaceTargetBound = com.daniel.runcoach.engine.model.PaceTargetBound.MAX,
 )
 
 data class SessionResultsData(
@@ -96,6 +97,7 @@ object SessionResultsCalculator {
                 movingSec = durationMs / 1000.0,
                 kmTimesSec = kmTimes,
                 skipped = false,
+                bound = segment.targetBound,
             )
             segments += SegmentResultData(
                 idx = index + 1,
@@ -117,6 +119,7 @@ object SessionResultsCalculator {
                 avgPace = evaluation.avgPaceSecPerKm,
                 deltaSec = evaluation.deltaSec,
                 status = evaluation.status.name,
+                targetBound = segment.targetBound,
             )
 
             startDist = endDist

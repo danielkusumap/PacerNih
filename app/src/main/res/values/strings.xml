@@ -387,6 +387,9 @@
     <string name="d01_fast_margin">Margin terlalu cepat, detik (0 = mati)</string>
     <string name="d01_per_km">Per-km check</string>
     <string name="d01_done">Selesai</string>
+    <string name="d01_target_bound">Arah target</string>
+    <string name="d01_bound_max">≤ Maks (tidak lebih lambat)</string>
+    <string name="d01_bound_min">≥ Min (tidak lebih cepat)</string>
 
     <!-- D02 Preset Generator -->
     <string name="d02_title">Preset Generator</string>

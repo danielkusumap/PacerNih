@@ -53,6 +53,7 @@ object SegmentEvaluator {
         kmTimesSec: List<Double> = emptyList(),
         skipped: Boolean = false,
         extended: Boolean = false,
+        bound: com.daniel.runcoach.engine.model.PaceTargetBound = com.daniel.runcoach.engine.model.PaceTargetBound.MAX,
         config: EngineConfig = EngineConfig(),
     ): SegmentEvaluation {
         val movingMs = roundHalfUp(movingSec * 1000.0)
@@ -66,17 +67,20 @@ object SegmentEvaluator {
         val avg = movingSec / (distanceM / 1000.0)
         val avgR = roundHalfUp(avg)
         val deltaSec = avgR - targetSecPerKm
-        val excessAvg = max(0L, deltaSec)
         val marginAvg = marginSec(targetSecPerKm.toDouble(), distanceM, config)
         val marginKm = marginKmSec(targetSecPerKm.toDouble(), config)
+
+        fun ok(delta: Long): Boolean = if (bound == com.daniel.runcoach.engine.model.PaceTargetBound.MIN) delta >= 0L else delta <= 0L
+        fun withinAvg(delta: Long): Boolean = if (bound == com.daniel.runcoach.engine.model.PaceTargetBound.MIN) -delta <= marginAvg else delta <= marginAvg
+        fun withinKm(delta: Long): Boolean = if (bound == com.daniel.runcoach.engine.model.PaceTargetBound.MIN) -delta <= marginKm else delta <= marginKm
 
         val kmStatuses = if (perKmCheck) {
             kmTimesSec.mapIndexed { index, kmTimeSec ->
                 val kmR = roundHalfUp(kmTimeSec)
                 val kmDelta = kmR - targetSecPerKm
                 val status = when {
-                    kmDelta <= 0L -> SegmentStatus.PASS
-                    kmDelta <= marginKm -> SegmentStatus.BORDERLINE
+                    ok(kmDelta) -> SegmentStatus.PASS
+                    withinKm(kmDelta) -> SegmentStatus.BORDERLINE
                     else -> SegmentStatus.FAIL
                 }
                 KmStatus(index + 1, kmTimeSec, kmR, kmDelta, status)
@@ -86,8 +90,8 @@ object SegmentEvaluator {
         }
 
         val status = when {
-            excessAvg == 0L && kmStatuses.all { it.deltaSec <= 0L } -> SegmentStatus.PASS
-            excessAvg <= marginAvg && kmStatuses.all { it.deltaSec <= marginKm } -> SegmentStatus.BORDERLINE
+            ok(deltaSec) && kmStatuses.all { ok(it.deltaSec) } -> SegmentStatus.PASS
+            withinAvg(deltaSec) && kmStatuses.all { withinKm(it.deltaSec) } -> SegmentStatus.BORDERLINE
             else -> SegmentStatus.FAIL
         }
         return SegmentEvaluation(

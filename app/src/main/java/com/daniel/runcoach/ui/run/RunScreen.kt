@@ -305,7 +305,7 @@ private fun TargetRow(segment: Segment?) {
     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.run_target_label).uppercase(), style = type.label, color = colors.textSecondary)
         val target = segment?.targetPaceSecPerKm
-        if (target != null) Text(Formatters.pace(target.toDouble()), style = type.numberL, color = colors.textPrimary)
+        if (target != null) Text(Formatters.targetPace(target, segment.targetBound), style = type.numberL, color = colors.textPrimary)
         else Text(stringResource(R.string.run_no_target), style = type.bodySmall, color = colors.textSecondary)
     }
 }
@@ -535,7 +535,7 @@ private fun describeSegmentText(segment: Segment): String {
         is Limit.Duration -> Formatters.duration(l.seconds * 1000L)
         Limit.Open -> stringResource(R.string.run_no_target)
     }
-    val target = segment.targetPaceSecPerKm?.let { ", ≤ ${Formatters.pace(it.toDouble())}" } ?: ""
+    val target = segment.targetPaceSecPerKm?.let { ", ${Formatters.targetPace(it, segment.targetBound)}" } ?: ""
     return "${kindLabel(segment.kind)} $limit$target"
 }
 

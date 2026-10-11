@@ -501,7 +501,9 @@ private fun limitText(segment: SegmentResultEntity): String = when (segment.limi
 }
 
 private fun targetText(segment: SegmentResultEntity): String =
-    segment.targetPace?.let { "≤ ${Formatters.pace(it.toDouble())}" } ?: "Tanpa target"
+    segment.targetPace?.let {
+        Formatters.targetPace(it, runCatching { com.daniel.runcoach.engine.model.PaceTargetBound.valueOf(segment.targetBound) }.getOrDefault(com.daniel.runcoach.engine.model.PaceTargetBound.MAX))
+    } ?: "Tanpa target"
 
 private fun formatRange(session: SessionEntity): String {
     val fmt = SimpleDateFormat("d MMM yyyy · HH:mm", Locale.getDefault())

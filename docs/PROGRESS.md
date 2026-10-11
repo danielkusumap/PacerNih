@@ -514,6 +514,15 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
   `AppNavHost`). **Simpan** → `finalizeDraft` (pending=0 + nama/catatan/RPE). **Buang** → hapus sesi + track point.
 - `FinishedSessionHolder` kembali hanya menyimpan `sessionId`.
 
+## U3.9 Target pace dua arah (2026-10-11)
+- `Segment.targetBound` (`MAX`/`MIN`): MAX = batas **maks** ("≤", tidak lebih lambat; default untuk lari),
+  MIN = batas **min** ("≥", tidak lebih cepat; untuk pemanasan/pendinginan/pemulihan).
+- Engine: `SegmentEvaluator` menilai sesuai bound (PASS/BORDERLINE/FAIL terbalik untuk MIN); `AlertEngine` untuk
+  MIN hanya memicu **TERLALU CEPAT** (tidak ada TERLALU LAMBAT). `SegmentResultData.targetBound` disimpan.
+- UI: editor D01 punya pilihan **Arah target** (≤ Maks / ≥ Min), otomatis default per tipe segmen; simbol ≤/≥
+  dipakai di editor, pra-start, layar live, dan detail sesi. Mock data: pemanasan/pendinginan/pemulihan pakai ≥ 8:25.
+- DB naik ke v5 (`SegmentResult.targetBound`).
+
 
 
 

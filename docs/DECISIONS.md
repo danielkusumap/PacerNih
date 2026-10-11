@@ -381,3 +381,10 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - **Simpan** = `finalizeDraft` (pending=0 + form). **Buang** = hapus sesi + track point (cascade).
 - Pemulihan: saat app dibuka, kalau ada draft, langsung navigasi ke S06 (`AppNavHost`).
 - DB naik ke v4 dengan `MIGRATION_3_4` (ALTER TABLE Session ADD COLUMN pending).
+
+## D-055 Target pace dua arah (MAX/MIN)
+- Plan mendefinisikan target sebagai "batas paling lambat" untuk semua segmen; kebutuhan baru: pemanasan/pendinginan/
+  pemulihan butuh batas **paling cepat** ("tidak lebih cepat dari"). Ditambah `PaceTargetBound { MAX, MIN }`.
+- MAX (default): lulus bila pace ≤ target. MIN: lulus bila pace ≥ target; terlalu cepat = gagal/borderline.
+- Alert untuk MIN hanya "terlalu cepat" (tidak ada "terlalu lambat"); required-pace tidak relevan.
+- Nilai bound disimpan di `SegmentResult` agar detail sesi menampilkan simbol yang benar; DB naik ke v5.

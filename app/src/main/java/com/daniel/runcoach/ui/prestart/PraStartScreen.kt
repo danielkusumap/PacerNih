@@ -193,7 +193,7 @@ private fun describe(segment: Segment): String {
         is Limit.Duration -> Formatters.duration(l.seconds * 1000L)
         Limit.Open -> stringResource(R.string.run_no_target)
     }
-    val target = segment.targetPaceSecPerKm?.let { ", ≤ ${Formatters.pace(it.toDouble())}" } ?: ""
+    val target = segment.targetPaceSecPerKm?.let { ", ${Formatters.targetPace(it, segment.targetBound)}" } ?: ""
     return "${kindWord(segment.kind)} $limit$target"
 }
 

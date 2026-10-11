@@ -30,6 +30,7 @@ data class Segment(
     val targetPaceSecPerKm: Int?,
     val fastMarginSec: Int? = 20,
     val perKmCheck: Boolean = true,
+    val targetBound: PaceTargetBound = PaceTargetBound.MAX,
 ) : Block
 
 /**
@@ -65,3 +66,11 @@ sealed interface Limit {
 
 @Serializable
 enum class SegmentKind { WARMUP, RUN, WALK, COOLDOWN, RECOVERY }
+
+/**
+ * Which way a target pace is enforced. [MAX] (default, for run/work) is a ceiling: the average pace must be
+ * **at most** the target (faster passes). [MIN] (for warm-up, cool-down, recovery) is a floor: the average
+ * pace must be **at least** the target, i.e. you may not go faster than it.
+ */
+@Serializable
+enum class PaceTargetBound { MAX, MIN }

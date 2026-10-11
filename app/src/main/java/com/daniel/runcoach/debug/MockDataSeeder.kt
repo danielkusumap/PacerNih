@@ -7,6 +7,7 @@ import com.daniel.runcoach.data.SessionRepository
 import com.daniel.runcoach.data.TrackPointEntity
 import com.daniel.runcoach.data.WorkoutTemplateRepository
 import com.daniel.runcoach.engine.model.Limit
+import com.daniel.runcoach.engine.model.PaceTargetBound
 import com.daniel.runcoach.engine.model.Repeat
 import com.daniel.runcoach.engine.model.Segment
 import com.daniel.runcoach.engine.model.SegmentKind
@@ -34,9 +35,9 @@ object MockDataSeeder {
     private val tempo5k = Workout(
         id = "", name = "Tempo 5 km",
         items = listOf(
-            Segment("Pemanasan", SegmentKind.WARMUP, Limit.Distance(1000), targetPaceSecPerKm = 480),
+            Segment("Pemanasan", SegmentKind.WARMUP, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
             Segment("Tempo", SegmentKind.RUN, Limit.Distance(5000), targetPaceSecPerKm = 340),
-            Segment("Pendinginan", SegmentKind.COOLDOWN, Limit.Distance(1000), targetPaceSecPerKm = 480),
+            Segment("Pendinginan", SegmentKind.COOLDOWN, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
         ),
     )
     private val freeRun = Workout(
@@ -46,15 +47,15 @@ object MockDataSeeder {
     private val interval6x400 = Workout(
         id = "", name = "Interval 6x400",
         items = listOf(
-            Segment("Pemanasan", SegmentKind.WARMUP, Limit.Distance(1000), targetPaceSecPerKm = 480),
+            Segment("Pemanasan", SegmentKind.WARMUP, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
             Repeat(
                 times = 6,
                 children = listOf(
                     Segment("Interval", SegmentKind.RUN, Limit.Distance(400), targetPaceSecPerKm = 300),
-                    Segment("Pemulihan", SegmentKind.RECOVERY, Limit.Distance(200), targetPaceSecPerKm = null),
+                    Segment("Pemulihan", SegmentKind.RECOVERY, Limit.Distance(200), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
                 ),
             ),
-            Segment("Pendinginan", SegmentKind.COOLDOWN, Limit.Distance(1000), targetPaceSecPerKm = 480),
+            Segment("Pendinginan", SegmentKind.COOLDOWN, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
         ),
     )
 

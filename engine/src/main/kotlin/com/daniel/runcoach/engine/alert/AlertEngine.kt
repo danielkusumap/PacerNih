@@ -23,6 +23,7 @@ data class CorrectionInput(
     val requiredSecPerKm: Double?,
     val running: Boolean,
     val gpsLost: Boolean,
+    val targetBound: com.daniel.runcoach.engine.model.PaceTargetBound = com.daniel.runcoach.engine.model.PaceTargetBound.MAX,
 )
 
 /**
@@ -104,6 +105,18 @@ class AlertEngine(private val config: EngineConfig = EngineConfig()) {
     private fun classify(input: CorrectionInput, target: Int): CorrectionState {
         val paceLive = input.paceLiveSecPerKm!!
         val hysteresis = config.hysteresisSecPerKm
+        val margin = input.fastMarginSec
+        val minBound = input.targetBound == com.daniel.runcoach.engine.model.PaceTargetBound.MIN
+
+        if (minBound) {
+            // Floor target (warm-up/cool-down/recovery): going slower is fine, going too fast is not.
+            if (state == CorrectionState.TOO_FAST && margin != null && paceLive < target - margin + hysteresis) {
+                return CorrectionState.TOO_FAST
+            }
+            if (margin != null && paceLive < target - margin) return CorrectionState.TOO_FAST
+            return CorrectionState.STABLE
+        }
+
         if (state == CorrectionState.TOO_SLOW) {
             val stillSlow = if (input.timeBased) {
                 paceLive > target - hysteresis
@@ -113,7 +126,6 @@ class AlertEngine(private val config: EngineConfig = EngineConfig()) {
             if (stillSlow) return CorrectionState.TOO_SLOW
         }
         if (state == CorrectionState.TOO_FAST) {
-            val margin = input.fastMarginSec
             if (margin != null && paceLive >= target - margin + hysteresis) return CorrectionState.TOO_FAST
         }
 
@@ -125,7 +137,6 @@ class AlertEngine(private val config: EngineConfig = EngineConfig()) {
         }
         if (tooSlow) return CorrectionState.TOO_SLOW
 
-        val margin = input.fastMarginSec
         if (margin != null && paceLive < target - margin) return CorrectionState.TOO_FAST
         return CorrectionState.STABLE
     }

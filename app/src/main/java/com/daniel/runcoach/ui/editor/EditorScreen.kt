@@ -360,6 +360,7 @@ private fun SegmentSheet(
     var distance by remember { mutableStateOf((initial.limit as? Limit.Distance)?.meters?.toString() ?: "1000") }
     var duration by remember { mutableStateOf((initial.limit as? Limit.Duration)?.let { formatPace(it.seconds) } ?: "6:00") }
     var target by remember { mutableStateOf(initial.targetPaceSecPerKm?.let { formatPace(it) } ?: "") }
+    var bound by remember { mutableStateOf(initial.targetBound) }
     var margin by remember { mutableStateOf(initial.fastMarginSec?.toString() ?: "") }
     var perKm by remember { mutableStateOf(initial.perKmCheck) }
     val colors = LocalRcColors.current
@@ -376,7 +377,7 @@ private fun SegmentSheet(
             SegmentKind.entries.forEach { k ->
                 val active = k == kind
                 Column(
-                    modifier = Modifier.weight(1f).background(if (active) colors.accentContainer else colors.surfaceRaised, RoundedCornerShape(spacing.s3)).clickable { kind = k }.padding(vertical = 10.dp),
+                    modifier = Modifier.weight(1f).background(if (active) colors.accentContainer else colors.surfaceRaised, RoundedCornerShape(spacing.s3)).clickable { kind = k; bound = defaultBoundFor(k) }.padding(vertical = 10.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Icon(painterResource(segmentKindIcon(k)), contentDescription = null, tint = segmentKindColor(k), modifier = Modifier.size(24.dp))
@@ -402,6 +403,15 @@ private fun SegmentSheet(
         }
 
         RcTextField(value = target, onValueChange = { target = it }, label = stringResource(R.string.d01_target), modifier = Modifier.padding(top = spacing.s2))
+        Text(stringResource(R.string.d01_target_bound), style = type.label, color = colors.textSecondary, modifier = Modifier.padding(top = spacing.s2))
+        SegmentedControl(
+            options = listOf(
+                com.daniel.runcoach.engine.model.PaceTargetBound.MAX to stringResource(R.string.d01_bound_max),
+                com.daniel.runcoach.engine.model.PaceTargetBound.MIN to stringResource(R.string.d01_bound_min),
+            ),
+            selected = bound,
+            onSelect = { bound = it },
+        )
         RcTextField(value = margin, onValueChange = { margin = it.filter(Char::isDigit) }, label = stringResource(R.string.d01_fast_margin), modifier = Modifier.padding(top = spacing.s2))
         RcSwitchRow(stringResource(R.string.d01_per_km), perKm, onCheckedChange = { perKm = it })
 
@@ -422,6 +432,7 @@ private fun SegmentSheet(
                         targetPaceSecPerKm = target.takeIf { it.isNotBlank() }?.let { parsePace(it) },
                         fastMarginSec = if (margin.isBlank()) null else margin.toIntOrNull(),
                         perKmCheck = perKm,
+                        targetBound = bound,
                     ),
                 )
             },
@@ -509,7 +520,7 @@ private fun describe(segment: Segment): String {
         is Limit.Duration -> Formatters.duration(l.seconds * 1000L)
         Limit.Open -> stringResource(R.string.d01_open)
     }
-    val target = segment.targetPaceSecPerKm?.let { ", ≤ ${Formatters.pace(it.toDouble())}" } ?: ""
+    val target = segment.targetPaceSecPerKm?.let { ", ${Formatters.targetPace(it, segment.targetBound)}" } ?: ""
     return "$limit$target"
 }
 
@@ -531,3 +542,9 @@ private fun kindWord(kind: SegmentKind): String = stringResource(
 private fun defaultSegment() = Segment("Run", SegmentKind.RUN, Limit.Distance(1000), targetPaceSecPerKm = null)
 private fun defaultChild() = Segment("Recovery", SegmentKind.RECOVERY, Limit.Distance(400), targetPaceSecPerKm = null)
 private fun defaultRepeat() = Repeat(times = 3, children = listOf(defaultSegment(), defaultChild()))
+
+/** Warm-up/cool-down/recovery default to a floor target (don't go faster); run/walk to a ceiling. */
+private fun defaultBoundFor(kind: SegmentKind) = when (kind) {
+    SegmentKind.WARMUP, SegmentKind.COOLDOWN, SegmentKind.RECOVERY -> com.daniel.runcoach.engine.model.PaceTargetBound.MIN
+    SegmentKind.RUN, SegmentKind.WALK -> com.daniel.runcoach.engine.model.PaceTargetBound.MAX
+}
