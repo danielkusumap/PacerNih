@@ -247,8 +247,8 @@ private fun SegmentBlock(state: RunnerState, segment: Segment) {
     val spacing = LocalRcSpacing.current
     Column(modifier = Modifier.fillMaxWidth().height(96.dp), verticalArrangement = Arrangement.spacedBy(spacing.s1)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-            Icon(painterResource(segmentKindIcon(segment.kind)), contentDescription = null, tint = segmentKindColor(segment.kind), modifier = Modifier.size(20.dp))
-            Text(segmentLabel(segment), style = type.titleM, color = colors.textPrimary, modifier = Modifier.weight(1f))
+            Icon(painterResource(segmentKindIcon(segment.kind)), contentDescription = null, tint = segmentKindColor(segment.kind), modifier = Modifier.size(22.dp))
+            Text(segmentLabel(segment).uppercase(), style = type.numberXS, color = colors.textPrimary, maxLines = 1, modifier = Modifier.weight(1f))
             Text(
                 stringResource(R.string.run_segment_of, state.stepIndex, state.stepCount ?: state.stepIndex).uppercase(),
                 style = type.label,
@@ -258,7 +258,7 @@ private fun SegmentBlock(state: RunnerState, segment: Segment) {
         if (segment.limit != Limit.Open) SegmentProgressBar(segmentProgress(state, segment), segment.kind)
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
             Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(segmentRemainingValue(state, segment), style = type.numberM, color = colors.textPrimary)
+                Text(segmentRemainingValue(state, segment), style = type.numberXS, color = colors.textPrimary)
                 Text(stringResource(R.string.run_remaining), style = type.bodySmall, color = colors.textSecondary)
             }
             Text(segmentLimitCaption(segment), style = type.caption, color = colors.textTertiary)
@@ -294,7 +294,7 @@ private fun BannerLine(text: String, container: androidx.compose.ui.graphics.Col
         text,
         style = type.bodySmall.copy(fontWeight = FontWeight.Bold),
         color = content,
-        modifier = Modifier.fillMaxWidth().padding(top = 4.dp).background(container, RoundedCornerShape(shapes.radiusM)).padding(horizontal = 12.dp, vertical = 10.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp).background(container, RoundedCornerShape(shapes.radiusM)).padding(horizontal = 14.dp, vertical = 10.dp),
     )
 }
 
@@ -305,7 +305,7 @@ private fun TargetRow(segment: Segment?) {
     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.run_target_label).uppercase(), style = type.label, color = colors.textSecondary)
         val target = segment?.targetPaceSecPerKm
-        if (target != null) Text(Formatters.targetPace(target, segment.targetBound), style = type.numberL, color = colors.textPrimary)
+        if (target != null) Text(Formatters.targetPace(target, segment.targetBound), style = type.numberM, color = colors.textPrimary)
         else Text(stringResource(R.string.run_no_target), style = type.bodySmall, color = colors.textSecondary)
     }
 }
@@ -334,9 +334,9 @@ private fun SegmentMetrics(ui: RunUiState) {
     val type = LocalRcTypography.current
     val spacing = LocalRcSpacing.current
     RcCard {
-        Row(modifier = Modifier.fillMaxWidth().height(48.dp), horizontalArrangement = Arrangement.spacedBy(spacing.s5)) {
-            MetricBlock(stringResource(R.string.run_avg_segment), Formatters.pace(ui.state.segmentAvgPaceOrNull()), valueStyle = type.numberL, modifier = Modifier.weight(1f))
-            MetricBlock(stringResource(R.string.run_need_rest), ui.requiredPaceSecPerKm?.let { Formatters.pace(it) } ?: "", valueStyle = type.numberL, modifier = Modifier.weight(1f))
+        Row(modifier = Modifier.fillMaxWidth().height(76.dp), horizontalArrangement = Arrangement.spacedBy(spacing.s5), verticalAlignment = Alignment.CenterVertically) {
+            MetricBlock(stringResource(R.string.run_avg_segment), Formatters.pace(ui.state.segmentAvgPaceOrNull()), valueStyle = type.numberM, modifier = Modifier.weight(1f))
+            MetricBlock(stringResource(R.string.run_need_rest), ui.requiredPaceSecPerKm?.let { Formatters.pace(it) } ?: "", valueStyle = type.numberM, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -349,12 +349,13 @@ private fun Totals(state: RunnerState) {
         Column {
             Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(colors.outline))
             Row(modifier = Modifier.fillMaxWidth().height(63.dp).padding(top = spacing.s2), horizontalArrangement = Arrangement.spacedBy(spacing.s4)) {
-                MetricBlock(stringResource(R.string.run_label_total), Formatters.duration(state.movingMs), modifier = Modifier.weight(1f))
-                MetricBlock(stringResource(R.string.run_label_distance), Formatters.distanceKm(state.totalDistanceM), modifier = Modifier.weight(1f))
+                MetricBlock(stringResource(R.string.run_label_total), Formatters.duration(state.movingMs), valueStyle = LocalRcTypography.current.numberS, modifier = Modifier.weight(1f))
+                MetricBlock(stringResource(R.string.run_label_distance), Formatters.distanceKm(state.totalDistanceM), valueStyle = LocalRcTypography.current.numberS, modifier = Modifier.weight(1f))
                 MetricBlock(
                     stringResource(R.string.run_label_avg_pace),
                     Formatters.pace(if (state.totalDistanceM > 0) state.movingMs / state.totalDistanceM else null),
                     unit = "/km",
+                    valueStyle = LocalRcTypography.current.numberS,
                     valueColor = colors.textSecondary,
                     modifier = Modifier.weight(1f),
                 )
@@ -368,19 +369,22 @@ private fun NextBlock(next: Segment?) {
     val colors = LocalRcColors.current
     val type = LocalRcTypography.current
     val spacing = LocalRcSpacing.current
-    RcCard {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-            if (next != null) {
-                Icon(painterResource(segmentKindIcon(next.kind)), contentDescription = null, tint = segmentKindColor(next.kind), modifier = Modifier.size(20.dp))
-            }
-            Text(stringResource(R.string.run_next).uppercase(), style = type.label, color = colors.textSecondary)
-            Text(
-                next?.let { describeSegmentText(it) } ?: stringResource(R.string.run_next_free),
-                style = type.body,
-                color = colors.textPrimary,
-                modifier = Modifier.weight(1f),
-            )
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = spacing.s3),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+    ) {
+        if (next != null) {
+            Icon(painterResource(segmentKindIcon(next.kind)), contentDescription = null, tint = segmentKindColor(next.kind), modifier = Modifier.size(18.dp))
         }
+        Text(stringResource(R.string.run_next).uppercase(), style = type.label, color = colors.textSecondary)
+        Text(
+            next?.let { describeSegmentText(it) } ?: stringResource(R.string.run_next_free),
+            style = type.bodySmall,
+            color = colors.textPrimary,
+            maxLines = 1,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
@@ -442,10 +446,24 @@ private fun Controls(
                 }
             }
         }
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-            RcButton(stringResource(R.string.run_extend), onClick = onExtend, variant = RcButtonVariant.Tertiary, icon = RcIcons.Add, modifier = Modifier.weight(1f))
-            RcButton(stringResource(R.string.run_list_segments), onClick = onSegments, variant = RcButtonVariant.Tertiary, icon = RcIcons.List, modifier = Modifier.weight(1f))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            ControlTextButton(icon = RcIcons.Add, text = stringResource(R.string.run_extend), onClick = onExtend)
+            ControlTextButton(icon = RcIcons.List, text = stringResource(R.string.run_list_segments), onClick = onSegments)
         }
+    }
+}
+
+@Composable
+private fun ControlTextButton(icon: Int, text: String, onClick: () -> Unit) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    Row(
+        modifier = Modifier.clickable(onClick = onClick).padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Icon(painterResource(icon), contentDescription = null, tint = colors.accentText, modifier = Modifier.size(18.dp))
+        Text(text, style = type.titleS, color = colors.accentText, maxLines = 1)
     }
 }
 
