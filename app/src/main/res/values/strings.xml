@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">RunCoach</string>
+    <string name="app_name">PacerNih</string>
 
     <!-- S01 Onboarding & Izin -->
-    <string name="onboarding_title">Selamat datang di RunCoach</string>
+    <string name="onboarding_title">Selamat datang di PacerNih</string>
     <string name="onboarding_intro">Aplikasi ini merekam lari lewat GPS. Izinkan akses lokasi presisi dan notifikasi agar tracking berjalan stabil.</string>
     <string name="permission_location_title">Izin lokasi presisi</string>
     <string name="permission_location_desc">Untuk merekam rute, jarak, dan pace.</string>
@@ -38,11 +38,11 @@
     <string name="battery_label_vivo">Vivo</string>
     <string name="battery_label_samsung">Samsung</string>
     <string name="battery_label_other">Lainnya</string>
-    <string name="battery_action_open_battery">Buka pengaturan baterai</string>    <string name="battery_brand_xiaomi">Xiaomi: Pengaturan &gt; Aplikasi &gt; RunCoach &gt; Baterai &gt; Tanpa batasan; aktifkan Autostart.</string>
-    <string name="battery_brand_oppo">OPPO/Realme: Pengaturan &gt; Baterai &gt; Optimasi &gt; RunCoach &gt; Jangan optimalkan.</string>
-    <string name="battery_brand_vivo">Vivo: Pengaturan &gt; Baterai &gt; Konsumsi latar belakang tinggi &gt; RunCoach.</string>
-    <string name="battery_brand_samsung">Samsung: Pengaturan &gt; Perangkat &gt; Baterai &gt; Batas penggunaan latar belakang &gt; RunCoach.</string>
-    <string name="battery_brand_other">Lainnya: Pengaturan &gt; Aplikasi &gt; RunCoach &gt; Baterai &gt; Tidak dibatasi.</string>
+    <string name="battery_action_open_battery">Buka pengaturan baterai</string>    <string name="battery_brand_xiaomi">Xiaomi: Pengaturan &gt; Aplikasi &gt; PacerNih &gt; Baterai &gt; Tanpa batasan; aktifkan Autostart.</string>
+    <string name="battery_brand_oppo">OPPO/Realme: Pengaturan &gt; Baterai &gt; Optimasi &gt; PacerNih &gt; Jangan optimalkan.</string>
+    <string name="battery_brand_vivo">Vivo: Pengaturan &gt; Baterai &gt; Konsumsi latar belakang tinggi &gt; PacerNih.</string>
+    <string name="battery_brand_samsung">Samsung: Pengaturan &gt; Perangkat &gt; Baterai &gt; Batas penggunaan latar belakang &gt; PacerNih.</string>
+    <string name="battery_brand_other">Lainnya: Pengaturan &gt; Aplikasi &gt; PacerNih &gt; Baterai &gt; Tidak dibatasi.</string>
 
     <string name="home_placeholder">Layar utama (P1.7)</string>
     <string name="action_start_test_run">Mulai sesi uji</string>

@@ -355,3 +355,14 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
   tipe/batas/target sebagai baris kedua.
 - **Onboarding** tidak muncul lagi setelah selesai: flag `onboardingDone` di DataStore; `MainActivity` menunggu
   setelan termuat lalu memilih start destination (Beranda bila sudah selesai, atau selalu di build mock).
+
+## D-051 Nama tampilan: PacerNih
+- Nama tampilan aplikasi (label launcher + teks onboarding/panduan baterai) diganti **PacerNih**.
+- `applicationId` tetap `com.daniel.runcoach` (mengganti id akan memutus update/keystore dan menghapus data pengguna);
+  hanya nama tampilan yang berubah.
+- Ikon launcher tetap gambar RUN+ (teks di dalam gambar bukan bagian dari nama app).
+
+## D-052 Mulai tanpa menunggu GPS
+- Gate "tunggu GPS" di S04 dihapus: tombol Mulai aktif selama izin lokasi diberikan, terlepas dari kualitas fix.
+- Akurasi GPS ditampilkan di S04 (kartu status) dan **di layar live** (`RunUiState.accuracyM` dari sample terakhir).
+- Alasan: menunggu fix dianggap menghambat; pengguna ingin bisa mulai kapan saja dengan informasi akurasi.

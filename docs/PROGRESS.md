@@ -490,6 +490,15 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
 - **Release**: `release.keystore` + signing config; `lint.checkReleaseBuilds=false` (targetSdk 30 disengaja).
   APK bersih: `app/build/outputs/apk/release/app-release.apk` (MOCK_DATA=false).
 
+## U3.6 Perbaikan fungsional + rename (2026-10-11)
+- **Bug tombol live**: `ACTION_RESUME` dan `ACTION_RESUME_RUN` sempat sama → tombol "Lanjut" mematikan service.
+  Dipisah; Stop kini tekan-tahan (isi ring tidak lagi `clickable`); daftar segmen live memakai **nama segmen**.
+- **Onboarding** tidak muncul lagi setelah selesai (`onboardingDone` di DataStore).
+- **Tanpa gate "tunggu GPS"**: S04 bisa Start kapan saja (tombol aktif selama izin lokasi ada) sambil menampilkan
+  akurasi + status. **Halaman live** kini menampilkan **angka akurasi GPS** di samping ikon (`RunUiState.accuracyM`).
+- **Nama app → PacerNih** (label & teks; `applicationId` tetap `com.daniel.runcoach`).
+- APK bersih: `app/build/outputs/apk/release/app-release.apk` — 14,26 MB, `targetSdk 34`, label **PacerNih**.
+
 
 
 

@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">RunCoach</string>
+    <string name="app_name">PacerNih</string>
 
     <!-- S01 Onboarding & permissions -->
-    <string name="onboarding_title">Welcome to RunCoach</string>
+    <string name="onboarding_title">Welcome to PacerNih</string>
     <string name="onboarding_intro">This app records runs using GPS. Allow precise location and notifications so tracking stays reliable.</string>
     <string name="permission_location_title">Precise location permission</string>
     <string name="permission_location_desc">Used to record route, distance, and pace.</string>
@@ -39,11 +39,11 @@
     <string name="battery_label_samsung">Samsung</string>
     <string name="battery_label_other">Other</string>
     <string name="battery_action_open_battery">Open battery settings</string>
-    <string name="battery_brand_xiaomi">Xiaomi: Settings &gt; Apps &gt; RunCoach &gt; Battery &gt; No restrictions; enable Autostart.</string>
-    <string name="battery_brand_oppo">OPPO/Realme: Settings &gt; Battery &gt; Optimization &gt; RunCoach &gt; Don\'t optimize.</string>
-    <string name="battery_brand_vivo">Vivo: Settings &gt; Battery &gt; High background power consumption &gt; RunCoach.</string>
-    <string name="battery_brand_samsung">Samsung: Settings &gt; Device care &gt; Battery &gt; Background usage limits &gt; RunCoach.</string>
-    <string name="battery_brand_other">Others: Settings &gt; Apps &gt; RunCoach &gt; Battery &gt; Unrestricted.</string>
+    <string name="battery_brand_xiaomi">Xiaomi: Settings &gt; Apps &gt; PacerNih &gt; Battery &gt; No restrictions; enable Autostart.</string>
+    <string name="battery_brand_oppo">OPPO/Realme: Settings &gt; Battery &gt; Optimization &gt; PacerNih &gt; Don\'t optimize.</string>
+    <string name="battery_brand_vivo">Vivo: Settings &gt; Battery &gt; High background power consumption &gt; PacerNih.</string>
+    <string name="battery_brand_samsung">Samsung: Settings &gt; Device care &gt; Battery &gt; Background usage limits &gt; PacerNih.</string>
+    <string name="battery_brand_other">Others: Settings &gt; Apps &gt; PacerNih &gt; Battery &gt; Unrestricted.</string>
 
     <string name="home_placeholder">Home screen (P1.7)</string>
     <string name="action_start_test_run">Start test run</string>
