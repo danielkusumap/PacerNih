@@ -54,9 +54,9 @@ class HistoryUiTest {
         rule.setContent { RunCoachTheme { DetailSessionScreen(sessionId = id, onBack = {}) } }
         rule.waitUntil(5_000) { rule.onAllNodesWithText("Detail Test").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithText("Detail Test").assertExists()
-        rule.onNodeWithText(context.getString(R.string.s08_tab_segments)).assertExists()
-        rule.onNodeWithText(context.getString(R.string.s08_tab_splits)).assertExists()
-        rule.onNodeWithText(context.getString(R.string.s08_tab_charts)).assertExists()
+        rule.onNodeWithText(context.getString(R.string.s08_tab_segments).uppercase()).assertExists()
+        rule.onNodeWithText(context.getString(R.string.s08_tab_splits).uppercase()).assertExists()
+        rule.onNodeWithText(context.getString(R.string.s08_tab_charts).uppercase()).assertExists()
     }
 
     /** P3.1 AC: the Map tab renders the osmdroid route without crashing. */
@@ -83,7 +83,7 @@ class HistoryUiTest {
         }
         rule.setContent { RunCoachTheme { DetailSessionScreen(sessionId = id, onBack = {}) } }
         rule.waitUntil(5_000) { rule.onAllNodesWithText("Map Test").fetchSemanticsNodes().isNotEmpty() }
-        rule.onNodeWithText(context.getString(R.string.s08_tab_map)).performClick()
+        rule.onNodeWithText(context.getString(R.string.s08_tab_map).uppercase()).performClick()
         rule.onRoot().assertExists()
         runBlocking { com.daniel.runcoach.data.SettingsRepository(context).setHistoryMap(false) }
     }

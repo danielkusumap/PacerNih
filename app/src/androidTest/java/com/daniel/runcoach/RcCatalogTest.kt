@@ -21,7 +21,7 @@ class RcCatalogTest {
         rule.setContent { RcTheme { RcCatalogScreen(onBack = {}) } }
         rule.onNodeWithText("Catalog").assertExists()
         rule.onNodeWithText("BUTTONS").assertExists()
-        rule.onNodeWithText("Primary").assertExists()
+        rule.onNodeWithText("PRIMARY").assertExists()
         rule.onNodeWithText("STEADY").assertExists()
         rule.onNodeWithText("METRICS").assertExists()
         rule.onNodeWithText("CONTROLS").assertExists()

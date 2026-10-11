@@ -32,9 +32,9 @@ class PraStartUiTest {
         )
         rule.setContent { RunCoachTheme { PraStartScreen(workout, onStarted = {}, onBack = {}) } }
 
-        rule.onNodeWithText("Test 5k").assertIsDisplayed()
-        rule.onNodeWithText(context.getString(R.string.s04_segments)).assertIsDisplayed()
-        rule.onNodeWithText(context.getString(R.string.s04_accuracy)).assertIsDisplayed()
+        rule.onNodeWithText("TEST 5K").assertIsDisplayed()
+        rule.onNodeWithText(context.getString(R.string.s04_segments).uppercase()).assertIsDisplayed()
+        rule.onNodeWithText(context.getString(R.string.s04_accuracy).uppercase()).assertIsDisplayed()
         // Countdown options 0/3/5/10 are offered (may be below the fold).
         rule.onNodeWithText("10").assertExists()
     }
