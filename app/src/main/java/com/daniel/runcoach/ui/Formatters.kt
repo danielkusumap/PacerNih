@@ -33,6 +33,10 @@ object Formatters {
     /** Distance in kilometres with two decimals, locale-aware (e.g. `5,03 km`). */
     fun distanceKm(meters: Double): String = String.format(Locale.getDefault(), "%.2f km", meters / 1000.0)
 
+    /** Segment distance: metres below 1 km (`400 m`), otherwise kilometres (`1,50 km`). */
+    fun segmentDistance(meters: Double): String =
+        if (meters < 1000.0) "${meters.toInt()} m" else distanceKm(meters)
+
     /** A signed pace difference in seconds, e.g. `+0:12` or `-0:05`. */
     fun deltaSeconds(seconds: Long): String {
         val sign = if (seconds < 0) "-" else "+"

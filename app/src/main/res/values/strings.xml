@@ -104,6 +104,8 @@
     <string name="s04_status_searching">Mencari sinyal</string>
     <string name="s04_status_weak">Lemah</string>
     <string name="s04_summary">%1$d segmen · ≥ %2$s</string>
+    <string name="s04_segment_count">%1$d segmen</string>
+    <string name="s04_repeat">Ulangi %1$d×</string>
 
     <!-- S06 Selesai & Simpan -->
     <string name="s06_title">Selesai</string>

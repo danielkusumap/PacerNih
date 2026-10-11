@@ -105,6 +105,8 @@
     <string name="s04_status_searching">Searching</string>
     <string name="s04_status_weak">Weak</string>
     <string name="s04_summary">%1$d segments · ≥ %2$s</string>
+    <string name="s04_segment_count">%1$d segments</string>
+    <string name="s04_repeat">Repeat %1$d×</string>
 
     <!-- S06 Finish & save -->
     <string name="s06_title">Finish</string>

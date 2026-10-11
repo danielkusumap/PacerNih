@@ -53,12 +53,13 @@ fun SegmentProgressBar(progress: Float, kind: SegmentKind, modifier: Modifier = 
     }
 }
 
-/** SegmentStrip: thin proportional blocks coloured by segment kind (DESIGN.md section 6). */
+/** SegmentStrip: thin proportional blocks coloured by segment kind (DESIGN-RESKIN section 2). */
 @Composable
 fun SegmentStrip(
     kinds: List<SegmentKind>,
     modifier: Modifier = Modifier,
     weights: List<Float>? = null,
+    height: androidx.compose.ui.unit.Dp = 8.dp,
 ) {
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
         kinds.forEachIndexed { index, kind ->
@@ -66,7 +67,7 @@ fun SegmentStrip(
             Box(
                 modifier = Modifier
                     .weight(weight)
-                    .height(8.dp)
+                    .height(height)
                     .background(segmentKindColor(kind), RoundedCornerShape(3.dp)),
             )
         }
