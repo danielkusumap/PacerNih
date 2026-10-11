@@ -223,6 +223,7 @@
     <string name="s13_delete_all">Hapus semua data</string>
     <string name="s13_delete_title">Hapus semua data?</string>
     <string name="s13_delete_message">Ketik HAPUS untuk konfirmasi.</string>
+    <string name="s13_delete_hint">Ketik "HAPUS" untuk konfirmasi</string>
     <string name="s13_restore_ok">Cadangan berhasil dipulihkan.</string>
     <string name="s13_restore_fail">Gagal: %1$s</string>
     <string name="s13_backup_done">Cadangan tersimpan.</string>

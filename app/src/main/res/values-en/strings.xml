@@ -224,6 +224,7 @@
     <string name="s13_delete_all">Delete all data</string>
     <string name="s13_delete_title">Delete all data?</string>
     <string name="s13_delete_message">Type DELETE to confirm.</string>
+    <string name="s13_delete_hint">Type "DELETE" to confirm</string>
     <string name="s13_restore_ok">Backup restored.</string>
     <string name="s13_restore_fail">Failed: %1$s</string>
     <string name="s13_backup_done">Backup saved.</string>

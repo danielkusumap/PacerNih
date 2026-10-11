@@ -120,23 +120,25 @@ fun BackupScreen(onBack: () -> Unit) {
                 }
             }
 
+            RcCard {
+                Text(stringResource(R.string.s13_last_backup).uppercase(), style = type.label, color = colors.textSecondary)
+                Text(
+                    lastBackup?.let { SimpleDateFormat("d MMM yyyy HH:mm", Locale.getDefault()).format(Date(it)) } ?: stringResource(R.string.s13_never),
+                    style = type.titleS,
+                    color = if (lastBackup == null) colors.warn else colors.textPrimary,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+
             if (BackupReminder.isDue(lastBackup, System.currentTimeMillis(), reminderDays)) {
                 Banner(stringResource(R.string.s13_backup_due), variant = RcBannerVariant.Warning)
             }
 
-            RcCard {
-                Text(stringResource(R.string.s13_last_backup), style = type.label, color = colors.textSecondary)
-                Text(
-                    lastBackup?.let { SimpleDateFormat("d MMM yyyy HH:mm", Locale.getDefault()).format(Date(it)) } ?: stringResource(R.string.s13_never),
-                    style = type.titleM,
-                    color = if (lastBackup == null) colors.warn else colors.textPrimary,
-                )
-                RcButton(stringResource(R.string.s13_backup), onClick = { createBackup.launch("runcoach-backup.zip") }, fillWidth = true, modifier = Modifier.padding(top = spacing.s2))
-                RcButton(stringResource(R.string.s13_restore), onClick = { openBackup.launch(arrayOf("application/zip", "*/*")) }, variant = RcButtonVariant.Secondary, fillWidth = true)
-                Text(stringResource(R.string.s13_restore_warning), style = type.bodySmall, color = colors.textSecondary)
-            }
-
             message?.let { Text(it, style = type.bodySmall, color = colors.accentText) }
+
+            RcButton(stringResource(R.string.s13_backup), onClick = { createBackup.launch("runcoach-backup.zip") }, fillWidth = true)
+            RcButton(stringResource(R.string.s13_restore), onClick = { openBackup.launch(arrayOf("application/zip", "*/*")) }, variant = RcButtonVariant.Secondary, fillWidth = true)
+            Text(stringResource(R.string.s13_restore_warning), style = type.caption, color = colors.textTertiary)
 
             SectionHeader(stringResource(R.string.s13_reminder))
             SegmentedControl(
@@ -154,11 +156,12 @@ fun BackupScreen(onBack: () -> Unit) {
                     .fillMaxWidth()
                     .padding(top = spacing.s4)
                     .border(1.dp, colors.fail, RoundedCornerShape(shapes.radiusL))
-                    .padding(spacing.cardPad),
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(spacing.s2),
             ) {
-                Text(stringResource(R.string.s13_danger_zone), style = type.titleS, color = colors.fail)
-                RcButton(stringResource(R.string.s13_delete_all), onClick = { showDelete = true }, variant = RcButtonVariant.DestructiveFilled, fillWidth = true)
+                Text(stringResource(R.string.s13_danger_zone).uppercase(), style = type.label, color = colors.fail)
+                RcButton(stringResource(R.string.s13_delete_all), onClick = { showDelete = true }, variant = RcButtonVariant.Destructive, fillWidth = true)
+                Text(stringResource(R.string.s13_delete_hint), style = type.caption, color = colors.textTertiary)
             }
             androidx.compose.foundation.layout.Spacer(Modifier.padding(bottom = spacing.s4))
         }
