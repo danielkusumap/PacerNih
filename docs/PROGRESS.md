@@ -666,3 +666,9 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 
 ## F3 tweak (2026-10-11)
 - Label blok segmen lulus di PNG share: "SEGMEN LULUS" -> "SPLIT SEGMENT"; jarak label ke chart ditambah.
+
+## README untuk GitHub + screenshot (2026-10-12)
+- `README.md` di root: ringkasan app, fitur, screenshot, arsitektur, cara build/run lokal, struktur repo, tech stack,
+  izin, privasi, testing, docs. Screenshot di `docs/screenshots/` (S02, S03, D01, S07, S08, S09, S10, S12).
+- Screenshot di-capture ulang biner-aman (`adb shell screencap` + `adb pull`). Judul halaman Statistik diperbaiki
+  ("STATISTIK", sebelumnya "Weekly summary").

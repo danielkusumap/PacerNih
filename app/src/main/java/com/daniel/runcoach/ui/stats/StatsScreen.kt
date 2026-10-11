@@ -69,7 +69,7 @@ fun StatsScreen(onOpenRecord: (String) -> Unit, onOpenSession: (String) -> Unit,
     val spacing = LocalRcSpacing.current
     androidx.compose.material3.Scaffold(bottomBar = { MainBottomBar(MainTab.STATS, onSelectTab) }) { padding ->
         Column(modifier = Modifier.fillMaxSize().background(colors.bg).padding(padding)) {
-            RcScreenTitle(stringResource(R.string.s09_title), modifier = Modifier.padding(horizontal = spacing.screenH, vertical = spacing.s2))
+            RcScreenTitle(stringResource(R.string.tab_stats), modifier = Modifier.padding(horizontal = spacing.screenH, vertical = spacing.s2))
             SegmentedControl(
                 options = listOf(0 to stringResource(R.string.sub_weekly), 1 to stringResource(R.string.sub_records)),
                 selected = tab,
