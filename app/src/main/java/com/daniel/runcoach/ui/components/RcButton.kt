@@ -95,7 +95,7 @@ fun RcButton(
     }
 }
 
-/** Text-button (DESIGN-RESKIN section 2): Barlow 800 18-20, accent / textSecondary / fail. */
+/** Text-button (mock): Manrope bold, accent / textSecondary / fail. Not uppercased. */
 enum class RcTextButtonTone { Accent, Neutral, Destructive }
 
 @Composable
@@ -114,9 +114,9 @@ fun RcTextButton(
         RcTextButtonTone.Destructive -> colors.fail
     }
     Text(
-        text = text.uppercase(),
+        text = text,
         color = color,
-        style = type.tab,
+        style = type.titleS,
         maxLines = 1,
         modifier = modifier.alpha(if (enabled) 1f else 0.38f).clickable(enabled = enabled, onClick = onClick),
     )
