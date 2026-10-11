@@ -132,10 +132,20 @@ fun ProgressRing(
         modifier = modifier.pointerInput(Unit) {
             detectTapGestures(
                 onPress = {
-                    val job = scope.launch { progress.animateTo(1f, tween(holdMs, easing = LinearEasing)) }
+                    var confirmed = false
+                    val job = scope.launch {
+                        progress.animateTo(1f, tween(holdMs, easing = LinearEasing))
+                        if (!confirmed) {
+                            confirmed = true
+                            onConfirm()
+                        }
+                    }
                     val released = tryAwaitRelease()
+                    if (!confirmed && released && progress.value >= 1f) {
+                        confirmed = true
+                        onConfirm()
+                    }
                     job.cancel()
-                    if (released && progress.value >= 1f) onConfirm()
                     scope.launch { progress.animateTo(0f, tween(150)) }
                 },
             )

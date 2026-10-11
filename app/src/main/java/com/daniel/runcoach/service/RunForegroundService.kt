@@ -389,7 +389,11 @@ class RunForegroundService : Service() {
         }
     }
 
-    /** Saves the session (and its results) before S06 appears, then drops only the active snapshot. */
+    /**
+     * Prepares the finished session (results computed from the persisted track points) but does **not** save it:
+     * S06 decides. Track points stay in the DB; only the active snapshot is dropped so Beranda no longer offers
+     * resume.
+     */
     private suspend fun finalizeSession(id: String, activeWorkout: Workout?, state: RunnerState?) {
         val store = persistence ?: return
         val points = buildCurve(id)
@@ -432,8 +436,8 @@ class RunForegroundService : Service() {
             droppedSampleCount = state?.droppedSampleCount ?: 0,
             updatedAt = now,
         )
-        runCatching { SessionRepository(this@RunForegroundService).saveSession(entity, results) }
         FinishedSessionHolder.sessionId = id
+        FinishedSessionHolder.pending = PendingSession(entity, results)
         runCatching { store.clearActiveSnapshot(id) }
     }
 

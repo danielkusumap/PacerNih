@@ -116,6 +116,11 @@
     <string name="s06_save">Simpan</string>
     <string name="s06_skip">Lewati</string>
     <string name="s06_discard">Buang sesi</string>
+    <string name="s06_saved_pending">Sesi siap disimpan</string>
+    <string name="s06_nothing">Tidak ada sesi untuk disimpan.</string>
+    <string name="s06_discard_title">Buang sesi ini?</string>
+    <string name="s06_discard_message">Sesi dan seluruh datanya akan dibuang dan tidak bisa dikembalikan.</string>
+    <string name="s06_discard_confirm">Buang</string>
     <string name="s06_saved">Sesi tersimpan</string>
     <string name="s06_optional_notes">Catatan (opsional)</string>
     <string name="s06_effort">Seberapa capek? (1-10)</string>

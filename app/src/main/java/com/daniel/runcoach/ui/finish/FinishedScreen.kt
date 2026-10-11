@@ -1,5 +1,6 @@
 package com.daniel.runcoach.ui.finish
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,22 +26,26 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.daniel.runcoach.R
-import com.daniel.runcoach.data.BestEffortEntity
-import com.daniel.runcoach.data.SessionEntity
+import com.daniel.runcoach.data.RecordRepository
+import com.daniel.runcoach.data.RunPersistence
 import com.daniel.runcoach.data.SessionRepository
+import com.daniel.runcoach.engine.result.BestEffort
 import com.daniel.runcoach.engine.voice.VoiceLanguage
 import com.daniel.runcoach.service.FinishedSessionHolder
+import com.daniel.runcoach.service.PendingSession
 import com.daniel.runcoach.ui.Formatters
 import com.daniel.runcoach.ui.components.Banner
 import com.daniel.runcoach.ui.components.MetricBlock
 import com.daniel.runcoach.ui.components.RcBannerVariant
 import com.daniel.runcoach.ui.components.RcButton
 import com.daniel.runcoach.ui.components.RcButtonVariant
+import com.daniel.runcoach.ui.components.RcDialog
 import com.daniel.runcoach.ui.components.RcStatus
 import com.daniel.runcoach.ui.components.RcTextField
 import com.daniel.runcoach.ui.components.ResultStrip
@@ -50,41 +55,77 @@ import com.daniel.runcoach.ui.theme.LocalRcSpacing
 import com.daniel.runcoach.ui.theme.LocalRcTypography
 import com.daniel.runcoach.ui.theme.RcIcons
 import java.util.Locale
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** S06 Finish & save (DESIGN.md section 8): calm completion, distance hero, optional notes, sticky save. */
+/**
+ * S06 Finish & save (DESIGN.md section 8). The run is **not** stored yet: this screen edits the name and notes
+ * and only writes the session when the user taps Save. Discard asks for confirmation and then drops the run.
+ */
 @Composable
 fun FinishedScreen(onDone: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val repository = remember { SessionRepository(context) }
-    var session by remember { mutableStateOf<SessionEntity?>(null) }
-    var records by remember { mutableStateOf<List<BestEffortEntity>>(emptyList()) }
+    val recordRepository = remember { RecordRepository(context) }
+    val persistence = remember { RunPersistence(context) }
+    var pending by remember { mutableStateOf<PendingSession?>(FinishedSessionHolder.pending) }
+    var newRecords by remember { mutableStateOf<List<BestEffort>>(emptyList()) }
     var name by remember { mutableStateOf("") }
     var rpe by remember { mutableStateOf<Int?>(null) }
     var note by remember { mutableStateOf("") }
+    var showDiscard by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        val id = FinishedSessionHolder.sessionId
-        if (id != null) {
-            var loaded = repository.get(id)
-            var tries = 0
-            while (loaded == null && tries < 25) {
-                delay(200)
-                loaded = repository.get(id)
-                tries++
-            }
-            session = loaded
-            if (loaded != null) records = repository.newRecords(id)
+        var p = FinishedSessionHolder.pending
+        var tries = 0
+        while (p == null && tries < 25) {
+            kotlinx.coroutines.delay(200)
+            p = FinishedSessionHolder.pending
+            tries++
+        }
+        if (p == null) return@LaunchedEffect
+        pending = p
+        val current = recordRepository.currentRecords()
+        newRecords = p.results.bestEfforts.filter { e ->
+            val cur = current[e.key]
+            cur == null || e.durationMs < cur.durationMs
         }
     }
 
     val colors = LocalRcColors.current
     val spacing = LocalRcSpacing.current
     val type = LocalRcTypography.current
-    val current = session
+    val current = pending
     val noteTooLong = note.length > SessionRepository.MAX_NOTE
+
+    fun save() {
+        val p = current ?: return
+        scope.launch {
+            repository.saveSession(
+                p.entity.copy(
+                    name = name.ifBlank { p.entity.name },
+                    nameIsCustom = name.isNotBlank(),
+                    note = note.ifBlank { null },
+                    rpe = rpe,
+                    updatedAt = System.currentTimeMillis(),
+                ),
+                p.results,
+            )
+            FinishedSessionHolder.clear()
+            onDone()
+        }
+    }
+
+    fun discard() {
+        val p = current ?: return
+        scope.launch {
+            runCatching { persistence.clear(p.entity.id) }
+            FinishedSessionHolder.clear()
+            onDone()
+        }
+    }
+
+    BackHandler { showDiscard = true }
 
     Column(modifier = Modifier.fillMaxSize().background(colors.bg)) {
         Column(
@@ -95,39 +136,52 @@ fun FinishedScreen(onDone: () -> Unit) {
                 Box(modifier = Modifier.size(48.dp).background(colors.accentContainer, CircleShape), contentAlignment = Alignment.Center) {
                     Icon(painterResource(RcIcons.Check), contentDescription = null, tint = colors.accentText, modifier = Modifier.size(24.dp))
                 }
-                Text(stringResource(R.string.s06_saved), style = type.bodySmall, color = colors.textSecondary)
+                Text(stringResource(R.string.s06_saved_pending), style = type.bodySmall, color = colors.textSecondary)
             }
 
             if (current == null) {
-                Text(stringResource(R.string.s06_loading), color = colors.textSecondary)
+                Text(stringResource(R.string.s06_nothing), color = colors.textSecondary)
                 return@Column
             }
 
             Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(Formatters.distanceKm(current.totalDistanceM).removeSuffix(" km"), style = type.displayL, color = colors.textPrimary)
+                Text(Formatters.distanceKm(current.entity.totalDistanceM).removeSuffix(" km"), style = type.displayL, color = colors.textPrimary)
                 Text("km", style = type.titleS, color = colors.textSecondary)
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.s5)) {
-                MetricBlock(stringResource(R.string.s06_metric_time), Formatters.duration(current.movingMs))
-                MetricBlock(stringResource(R.string.s06_metric_avg_pace), Formatters.pace(current.avgPaceSecPerKm), unit = "/km")
-                MetricBlock(stringResource(R.string.s06_metric_pass), "${current.segPass}/${current.segPass + current.segFail + current.segBorderline}")
+                MetricBlock(stringResource(R.string.s06_metric_time), Formatters.duration(current.entity.movingMs))
+                MetricBlock(stringResource(R.string.s06_metric_avg_pace), Formatters.pace(current.entity.avgPaceSecPerKm), unit = "/km")
+                MetricBlock(
+                    stringResource(R.string.s06_metric_pass),
+                    "${current.entity.segPass}/${current.entity.segPass + current.entity.segFail + current.entity.segBorderline}",
+                )
             }
             ResultStrip(statuses = buildList {
-                repeat(current.segPass) { add(RcStatus.Pass) }
-                repeat(current.segBorderline) { add(RcStatus.Warn) }
-                repeat(current.segFail) { add(RcStatus.Fail) }
+                repeat(current.entity.segPass) { add(RcStatus.Pass) }
+                repeat(current.entity.segBorderline) { add(RcStatus.Warn) }
+                repeat(current.entity.segFail) { add(RcStatus.Fail) }
             })
-            Text(stringResource(R.string.s06_seg_counts, current.segPass, current.segFail, current.segBorderline), style = type.caption, color = colors.textTertiary)
+            Text(
+                stringResource(R.string.s06_seg_counts, current.entity.segPass, current.entity.segFail, current.entity.segBorderline),
+                style = type.caption,
+                color = colors.textTertiary,
+            )
 
-            records.forEach { record ->
+            newRecords.forEach { record ->
                 Banner(
-                    text = stringResource(R.string.s06_record_badge, keyLabel(record.distanceKey), Formatters.duration(record.durationMs)),
+                    text = stringResource(R.string.s06_record_badge, keyLabel(record.key), Formatters.duration(record.durationMs)),
                     variant = RcBannerVariant.Accent,
                 )
             }
 
             SectionHeader(stringResource(R.string.s06_optional_notes))
-            RcTextField(value = name, onValueChange = { name = it }, label = stringResource(R.string.s06_name), placeholder = current.name, modifier = Modifier.fillMaxWidth())
+            RcTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = stringResource(R.string.s06_name),
+                placeholder = current.entity.name,
+                modifier = Modifier.fillMaxWidth(),
+            )
             Text(stringResource(R.string.s06_effort), style = type.bodySmall, color = colors.textSecondary)
             EffortRow(rpe) { rpe = it }
             RcTextField(
@@ -143,31 +197,31 @@ fun FinishedScreen(onDone: () -> Unit) {
             Box(Modifier.padding(bottom = spacing.s3))
         }
 
-        // Sticky footer
+        // Sticky footer: Save (primary) + Discard (destructive).
         Column(modifier = Modifier.fillMaxWidth().background(colors.bg).padding(horizontal = spacing.screenH).padding(vertical = spacing.s3), verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
             RcButton(
                 text = stringResource(R.string.s06_save),
-                onClick = {
-                    val c = session ?: return@RcButton
-                    scope.launch {
-                        repository.updateForm(c.id, name, note.ifBlank { null }, rpe, false, currentLanguage(), System.currentTimeMillis())
-                        FinishedSessionHolder.sessionId = null
-                        onDone()
-                    }
-                },
-                enabled = !noteTooLong,
+                onClick = { save() },
+                enabled = !noteTooLong && current != null,
                 fillWidth = true,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-                RcButton(stringResource(R.string.s06_skip), onClick = { FinishedSessionHolder.sessionId = null; onDone() }, variant = RcButtonVariant.Tertiary, modifier = Modifier.weight(1f))
-                RcButton(
-                    stringResource(R.string.s06_discard),
-                    onClick = { scope.launch { session?.let { repository.delete(it.id) }; FinishedSessionHolder.sessionId = null; onDone() } },
-                    variant = RcButtonVariant.Destructive,
-                    modifier = Modifier.weight(1f),
-                )
-            }
+            RcButton(
+                text = stringResource(R.string.s06_discard),
+                onClick = { showDiscard = true },
+                variant = RcButtonVariant.Destructive,
+                fillWidth = true,
+            )
         }
+    }
+
+    if (showDiscard) {
+        RcDialog(
+            onDismiss = { showDiscard = false },
+            title = stringResource(R.string.s06_discard_title),
+            content = { Text(stringResource(R.string.s06_discard_message), style = type.body, color = colors.textSecondary) },
+            dismiss = { RcButton(stringResource(R.string.editor_discard_keep), onClick = { showDiscard = false }, variant = RcButtonVariant.Tertiary) },
+            confirm = { RcButton(stringResource(R.string.s06_discard_confirm), onClick = { showDiscard = false; discard() }, variant = RcButtonVariant.DestructiveFilled) },
+        )
     }
 }
 
@@ -181,7 +235,7 @@ private fun EffortRow(selected: Int?, onSelect: (Int?) -> Unit) {
             Box(
                 modifier = Modifier
                     .size(28.dp)
-                    .background(if (active) colors.accent else androidx.compose.ui.graphics.Color.Transparent, CircleShape)
+                    .background(if (active) colors.accent else Color.Transparent, CircleShape)
                     .border(1.dp, if (active) colors.accent else colors.outlineStrong, CircleShape)
                     .clickable { onSelect(if (active) null else value) },
                 contentAlignment = Alignment.Center,
@@ -192,16 +246,10 @@ private fun EffortRow(selected: Int?, onSelect: (Int?) -> Unit) {
     }
 }
 
-private fun currentLanguage(): VoiceLanguage {
-    val language = Locale.getDefault().language
-    return if (language.startsWith("in") || language == "id") VoiceLanguage.ID else VoiceLanguage.EN
-}
-
-private fun keyLabel(key: String): String = when (key) {
-    "K1" -> "1 km"
-    "K5" -> "5 km"
-    "K10" -> "10 km"
-    "HM" -> "Half"
-    "FM" -> "Marathon"
-    else -> key
+private fun keyLabel(key: com.daniel.runcoach.engine.result.BestEffortKey): String = when (key) {
+    com.daniel.runcoach.engine.result.BestEffortKey.K1 -> "1 km"
+    com.daniel.runcoach.engine.result.BestEffortKey.K5 -> "5 km"
+    com.daniel.runcoach.engine.result.BestEffortKey.K10 -> "10 km"
+    com.daniel.runcoach.engine.result.BestEffortKey.HM -> "Half"
+    com.daniel.runcoach.engine.result.BestEffortKey.FM -> "Marathon"
 }

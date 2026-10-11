@@ -499,6 +499,14 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
 - **Nama app → PacerNih** (label & teks; `applicationId` tetap `com.daniel.runcoach`).
 - APK bersih: `app/build/outputs/apk/release/app-release.apk` — 14,26 MB, `targetSdk 34`, label **PacerNih**.
 
+## U3.7 Selesai-sesi: simpan eksplisit (2026-10-11)
+- **Hold-to-finish** kini pindah ke S06 tepat saat hold selesai (tidak perlu lepas tombol dulu) — `ProgressRing`
+  memanggil konfirmasi saat animasi penuh.
+- **S06 tidak lagi auto-save**: service hanya menyiapkan `PendingSession` (entitas + hasil) di memori; track point
+  tetap di DB. S06 punya field **nama** + **catatan** (+ RPE), tombol **Simpan** (baru menyimpan ke DB) dan
+  **Buang** dengan **dialog konfirmasi** (OK buang, Cancel kembali). Tombol **Lewati dihapus**.
+- Banner rekor di S06 dihitung dari hasil sesi vs rekor saat ini (sesi belum tersimpan).
+
 
 
 

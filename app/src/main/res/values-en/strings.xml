@@ -117,6 +117,11 @@
     <string name="s06_save">Save</string>
     <string name="s06_skip">Skip</string>
     <string name="s06_discard">Discard session</string>
+    <string name="s06_saved_pending">Session ready to save</string>
+    <string name="s06_nothing">Nothing to save.</string>
+    <string name="s06_discard_title">Discard this session?</string>
+    <string name="s06_discard_message">The session and all its data will be discarded and cannot be recovered.</string>
+    <string name="s06_discard_confirm">Discard</string>
     <string name="s06_saved">Session saved</string>
     <string name="s06_optional_notes">Notes (optional)</string>
     <string name="s06_effort">How hard did it feel? (1-10)</string>

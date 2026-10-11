@@ -366,3 +366,11 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - Gate "tunggu GPS" di S04 dihapus: tombol Mulai aktif selama izin lokasi diberikan, terlepas dari kualitas fix.
 - Akurasi GPS ditampilkan di S04 (kartu status) dan **di layar live** (`RunUiState.accuracyM` dari sample terakhir).
 - Alasan: menunggu fix dianggap menghambat; pengguna ingin bisa mulai kapan saja dengan informasi akurasi.
+
+## D-053 Sesi disimpan hanya saat pengguna menekan Simpan
+- Service tidak lagi menulis sesi saat Stop; ia menyiapkan `PendingSession` (entitas + hasil) di memori
+  (`FinishedSessionHolder`) dan hanya menghapus snapshot aktif. Track point tetap di DB sampai keputusan.
+- **Simpan** di S06 menulis sesi + hasil (track point yang sudah ada tetap dipakai). **Buang** menghapus track point
+  sesi itu dan membuang `PendingSession`, dengan dialog konfirmasi.
+- Risiko: bila proses mati sebelum Simpan, sesi hilang (track point jadi orphan). Diterima demi alur eksplisit.
+- Hold-to-finish memicu konfirmasi saat animasi penuh (tidak perlu lepas tombol).
