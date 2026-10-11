@@ -165,6 +165,7 @@ class RunForegroundService : Service() {
     }
 
     private fun startNewRun(workout: Workout) {
+        FinishedSessionHolder.clear()
         this.workout = workout
         sessionId = UUID.randomUUID().toString()
         startedAtElapsedMs = SystemClock.elapsedRealtime()
@@ -373,6 +374,8 @@ class RunForegroundService : Service() {
         runJob?.cancel()
         val finishedSession = sessionId
         val activeWorkout = workout
+        // Make the id available to S06 immediately, before the async finalize writes the draft.
+        FinishedSessionHolder.sessionId = finishedSession
         ioScope.launch {
             runCatching {
                 persistence?.appendTrackPoints(trackBuffer.toList())

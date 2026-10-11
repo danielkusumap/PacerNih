@@ -71,15 +71,22 @@ fun FinishedScreen(onDone: () -> Unit) {
     var rpe by remember { mutableStateOf<Int?>(null) }
     var note by remember { mutableStateOf("") }
     var showDiscard by remember { mutableStateOf(false) }
-    val id = FinishedSessionHolder.sessionId
 
-    LaunchedEffect(id) {
-        if (id == null) return@LaunchedEffect
-        var loaded = repository.get(id)
+    LaunchedEffect(Unit) {
+        // Wait for the service to publish the id (Stop runs async), then for the draft row to be written.
+        var sid = FinishedSessionHolder.sessionId
         var tries = 0
+        while (sid == null && tries < 25) {
+            delay(200)
+            sid = FinishedSessionHolder.sessionId
+            tries++
+        }
+        if (sid == null) return@LaunchedEffect
+        var loaded = repository.get(sid)
+        tries = 0
         while (loaded == null && tries < 25) {
             delay(200)
-            loaded = repository.get(id)
+            loaded = repository.get(sid)
             tries++
         }
         session = loaded
@@ -87,7 +94,7 @@ fun FinishedScreen(onDone: () -> Unit) {
             name = if (loaded.nameIsCustom) loaded.name else ""
             note = loaded.note ?: ""
             rpe = loaded.rpe
-            newRecords = repository.newRecords(id)
+            newRecords = repository.newRecords(sid)
         }
     }
 
@@ -130,7 +137,7 @@ fun FinishedScreen(onDone: () -> Unit) {
             }
 
             if (current == null) {
-                Text(stringResource(R.string.s06_nothing), color = colors.textSecondary)
+                Text(stringResource(R.string.s06_loading), color = colors.textSecondary)
                 return@Column
             }
 
