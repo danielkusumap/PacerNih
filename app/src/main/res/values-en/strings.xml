@@ -365,8 +365,8 @@
     <string name="info_understand">Got it</string>
     <string name="editor_name">Workout name</string>
     <string name="editor_goal">Total distance goal (m, optional)</string>
-    <string name="editor_add_segment">Add segment</string>
-    <string name="editor_add_repeat">Add Repeat</string>
+    <string name="editor_add_segment">+ Segment</string>
+    <string name="editor_add_repeat">+ Repeat</string>
     <string name="editor_preset">Presets</string>
     <string name="editor_up">Up</string>
     <string name="editor_down">Down</string>

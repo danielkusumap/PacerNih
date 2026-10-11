@@ -364,8 +364,8 @@
     <string name="info_understand">Mengerti</string>
     <string name="editor_name">Nama workout</string>
     <string name="editor_goal">Target jarak total (m, opsional)</string>
-    <string name="editor_add_segment">Tambah segmen</string>
-    <string name="editor_add_repeat">Tambah Repeat</string>
+    <string name="editor_add_segment">+ Segmen</string>
+    <string name="editor_add_repeat">+ Repeat</string>
     <string name="editor_preset">Preset</string>
     <string name="editor_up">Naik</string>
     <string name="editor_down">Turun</string>

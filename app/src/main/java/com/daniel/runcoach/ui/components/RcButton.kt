@@ -27,6 +27,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.daniel.runcoach.ui.theme.LocalRcColors
 import com.daniel.runcoach.ui.theme.LocalRcShapes
@@ -36,7 +38,7 @@ import com.daniel.runcoach.ui.theme.LocalRcTypography
 /** RcButton variants (DESIGN-RESKIN section 2). */
 enum class RcButtonVariant { Primary, Secondary, Tertiary, Destructive, DestructiveFilled }
 
-enum class RcButtonSize { Regular, Small, Large }
+enum class RcButtonSize { Regular, Small, Large, Compact }
 
 /** Reusable button: 56dp (Small 44, Large 64), radius 14, Barlow 800 uppercase (DESIGN-RESKIN section 2). */
 @Composable
@@ -62,6 +64,7 @@ fun RcButton(
         RcButtonSize.Small -> 44.dp
         RcButtonSize.Regular -> 56.dp
         RcButtonSize.Large -> 64.dp
+        RcButtonSize.Compact -> 48.dp
     }
     val (container, border, content) = when (variant) {
         RcButtonVariant.Primary -> Triple(colors.accent, null, colors.onAccent)
@@ -71,7 +74,11 @@ fun RcButton(
         RcButtonVariant.DestructiveFilled -> Triple(colors.fail, null, colors.onFail)
     }
     val pressOverlay = if (pressed) 0.10f else 0f
-    val textStyle = if (size == RcButtonSize.Large) type.numberXS else type.button
+    val textStyle = when (size) {
+        RcButtonSize.Large -> type.numberXS
+        RcButtonSize.Compact -> type.segmented
+        else -> type.button
+    }
 
     Box(
         modifier = modifier
@@ -85,13 +92,21 @@ fun RcButton(
             .padding(horizontal = spacing.s4),
         contentAlignment = Alignment.Center,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
             if (loading) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), color = content, strokeWidth = 2.dp)
             } else if (icon != null) {
                 Icon(painter = painterResource(icon), contentDescription = null, tint = content, modifier = Modifier.size(20.dp))
             }
-            Text(text = text.uppercase(), color = content, style = textStyle, maxLines = 1)
+            Text(
+                text = text.uppercase(),
+                color = content,
+                style = textStyle,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f, fill = false),
+            )
         }
     }
 }
@@ -130,23 +145,31 @@ fun RcChoiceChip(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    icon: Int? = null,
+    iconTint: Color? = null,
 ) {
     val colors = LocalRcColors.current
     val type = LocalRcTypography.current
-    Box(
+    Row(
         modifier = modifier
             .height(40.dp)
             .background(if (selected) colors.accentContainer else colors.surfaceRaised, RoundedCornerShape(12.dp))
             .border(1.5.dp, if (selected) colors.accent else colors.outlineStrong, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp),
-        contentAlignment = Alignment.Center,
+            .padding(horizontal = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
+        if (icon != null) {
+            Icon(painterResource(icon), contentDescription = null, tint = iconTint ?: colors.textPrimary, modifier = Modifier.size(18.dp))
+        }
         Text(
             text,
             style = type.bodySmall.copy(fontWeight = FontWeight.Bold),
             color = if (selected) colors.accentText else colors.textPrimary,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f, fill = false),
         )
     }
 }

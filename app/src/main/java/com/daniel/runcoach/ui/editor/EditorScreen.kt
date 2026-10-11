@@ -211,9 +211,9 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
         Column(modifier = Modifier.fillMaxWidth().background(colors.surface)) {
             Box(Modifier.fillMaxWidth().height(1.dp).background(colors.outline))
             Row(modifier = Modifier.fillMaxWidth().height(80.dp).padding(horizontal = spacing.screenH), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-                RcButton(stringResource(R.string.editor_add_segment), onClick = { items.add(defaultSegment()); dirty = true }, variant = RcButtonVariant.Secondary, modifier = Modifier.weight(1f).testTag("btn_add_segment"))
-                RcButton(stringResource(R.string.editor_add_repeat), onClick = { items.add(defaultRepeat()); dirty = true }, variant = RcButtonVariant.Secondary, modifier = Modifier.weight(1f))
-                RcButton(stringResource(R.string.editor_preset), onClick = { showPresets = true }, variant = RcButtonVariant.Secondary, modifier = Modifier.weight(1f))
+                RcButton(stringResource(R.string.editor_add_segment), onClick = { items.add(defaultSegment()); dirty = true }, variant = RcButtonVariant.Secondary, size = com.daniel.runcoach.ui.components.RcButtonSize.Compact, modifier = Modifier.weight(1f).testTag("btn_add_segment"))
+                RcButton(stringResource(R.string.editor_add_repeat), onClick = { items.add(defaultRepeat()); dirty = true }, variant = RcButtonVariant.Secondary, size = com.daniel.runcoach.ui.components.RcButtonSize.Compact, modifier = Modifier.weight(1f))
+                RcButton(stringResource(R.string.editor_preset), onClick = { showPresets = true }, variant = RcButtonVariant.Secondary, size = com.daniel.runcoach.ui.components.RcButtonSize.Compact, modifier = Modifier.weight(1f))
             }
         }
     }
@@ -348,7 +348,10 @@ private fun RepeatBlock(
                     Box(modifier = Modifier.size(28.dp).background(childColor.copy(alpha = 0.2f), CircleShape), contentAlignment = Alignment.Center) {
                         Icon(painterResource(segmentKindIcon(child.kind)), contentDescription = null, tint = childColor, modifier = Modifier.size(16.dp))
                     }
-                    Text(describe(child), style = type.body, color = colors.textPrimary, modifier = Modifier.weight(1f))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(child.label.ifBlank { kindWord(child.kind) }, style = type.titleS, color = colors.textPrimary, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        Text(describe(child), style = type.caption, color = colors.textSecondary)
+                    }
                     RcIconButton(RcIcons.Delete, stringResource(R.string.editor_delete), onClick = { onDeleteChild(childIndex) }, tint = colors.fail, iconSize = 20)
                 }
             }
@@ -391,12 +394,12 @@ private fun SegmentSheet(
         val kindOrder = listOf(SegmentKind.WARMUP, SegmentKind.RUN, SegmentKind.WALK, SegmentKind.RECOVERY, SegmentKind.COOLDOWN)
         Row(modifier = Modifier.fillMaxWidth().padding(top = spacing.s2), horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
             kindOrder.take(3).forEach { k ->
-                RcChoiceChip(kindWord(k), selected = k == kind, onClick = { kind = k; bound = defaultBoundFor(k) }, modifier = Modifier.weight(1f))
+                RcChoiceChip(kindWord(k), selected = k == kind, onClick = { kind = k; bound = defaultBoundFor(k) }, icon = segmentKindIcon(k), iconTint = segmentKindColor(k), modifier = Modifier.weight(1f))
             }
         }
         Row(modifier = Modifier.fillMaxWidth().padding(top = spacing.s2), horizontalArrangement = Arrangement.spacedBy(spacing.s2), verticalAlignment = Alignment.CenterVertically) {
             kindOrder.drop(3).forEach { k ->
-                RcChoiceChip(kindWord(k), selected = k == kind, onClick = { kind = k; bound = defaultBoundFor(k) }, modifier = Modifier.weight(1f))
+                RcChoiceChip(kindWord(k), selected = k == kind, onClick = { kind = k; bound = defaultBoundFor(k) }, icon = segmentKindIcon(k), iconTint = segmentKindColor(k), modifier = Modifier.weight(1f))
             }
             InfoIcon(topic = kindWord(kind), onClick = { onInfo(kindTopic(kind)) })
         }
@@ -412,18 +415,18 @@ private fun SegmentSheet(
             onSelect = { limitType = it },
         )
         when (limitType) {
-            0 -> NumberStepper(
-                value = "${distance.toIntOrNull() ?: 0} m",
-                onDecrement = { distance = ((distance.toIntOrNull() ?: 0) - 100).coerceAtLeast(100).toString() },
-                onIncrement = { distance = ((distance.toIntOrNull() ?: 0) + 100).toString() },
-                stepLabel = stringResource(R.string.d01_distance_m),
+            0 -> RcTextField(
+                value = distance,
+                onValueChange = { distance = it.filter(Char::isDigit) },
+                label = stringResource(R.string.d01_distance_m),
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
                 modifier = Modifier.padding(top = spacing.s2),
             )
-            1 -> NumberStepper(
-                value = Formatters.duration((parsePace(duration) ?: 0).toLong() * 1000L),
-                onDecrement = { duration = formatPace(((parsePace(duration) ?: 0) - 30).coerceAtLeast(30)) },
-                onIncrement = { duration = formatPace((parsePace(duration) ?: 0) + 30) },
-                stepLabel = stringResource(R.string.d01_duration_ms),
+            1 -> RcTextField(
+                value = duration,
+                onValueChange = { duration = it },
+                label = stringResource(R.string.d01_duration_ms),
+                placeholder = "6:00",
                 modifier = Modifier.padding(top = spacing.s2),
             )
             else -> Text(stringResource(R.string.d01_open), style = type.body, color = colors.textSecondary, modifier = Modifier.padding(top = spacing.s2))
