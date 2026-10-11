@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PacerNih — Panduan Aplikasi</title>
+<style>
+  :root{
+    --bg:#0B0D0F; --surface:#14181C; --surface-raised:#1C2127;
+    --outline:#2A3139; --outline-strong:#3A444E;
+    --text:#F2F5F7; --text2:#A3ADB7; --text3:#7C8791;
+    --accent:#C6F432; --on-accent:#0B0D0F; --accent-text:#C6F432; --accent-container:#2D371F;
+    --pass:#34D399; --fail:#FF5D5D; --warn:#FFB547; --fast:#5BB5FF;
+    --pass-c:#19342F; --fail-c:#372222; --warn-c:#373022; --fast-c:#1F303E; --neutral-c:#232A31;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent-text); text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{display:grid; grid-template-columns:280px 1fr; max-width:1200px; margin:0 auto; gap:0}
+  nav{
+    position:sticky; top:0; align-self:start; height:100vh; overflow:auto;
+    padding:24px 16px; border-right:1px solid var(--outline);
+    background:var(--surface);
+  }
+  nav h2{font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--text2); margin:0 0 12px}
+  nav ol{margin:0; padding-left:18px}
+  nav li{margin:6px 0; font-size:14px}
+  nav a{color:var(--text2)}
+  nav a:hover{color:var(--accent-text)}
+  main{padding:32px 28px 80px; min-width:0}
+  header.top{border-bottom:1px solid var(--outline); padding-bottom:20px; margin-bottom:8px}
+  h1{font-size:30px; margin:0 0 6px; letter-spacing:-.01em}
+  .sub{color:var(--text2); font-size:15px}
+  h2{font-size:23px; margin:40px 0 12px; padding-top:8px; border-top:1px solid var(--outline)}
+  h3{font-size:18px; margin:26px 0 8px; color:var(--text)}
+  h4{font-size:15px; margin:18px 0 6px; color:var(--text2); text-transform:uppercase; letter-spacing:.06em}
+  p{margin:8px 0}
+  ul,ol{margin:8px 0; padding-left:22px}
+  li{margin:4px 0}
+  code{background:var(--surface-raised); padding:1px 6px; border-radius:6px; font-size:.9em; color:var(--accent-text)}
+  pre{
+    background:var(--surface); border:1px solid var(--outline); border-radius:var(--radius);
+    padding:16px; overflow:auto; color:var(--text2); font-size:13px; line-height:1.5;
+  }
+  table{width:100%; border-collapse:collapse; margin:12px 0; font-size:14px}
+  th,td{border:1px solid var(--outline); padding:8px 10px; text-align:left; vertical-align:top}
+  th{background:var(--surface-raised); color:var(--text2); font-weight:600}
+  tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+  .card{background:var(--surface); border:1px solid var(--outline); border-radius:20px; padding:16px; margin:12px 0}
+  .pill{display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:600}
+  .pass{color:var(--pass)} .fail{color:var(--fail)} .warn{color:var(--warn)} .fast{color:var(--fast)}
+  .sw{display:inline-block; width:18px; height:18px; border-radius:5px; border:1px solid rgba(255,255,255,.15); vertical-align:-3px; margin-right:6px}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .note{background:var(--accent-container); border:1px solid var(--accent); border-radius:var(--radius); padding:12px 14px; margin:12px 0; color:var(--accent-text)}
+  .muted{color:var(--text3); font-size:13px}
+  .tag{display:inline-block; background:var(--surface-raised); border:1px solid var(--outline-strong); border-radius:8px; padding:1px 8px; font-size:12px; color:var(--text2); margin:2px 4px 2px 0}
+  @media(max-width:880px){
+    .wrap{grid-template-columns:1fr}
+    nav{position:static; height:auto; border-right:none; border-bottom:1px solid var(--outline)}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <h2>Daftar Isi</h2>
+  <ol>
+    <li><a href="#ringkasan">Ringkasan</a></li>
+    <li><a href="#usecase">Use Case</a></li>
+    <li><a href="#flow">Alur Navigasi</a></li>
+    <li><a href="#istilah">Istilah &amp; Konsep</a></li>
+    <li><a href="#ui">Sistem UI</a></li>
+    <li><a href="#halaman">Detail Halaman S01–S15</a></li>
+    <li><a href="#dialog">Sheet &amp; Dialog</a></li>
+    <li><a href="#data">Data yang Disimpan</a></li>
+    <li><a href="#izin">Perizinan</a></li>
+    <li><a href="#rumus">Rumus &amp; Aturan</a></li>
+    <li><a href="#catatan">Catatan</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="top">
+  <h1>PacerNih — Panduan Aplikasi</h1>
+  <div class="sub">Flow, use case, detail halaman &amp; UI · <span class="tag">applicationId com.daniel.runcoach</span> <span class="tag">minSdk 26</span> <span class="tag">targetSdk 34</span></div>
+  <p class="muted">Deskriptif. Sumber kebenaran: <code>RUNCOACH_PLAN.md</code> (data/alur/rumus) dan <code>DESIGN.md</code> (tampilan).</p>
+</header>
+
+<h2 id="ringkasan">1. Ringkasan</h2>
+<p>PacerNih adalah aplikasi lari <strong>offline, tanpa biaya</strong> yang:</p>
+<ul>
+  <li>melacak jarak, pace, dan waktu dari <strong>GPS</strong>;</li>
+  <li>menjalankan <strong>workout terstruktur</strong> dengan target pace + suara/beep;</li>
+  <li>memberi <strong>koreksi real-time</strong> dan auto-pause;</li>
+  <li>menyimpan <strong>riwayat, statistik mingguan, rekor pribadi</strong>;</li>
+  <li><strong>export GPX</strong> dan <strong>cadangan/restore</strong>; 100% data lokal.</li>
+</ul>
+
+<h2 id="usecase">2. Use Case Utama</h2>
+<table>
+  <thead><tr><th>Use case</th><th>Ringkasan</th><th>Layar</th></tr></thead>
+  <tbody>
+    <tr><td>Lari bebas</td><td>Mulai cepat tanpa target</td><td>S02→S04→S05→S06</td></tr>
+    <tr><td>Workout terstruktur</td><td>Template dengan target per segmen</td><td>S02→S04→S05→S06</td></tr>
+    <tr><td>Interval</td><td>Repeat 6×400 m + pemulihan</td><td>S03→S04→S05</td></tr>
+    <tr><td>Buat/ubah workout</td><td>Susun segmen &amp; repeat</td><td>S03 + D01/D02</td></tr>
+    <tr><td>Koreksi pace</td><td>"Terlalu lambat/cepat" saat lari</td><td>S05</td></tr>
+    <tr><td>Auto-pause</td><td>Jeda otomatis saat berhenti</td><td>S05/S12</td></tr>
+    <tr><td>Riwayat</td><td>Telusuri/edit/hapus sesi</td><td>S07 + D03/D09</td></tr>
+    <tr><td>Analisis sesi</td><td>Segmen, split km, grafik, peta, GPX</td><td>S08 + D08</td></tr>
+    <tr><td>Rekor</td><td>1k/5k/10k/HM/FM + progres</td><td>S10→S11</td></tr>
+    <tr><td>Statistik mingguan</td><td>Jarak/waktu/sesi + tren 12 minggu</td><td>S09</td></tr>
+    <tr><td>Kalibrasi jarak</td><td>Sesuaikan faktor jarak</td><td>S08(D08)/S12</td></tr>
+    <tr><td>Cadangan &amp; restore</td><td>Backup DB + setelan satu file</td><td>S13</td></tr>
+    <tr><td>Hemat baterai</td><td>Panduan optimasi baterai</td><td>S14</td></tr>
+    <tr><td>Simulator (debug)</td><td>Uji engine dengan track sintetis</td><td>S15</td></tr>
+  </tbody>
+</table>
+
+<h2 id="flow">3. Alur Navigasi</h2>
+<pre>
+   pertama kali ─▶ S01 Onboarding ─(Mulai, set onboarding_done)─▶ S02
+        ┌───────────── Tab utama (BottomBar) ─────────────┐
+        │  S02 Latihan   S07 Riwayat   S09/S10 Statistik   S12 Pengaturan │
+        └───┬────────────┬───────────────┬────────────────────┬──────────┘
+     pilih  │     buka    │       buka rekor│            Data  │
+   workout  ▼      sesi   ▼              ▼                    ▼
+          S04 ─▶ S05 ─(Stop tahan)─▶ S06            S11 Detail   S13/S14
+                 │                    │ (app mati → auto-recovery)
+                 └ snapshot → banner "Lanjutkan" di S02
+
+   S02 ─▶ S03 Editor ─▶ D01 Segmen / D02 Preset / D11 Info
+</pre>
+<div class="note">
+  <strong>Penting:</strong> onboarding hanya sekali · bisa mulai kapan saja (S04 tak menunggu GPS) ·
+  sesi baru tersimpan saat menekan <em>Simpan</em> (sebelum itu berupa <em>draft</em>) ·
+  auto-recovery bila app mati sebelum Simpan.
+</div>
+
+<h2 id="istilah">4. Istilah &amp; Konsep</h2>
+<table>
+  <thead><tr><th>Istilah</th><th>Arti</th></tr></thead>
+  <tbody>
+    <tr><td>Segmen</td><td>Bagian workout: tipe, batas (jarak/durasi/bebas), target pace opsional.</td></tr>
+    <tr><td>Repeat</td><td>Mengulang sekelompok segmen (sejumlah kali / sampai total jarak).</td></tr>
+    <tr><td>Target pace maks <code>≤</code></td><td>Batas <strong>paling lambat</strong> (rata-rata ≤ target). Lari/tempo/interval.</td></tr>
+    <tr><td>Target pace min <code>≥</code></td><td>Batas <strong>paling cepat</strong> (rata-rata ≥ target). Pemanasan/pendinginan/pemulihan.</td></tr>
+    <tr><td>Margin "terlalu cepat"</td><td>Detik lebih cepat dari target yang memicu alert.</td></tr>
+    <tr><td>Per-km check</td><td>Segmen ≥ 1 km bertarget: tiap km penuh juga harus memenuhi target.</td></tr>
+    <tr><td>Auto-pause</td><td>Jeda otomatis saat <code>speed &lt; 0.6 m/s</code> ≥ 3 dtk; lanjut saat bergerak.</td></tr>
+    <tr><td>Moving time</td><td>Waktu berjalan (tanpa pause).</td></tr>
+    <tr><td>Kalibrasi jarak</td><td>Faktor koreksi 0,95–1,05 untuk sesi berikutnya.</td></tr>
+    <tr><td>Rekor pribadi</td><td>Waktu terbaik per jarak dari bagian tercepat dalam sesi.</td></tr>
+    <tr><td>Draft</td><td>Sesi selesai belum disimpan (<code>pending</code>), tersembunyi dari Riwayat/Statistik/Rekor.</td></tr>
+    <tr><td>Snapshot</td><td>Data sesi berjalan, agar bisa dilanjutkan bila app mati.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="ui">5. Sistem UI (Token &amp; Komponen)</h2>
+
+<h3>5.1 Warna (dynamic color dimatikan)</h3>
+<table>
+  <thead><tr><th>Token</th><th>Dark</th><th>Light</th><th>Dipakai untuk</th></tr></thead>
+  <tbody>
+    <tr><td>bg</td><td><span class="sw" style="background:#0B0D0F"></span>#0B0D0F</td><td><span class="sw" style="background:#F4F5F1"></span>#F4F5F1</td><td>Latar layar</td></tr>
+    <tr><td>surface</td><td><span class="sw" style="background:#14181C"></span>#14181C</td><td><span class="sw" style="background:#FFFFFF"></span>#FFFFFF</td><td>Kartu, sheet, bottom bar</td></tr>
+    <tr><td>surfaceRaised</td><td><span class="sw" style="background:#1C2127"></span>#1C2127</td><td><span class="sw" style="background:#FFFFFF"></span>#FFFFFF</td><td>Kartu di atas kartu, dialog, input</td></tr>
+    <tr><td>outline</td><td><span class="sw" style="background:#2A3139"></span>#2A3139</td><td><span class="sw" style="background:#E1E4DC"></span>#E1E4DC</td><td>Garis pemisah, border kartu</td></tr>
+    <tr><td>outlineStrong</td><td><span class="sw" style="background:#3A444E"></span>#3A444E</td><td><span class="sw" style="background:#C5CABF"></span>#C5CABF</td><td>Border input, tombol sekunder</td></tr>
+    <tr><td>textPrimary</td><td><span class="sw" style="background:#F2F5F7"></span>#F2F5F7</td><td><span class="sw" style="background:#0E1114"></span>#0E1114</td><td>Teks &amp; angka utama</td></tr>
+    <tr><td>textSecondary</td><td><span class="sw" style="background:#A3ADB7"></span>#A3ADB7</td><td><span class="sw" style="background:#4A545D"></span>#4A545D</td><td>Label, keterangan</td></tr>
+    <tr><td>textTertiary</td><td><span class="sw" style="background:#7C8791"></span>#7C8791</td><td><span class="sw" style="background:#66707A"></span>#66707A</td><td>Keterangan sangat kecil</td></tr>
+    <tr><td>accent</td><td><span class="sw" style="background:#C6F432"></span>#C6F432</td><td><span class="sw" style="background:#B7E41C"></span>#B7E41C</td><td>Tombol utama, indikator aktif, aksen grafik</td></tr>
+    <tr><td>onAccent</td><td><span class="sw" style="background:#0B0D0F"></span>#0B0D0F</td><td><span class="sw" style="background:#0E1114"></span>#0E1114</td><td>Teks/ikon di atas aksen</td></tr>
+    <tr><td>accentText</td><td><span class="sw" style="background:#C6F432"></span>#C6F432</td><td><span class="sw" style="background:#4F6F00"></span>#4F6F00</td><td>Teks aksen di atas bg/surface</td></tr>
+    <tr><td>accentContainer</td><td><span class="sw" style="background:#2D371F"></span>#2D371F</td><td><span class="sw" style="background:#F1FAD2"></span>#F1FAD2</td><td>Latar lembut berisi aksen</td></tr>
+  </tbody>
+</table>
+<p><strong>Status</strong> (hanya untuk status, bukan tombol):</p>
+<table>
+  <thead><tr><th>Token</th><th>Dark</th><th>Light</th></tr></thead>
+  <tbody>
+    <tr><td class="pass">pass</td><td><span class="sw" style="background:#34D399"></span>#34D399</td><td><span class="sw" style="background:#0B7A55"></span>#0B7A55</td></tr>
+    <tr><td class="fail">fail</td><td><span class="sw" style="background:#FF5D5D"></span>#FF5D5D</td><td><span class="sw" style="background:#C42B2B"></span>#C42B2B</td></tr>
+    <tr><td class="warn">warn</td><td><span class="sw" style="background:#FFB547"></span>#FFB547</td><td><span class="sw" style="background:#9A5B00"></span>#9A5B00</td></tr>
+    <tr><td class="fast">fast</td><td><span class="sw" style="background:#5BB5FF"></span>#5BB5FF</td><td><span class="sw" style="background:#135FA8"></span>#135FA8</td></tr>
+  </tbody>
+</table>
+<p class="muted">Aturan: teks normal ≥ 4,5:1, teks besar/ikon ≥ 3:1 (diuji otomatis). Pace hero selalu textPrimary.</p>
+
+<h3>5.2 Tipografi (Inter, angka tabular)</h3>
+<table>
+  <thead><tr><th>Token</th><th>Ukuran/berat</th><th>Dipakai</th></tr></thead>
+  <tbody>
+    <tr><td>displayHero</td><td>96sp ExtraBold</td><td>Pace live (autosize → 72sp)</td></tr>
+    <tr><td>displayL</td><td>56sp Bold</td><td>Jarak S06, rekor S11</td></tr>
+    <tr><td>numberXL</td><td>40sp Bold</td><td>Jarak S08, rekor S10</td></tr>
+    <tr><td>numberL</td><td>32sp Bold</td><td>Metrik segmen, target</td></tr>
+    <tr><td>numberM</td><td>24sp SemiBold</td><td>Angka baris statistik</td></tr>
+    <tr><td>titleL / titleM / titleS</td><td>28/20/16sp</td><td>Judul halaman / kartu / item</td></tr>
+    <tr><td>body / bodySmall</td><td>16 / 14sp</td><td>Teks isi / keterangan</td></tr>
+    <tr><td>label / caption</td><td>12sp</td><td>Label metrik (KAPITAL) / sumbu grafik</td></tr>
+  </tbody>
+</table>
+
+<h3>5.3 Jarak, Bentuk, Gerak</h3>
+<ul>
+  <li>Grid 4dp: s1 4 · s2 8 · s3 12 · s4 16 · s5 24 · s6 32 · s7 48. Padding layar 20dp (16dp bila &lt; 360dp).</li>
+  <li>Radius: 8 (chip/input kecil) · 14 (tombol/input/status band) · 20 (kartu) · 28 (sheet/dialog).</li>
+  <li>Tanpa bayangan; kedalaman lewat lapisan warna + border <code>outline</code>.</li>
+  <li>Gerak: 180ms easeOut; sheet 240ms; hormati "hapus animasi".</li>
+  <li>Area sentuh minimal 48×48dp.</li>
+</ul>
+
+<h3>5.4 Komponen</h3>
+<table>
+  <thead><tr><th>Komponen</th><th>Spesifikasi</th></tr></thead>
+  <tbody>
+    <tr><td>RcButton</td><td>Tinggi 56dp (kecil 44), radius 14. primary/secondary/tertiary/destructive/destructive-filled. Disabled 38%, loading spinner 20dp, ikon 20dp.</td></tr>
+    <tr><td>RcIconButton</td><td>Area 48dp, ikon 24dp; plain/filled(56dp)/accent.</td></tr>
+    <tr><td>RcCard</td><td>surface, radius 20, padding 16, border outline 1dp; interaktif = efek tekan.</td></tr>
+    <tr><td>StatusBadge</td><td>44dp, radius 14, container status + ikon 24dp + teks KAPITAL + selisih.</td></tr>
+    <tr><td>ResultChip</td><td>28dp, radius 8, container status + ikon 16dp + label.</td></tr>
+    <tr><td>MetricBlock</td><td>Label (textSecondary) di atas; nilai (numberM/L) + satuan kecil.</td></tr>
+    <tr><td>HeroPace</td><td>displayHero rata tengah + "/km"; autosize 96→72sp; <code>--:--</code> bila kosong.</td></tr>
+    <tr><td>SegmentProgressBar</td><td>10dp, radius 5, trek outline, isi warna tipe.</td></tr>
+    <tr><td>SegmentStrip / ResultStrip</td><td>Blok 8dp radius 3 jarak 2dp; warna tipe / status.</td></tr>
+    <tr><td>SectionHeader</td><td>Label KAPITAL textSecondary; atas 24dp bawah 8dp; aksi teks opsional.</td></tr>
+    <tr><td>ListRow</td><td>Tinggi min 56dp; kiri konten, kanan kontrol; pemisah outline.</td></tr>
+    <tr><td>TopBar</td><td>56dp (64dp di halaman tab); judul kiri; ikon aksi kanan.</td></tr>
+    <tr><td>RcBottomBar</td><td>64dp + inset; ikon 24dp + label 12sp; aktif = aksen + batang aksen 3×24dp.</td></tr>
+    <tr><td>RcSheet / RcDialog</td><td>Sheet radius atas 28 + pegangan; Dialog surfaceRaised radius 28 maks 320dp.</td></tr>
+    <tr><td>RcTextField</td><td>56dp (multiline min 96); fokus aksen 2dp; error fail.</td></tr>
+    <tr><td>NumberStepper</td><td>−/+ 48dp; nilai numberM; label langkah.</td></tr>
+    <tr><td>SegmentedControl</td><td>44dp radius 14; aktif isi aksen.</td></tr>
+    <tr><td>RcSwitchRow</td><td>ListRow + switch 52×32; aktif aksen.</td></tr>
+    <tr><td>Banner</td><td>Min 48dp radius 14; info/warning/success/accent + aksi opsional.</td></tr>
+    <tr><td>EmptyState / ErrorState</td><td>Lingkaran 72dp + ikon 32dp, judul titleM, satu kalimat.</td></tr>
+    <tr><td>Skeleton</td><td>Blok surfaceRaised berdenyut.</td></tr>
+    <tr><td>ProgressRing</td><td>Cincin 3dp mengelilingi Stop, terisi fail selama 2 dtk; penuh = langsung konfirmasi.</td></tr>
+  </tbody>
+</table>
+
+<h3>5.5 Gaya Grafik (CH1–CH6)</h3>
+<ul>
+  <li>Latar transparan; garis bantu horizontal 1dp outline (maks 4); tanpa garis vertikal (kecuali batas segmen).</li>
+  <li><strong>Batang</strong>: lebar 60% slot, sudut atas radius 4, aksen (terpilih) / aksen 35% (lainnya); nol = garis 2dp outline.</li>
+  <li><strong>Garis</strong>: 3dp aksen ujung bulat; area gradien 18%→0%; null = garis putus.</li>
+  <li><strong>Target</strong> (tangga) 2dp putus-putus textSecondary; <strong>batas segmen</strong> 1dp putus-putus outlineStrong.</li>
+  <li><strong>Tooltip</strong> kartu surfaceRaised radius 12; muncul saat sentuh/seret.</li>
+  <li>Tinggi: CH1/CH6 200dp; CH2–CH5 160dp; animasi masuk sekali.</li>
+</ul>
+
+<h2 id="halaman">6. Detail Halaman S01–S15</h2>
+
+<div class="card">
+<h3>S01 — Onboarding &amp; Izin</h3>
+<p><strong>Tujuan:</strong> memandu izin, satu keputusan per langkah.</p>
+<p><strong>Data:</strong> 4 langkah (indikator 4 titik; aktif = batang aksen 24×6dp): intro, izin lokasi, izin notifikasi, baterai. Status izin + banner.</p>
+<p><strong>Kontrol:</strong> primer (Berikan izin/Lanjut/Mulai), tersier (Lewati), sekunder (Buka pengaturan baterai).</p>
+<p><strong>UI:</strong> tanpa TopBar; lingkaran 112dp accentContainer + ikon 56dp accentText; judul titleL; penjelasan body textSecondary; status izin = ikon pass/fail + teks.</p>
+<p><strong>Navigasi:</strong> Mulai → set <code>onboarding_done</code> → S02.</p>
+</div>
+
+<div class="card">
+<h3>S02 — Beranda (tab Latihan)</h3>
+<p><strong>Data:</strong> banner "Lanjutkan sesi"; kartu Lari Bebas; ringkasan minggu ini (Jarak/Sesi/Selisih); daftar template (nama, strip, chip, Mulai, "terakhir dipakai").</p>
+<p><strong>Kontrol:</strong> Lari Bebas/Mulai → S04; ⋮ (Edit/Duplikat/Hapus); tombol mengambang <strong>Buat</strong> → S03; BottomBar.</p>
+<p><strong>UI:</strong> kartu Lari Bebas aksen penuh tinggi 96dp radius 20; tombol Buat = pil radius 18 (bukan FAB bulat).</p>
+<p><strong>State:</strong> loading skeleton; kosong → EmptyState + "Buat workout pertama".</p>
+</div>
+
+<div class="card">
+<h3>S03 — Editor Workout</h3>
+<p><strong>Data:</strong> nama + target jarak; bar ringkasan; kartu segmen (batang tipe 4dp, ikon, nama, detail, ⓘ, ⋮); blok Repeat; validasi.</p>
+<p><strong>Kontrol:</strong> TopBar Simpan; baris bawah + Segmen/+ Repeat/Preset; dialog "Buang perubahan?".</p>
+<p><strong>UI:</strong> kartu segmen min 72dp; baris bawah menempel; menu ⋮ (Naik/Turun/Duplikat/Hapus).</p>
+<p><strong>Navigasi:</strong> Simpan → S02; Preset → D02; Info → D11; kartu → D01.</p>
+</div>
+
+<div class="card">
+<h3>S04 — Pra-start</h3>
+<p><strong>Data:</strong> nama workout; strip + ringkasan; kartu status GPS (batang sinyal, angka akurasi, chip Siap/Lemah/Mencari); daftar segmen; pengaturan cepat.</p>
+<p><strong>Kontrol:</strong> MULAI (aktif bila izin lokasi ada — <strong>tanpa menunggu GPS</strong>).</p>
+<p><strong>UI:</strong> kartu GPS ~120dp; tombol MULAI tinggi 64dp titleM KAPITAL.</p>
+</div>
+
+<div class="card">
+<h3>S05 — Layar Lari</h3>
+<p><strong>Data (A–H):</strong> header (nama; ikon GPS + akurasi; toggle peta; chip DIJEDA); segmen (ikon, <strong>nama segmen</strong>, SEGMEN x/y, progress, sisa); banner; hero pace + target <code>≤/≥</code> + StatusBadge; metrik segmen; total; berikutnya; kontrol.</p>
+<p><strong>Kontrol:</strong> Lewati; Jeda/Lanjut (lingkaran besar); <strong>Stop tekan-tahan 2 dtk</strong>; Perpanjang; Daftar segmen; toggle peta; kembali (dialog).</p>
+<p><strong>UI:</strong> tidak bisa di-scroll; hero autosize; tombol Jeda 88dp aksen; Stop + ProgressRing; konten 55% saat pause.</p>
+<p><strong>State:</strong> WAITING_GPS, COUNTDOWN, RUNNING, PAUSED, GPS hilang, rencana selesai.</p>
+<p><strong>Navigasi:</strong> Stop → S06.</p>
+</div>
+
+<div class="card">
+<h3>S06 — Simpan Sesi</h3>
+<p><strong>Data:</strong> "Sesi siap disimpan"; jarak; Waktu/Pace/Segmen lulus; ResultStrip; banner rekor; Nama sesi; skala capek 1–10; Catatan + penghitung.</p>
+<p><strong>Kontrol:</strong> <strong>Simpan</strong> (primer) → simpan; <strong>Buang sesi</strong> (destruktif) → konfirmasi. Tanpa "Lewati".</p>
+<p><strong>UI:</strong> jarak displayL; footer menempel 2 tombol; skala capek 10 lingkaran 28dp.</p>
+<p><strong>State:</strong> "Menyimpan sesi…"; auto-recovery bila app mati.</p>
+</div>
+
+<div class="card">
+<h3>S07 — Riwayat</h3>
+<p><strong>Data:</strong> TopBar + pencarian; header bulan; item sesi (nama, tanggal/jam, jarak, waktu, pace /km, chip hasil N/M).</p>
+<p><strong>Kontrol:</strong> kartu → S08; ⋮ (Edit D03/Hapus D09).</p>
+<p><strong>State:</strong> skeleton; kosong; hasil pencarian kosong.</p>
+</div>
+
+<div class="card">
+<h3>S08 — Detail Sesi</h3>
+<p><strong>Data:</strong> TopBar (kembali; ikon peta toggle; ⋮ Edit/Export GPX/Kalibrasi/Hapus); judul + edit; tanggal/jam; jarak; metrik; ResultStrip; catatan; tab.</p>
+<p><strong>Tab Segmen:</strong> chip status; Batas; Jarak &amp; Waktu; <strong>TARGET / AKTUAL / SELISIH</strong>; "Km di dalam segmen" (buka).</p>
+<p><strong>Tab Split km:</strong> tabel KM | WAKTU | PACE (/km) | SELISIH.</p>
+<p><strong>Tab Grafik:</strong> CH2 pace per km (batang); CH1 pace sepanjang jarak (garis, sumbu dibalik).</p>
+<p><strong>Tab Peta:</strong> polyline aksen + start/finish + batas segmen.</p>
+<p><strong>UI:</strong> tab garis bawah 3dp aksen; baris tabel 52dp.</p>
+</div>
+
+<div class="card">
+<h3>S09 — Ringkasan Mingguan (Statistik ▸ Mingguan)</h3>
+<p><strong>Data:</strong> navigator minggu; grid 2×3 kartu angka; daftar sesi minggu ini.</p>
+<p><strong>Grafik:</strong> CH3 jarak per hari; CH4 jarak 12 minggu; CH5 pace per minggu.</p>
+<p><strong>UI:</strong> kartu angka 84dp; grafik 160dp; hari/minggu terpilih disorot.</p>
+</div>
+
+<div class="card">
+<h3>S10 — Rekor Pribadi (Statistik ▸ Rekor)</h3>
+<p><strong>Data:</strong> 5 kartu rekor (waktu besar, pace, tanggal + sesi, piala); kartu "Belum ada"; daftar rekor terbaru; catatan.</p>
+<p><strong>UI:</strong> kartu 104dp; waktu numberXL.</p>
+<p><strong>Navigasi:</strong> kartu → S11.</p>
+</div>
+
+<div class="card">
+<h3>S11 — Detail Rekor</h3>
+<p><strong>Data:</strong> hero (waktu displayL, pace, tanggal + sesi → S08, "dari km x"); SegmentedControl Waktu/Pace; Top 10.</p>
+<p><strong>Grafik:</strong> CH6 best effort per sesi + garis rekor.</p>
+</div>
+
+<div class="card">
+<h3>S12 — Pengaturan</h3>
+<p><strong>Kelompok:</strong> TAMPILAN, VOICE, HITUNG MUNDUR, ALERT, TRACKING, DATA → S13, BANTUAN → S14, PENGEMBANG (debug) → S15/Katalog.</p>
+<p><strong>UI:</strong> tiap kelompok = RcCard + SectionHeader; kontrol SegmentedControl/RcSwitchRow/NumberStepper.</p>
+</div>
+
+<div class="card">
+<h3>S13 — Cadangan &amp; Data</h3>
+<p><strong>Data:</strong> ringkasan (Sesi/Template/Ukuran); "Cadangan terakhir"; banner pengingat; SegmentedControl pengingat; Zona bahaya.</p>
+<p><strong>Kontrol:</strong> Cadangkan ke file; Pulihkan dari file; Hapus semua data (ketik "HAPUS").</p>
+<p><strong>UI:</strong> Zona bahaya = kartu border fail 1dp.</p>
+</div>
+
+<div class="card">
+<h3>S14 — Panduan Baterai</h3>
+<p><strong>Data:</strong> penjelasan; status optimasi; chip merek (gulir); kartu langkah.</p>
+<p><strong>Kontrol:</strong> Buka pengaturan baterai; Buka pengaturan aplikasi.</p>
+</div>
+
+<div class="card">
+<h3>S15 — Simulator (debug) &amp; Katalog Komponen</h3>
+<p><strong>Data:</strong> workout; chip skenario; kecepatan 1x/10x/60x; panel log monospace.</p>
+<p><strong>Kontrol:</strong> Jalankan. Katalog menampilkan seluruh komponen UI.</p>
+</div>
+
+<h2 id="dialog">7. Sheet &amp; Dialog</h2>
+<table>
+  <thead><tr><th>ID</th><th>Nama</th><th>Isi / Fungsi</th><th>Bentuk</th></tr></thead>
+  <tbody>
+    <tr><td>D01</td><td>Editor Segmen</td><td>Label; tipe; batas; target pace; <strong>Arah target (≤ Maks / ≥ Min)</strong>; margin; per-km</td><td>Sheet penuh</td></tr>
+    <tr><td>D02</td><td>Preset</td><td>Stable run, Progressive tempo, Interval, Run/walk</td><td>Sheet</td></tr>
+    <tr><td>D03</td><td>Edit Sesi</td><td>Nama, skala capek, catatan, "jangan hitung untuk rekor"</td><td>Dialog (S07/S08)</td></tr>
+    <tr><td>D04</td><td>Lanjutkan Sesi</td><td>Nama workout + waktu; Lanjutkan/Buang</td><td>Banner di S02</td></tr>
+    <tr><td>D05</td><td>Konfirmasi Stop</td><td>Tetap lari / Stop</td><td>Dialog di S05</td></tr>
+    <tr><td>D06</td><td>Konfirmasi Skip</td><td>—</td><td>Tidak ada (Lewati langsung)</td></tr>
+    <tr><td>D07</td><td>Perpanjang Segmen</td><td>+100/+500 m; +30 s/+1 mnt</td><td>Dialog di S05</td></tr>
+    <tr><td>D08</td><td>Kalibrasi Jarak</td><td>Jarak terukur; input sebenarnya; faktor 0,95–1,05</td><td>Sheet di S08</td></tr>
+    <tr><td>D09</td><td>Konfirmasi Hapus</td><td>Hapus sesi; "Hapus semua data" = ketik HAPUS</td><td>Dialog</td></tr>
+    <tr><td>D10</td><td>Daftar Segmen (live)</td><td>Nama segmen + detail, status berjalan</td><td>Sheet di S05</td></tr>
+    <tr><td>D11</td><td>Info Segmen &amp; Istilah</td><td>Penjelasan tipe/batas/target/margin/per-km/repeat/cue</td><td>Sheet</td></tr>
+  </tbody>
+</table>
+
+<h2 id="data">8. Data yang Disimpan</h2>
+<h3>Database (Room) — <code>runcoach.db</code> (skema v5)</h3>
+<table>
+  <thead><tr><th>Tabel</th><th>Isi</th></tr></thead>
+  <tbody>
+    <tr><td>Session</td><td>Sesi: nama, catatan, RPE, waktu, elapsed/moving/paused, jarak, pace rata-rata, segmen lulus/gagal/borderline, status rencana, faktor kalibrasi, sample dibuang, <strong>pending</strong> (draft).</td></tr>
+    <tr><td>SegmentResult</td><td>Hasil segmen: label, tipe, batas, target, <strong>arah target</strong>, jarak, durasi, pace, selisih, status.</td></tr>
+    <tr><td>KmSplit</td><td>Split per km: jarak, durasi, pace, target, selisih, status.</td></tr>
+    <tr><td>BestEffort</td><td>Best effort per jarak (rekor).</td></tr>
+    <tr><td>TrackPoint</td><td>Titik GPS sesi.</td></tr>
+    <tr><td>WorkoutTemplate</td><td>Template workout (nama, JSON, bawaan, terakhir dipakai).</td></tr>
+    <tr><td>ActiveRunSnapshot</td><td>Snapshot sesi berjalan (resume).</td></tr>
+  </tbody>
+</table>
+<h3>Setelan (DataStore)</h3>
+<p>Tema; bahasa voice; countdown awal &amp; antar segmen; jarak cue; gaya countdown; margin terlalu cepat; getar; auto-pause; layar tetap menyala; km marker; alert pace; peta live; peta riwayat; faktor kalibrasi; pengingat cadangan (hari); cadangan terakhir; <strong>onboarding selesai</strong>.</p>
+
+<h2 id="izin">9. Perizinan</h2>
+<table>
+  <thead><tr><th>Izin</th><th>Untuk</th><th>Wajib</th></tr></thead>
+  <tbody>
+    <tr><td>ACCESS_FINE/COARSE_LOCATION</td><td>Rute &amp; pace</td><td>Ya (untuk lari)</td></tr>
+    <tr><td>POST_NOTIFICATIONS</td><td>Notifikasi sesi (Android 13+)</td><td>Dianjurkan</td></tr>
+    <tr><td>FOREGROUND_SERVICE + FOREGROUND_SERVICE_LOCATION</td><td>Sesi jalan saat layar mati</td><td>Ya</td></tr>
+    <tr><td>WAKE_LOCK, VIBRATE, INTERNET</td><td>Layar bangun, getar, tile peta</td><td>Otomatis</td></tr>
+  </tbody>
+</table>
+<p class="muted">Tidak meminta lokasi latar belakang.</p>
+
+<h2 id="rumus">10. Rumus &amp; Aturan Penting</h2>
+<ul>
+  <li><strong>Jarak efektif</strong>: <code>dEff = d × faktor kalibrasi</code> (0,95–1,05).</li>
+  <li><strong>Kalibrasi (F25)</strong>: <code>rawM = total / faktorLama</code>; <code>faktorBaru = clamp(sebenarnya / rawM, 0,95, 1,05)</code>. Tidak menumpuk.</li>
+  <li><strong>Auto-pause (F26)</strong>: <code>speed &lt; 0.6 m/s</code> ≥ 3 dtk → jeda; lanjut saat bergerak. Tidak retroaktif.</li>
+  <li><strong>Sample dibuang</strong>: akurasi &gt; 20 m, timestamp tidak naik, kecepatan tersirat &gt; 9 m/s.</li>
+  <li><strong>GPS hilang</strong>: tanpa sample valid ≥ 10 dtk.</li>
+  <li><strong>Segmentasi (F17)</strong>: margin GPS <code>min(target × 6 / jarak, 15)</code> detik. Target <strong>maks</strong> lulus bila pace ≤ target; target <strong>min</strong> lulus bila pace ≥ target.</li>
+  <li><strong>Rekor</strong>: dari bagian tercepat dalam sesi (window per jarak).</li>
+</ul>
+
+<h2 id="catatan">11. Catatan &amp; Penyimpangan</h2>
+<ul>
+  <li><strong>S06 tidak auto-save</strong>: draft → final saat Simpan (auto-recovery saat app dibuka).</li>
+  <li><strong>Mulai tanpa menunggu GPS</strong>; akurasi ditampilkan.</li>
+  <li><strong>Target pace dua arah</strong>: <code>≤ Maks</code> (lari) &amp; <code>≥ Min</code> (pemanasan/pendinginan/pemulihan).</li>
+  <li><strong>D04/D06</strong> tidak berbentuk dialog terpisah.</li>
+  <li>Keputusan lain: <code>docs/DECISIONS.md</code>; status tugas: <code>docs/PROGRESS.md</code>.</li>
+</ul>
+
+<p class="muted">© PacerNih — dokumen internal.</p>
+</main>
+</div>
+</body>
+</html>
