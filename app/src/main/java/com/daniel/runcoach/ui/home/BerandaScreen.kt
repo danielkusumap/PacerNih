@@ -55,19 +55,19 @@ import com.daniel.runcoach.service.RunForegroundService
 import com.daniel.runcoach.ui.Formatters
 import com.daniel.runcoach.ui.MainBottomBar
 import com.daniel.runcoach.ui.MainTab
-import com.daniel.runcoach.ui.components.Banner
 import com.daniel.runcoach.ui.components.EmptyState
 import com.daniel.runcoach.ui.components.MetricBlock
-import com.daniel.runcoach.ui.components.RcBannerVariant
 import com.daniel.runcoach.ui.components.RcButton
 import com.daniel.runcoach.ui.components.RcButtonSize
 import com.daniel.runcoach.ui.components.RcButtonVariant
 import com.daniel.runcoach.ui.components.RcCard
 import com.daniel.runcoach.ui.components.RcDialog
 import com.daniel.runcoach.ui.components.RcIconButton
+import com.daniel.runcoach.ui.components.RcScreenTitle
+import com.daniel.runcoach.ui.components.RcTextButton
+import com.daniel.runcoach.ui.components.RcTextButtonTone
 import com.daniel.runcoach.ui.components.SectionHeader
 import com.daniel.runcoach.ui.components.SegmentStrip
-import com.daniel.runcoach.ui.components.TopBar
 import com.daniel.runcoach.ui.theme.LocalRcColors
 import com.daniel.runcoach.ui.theme.LocalRcShapes
 import com.daniel.runcoach.ui.theme.LocalRcSpacing
@@ -134,26 +134,16 @@ fun BerandaScreen(
                     .padding(bottom = 88.dp),
                 verticalArrangement = Arrangement.spacedBy(spacing.cardGap),
             ) {
-                TopBar(title = stringResource(R.string.s02_title), tabPage = true)
+                RcScreenTitle(stringResource(R.string.s02_title))
 
                 snapshot?.let { snap ->
                     val name = runCatching { WorkoutJson.decode(snap.workoutJson).name }.getOrDefault("")
-                    Banner(
-                        text = "$name · ${stringResource(R.string.s02_resume_saved, formatTimestamp(snap.startedAtEpochMs))}",
-                        variant = RcBannerVariant.Accent,
+                    ResumeCard(
+                        name = name,
+                        savedLabel = stringResource(R.string.s02_resume_saved, formatTimestamp(snap.startedAtEpochMs)),
+                        onResume = { RunForegroundService.resume(context, snap.sessionId); onResumeRun() },
+                        onDiscard = { scope.launch { persistence.clear(snap.sessionId) }; snapshot = null },
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-                        RcButton(
-                            text = stringResource(R.string.action_resume),
-                            onClick = { RunForegroundService.resume(context, snap.sessionId); onResumeRun() },
-                            variant = RcButtonVariant.Tertiary,
-                        )
-                        RcButton(
-                            text = stringResource(R.string.action_discard),
-                            onClick = { scope.launch { persistence.clear(snap.sessionId) }; snapshot = null },
-                            variant = RcButtonVariant.Destructive,
-                        )
-                    }
                 }
 
                 FreeRunCard(onStart = { freeRun?.let { start(it.workout, null) } ?: start(WorkoutTemplateRepository.freeRunWorkout(), null) })
@@ -207,8 +197,8 @@ fun BerandaScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             ) {
-                Icon(painterResource(RcIcons.Add), contentDescription = null, tint = colors.textPrimary, modifier = Modifier.size(20.dp))
-                Text(stringResource(R.string.s02_create), style = LocalRcTypography.current.titleS, color = colors.textPrimary)
+                Icon(painterResource(RcIcons.Add), contentDescription = null, tint = colors.accentText, modifier = Modifier.size(20.dp))
+                Text(stringResource(R.string.s02_create).uppercase(), style = LocalRcTypography.current.tab, color = colors.textPrimary)
             }
         }
     }
@@ -231,6 +221,31 @@ fun BerandaScreen(
 }
 
 @Composable
+private fun ResumeCard(name: String, savedLabel: String, onResume: () -> Unit, onDiscard: () -> Unit) {
+    val colors = LocalRcColors.current
+    val shapes = LocalRcShapes.current
+    val type = LocalRcTypography.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colors.accentContainer, RoundedCornerShape(shapes.radiusL))
+            .border(1.dp, colors.accent, RoundedCornerShape(shapes.radiusL))
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.s02_resume_label).uppercase(), style = type.label, color = colors.accentText)
+            Text("$name · $savedLabel", style = type.bodySmall, color = colors.textSecondary)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            RcTextButton(stringResource(R.string.action_resume), onResume, tone = RcTextButtonTone.Accent)
+            RcTextButton(stringResource(R.string.action_discard), onDiscard, tone = RcTextButtonTone.Destructive)
+        }
+    }
+}
+
+@Composable
 private fun FreeRunCard(onStart: () -> Unit) {
     val colors = LocalRcColors.current
     val shapes = LocalRcShapes.current
@@ -248,8 +263,8 @@ private fun FreeRunCard(onStart: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column {
-            Text(stringResource(R.string.s02_free_run), style = type.titleM, color = colors.onAccent)
-            Text(stringResource(R.string.s02_free_run_sub), style = type.bodySmall, color = colors.onAccent)
+            Text(stringResource(R.string.s02_free_run).uppercase(), style = type.titleL, color = colors.onAccent)
+            Text(stringResource(R.string.s02_free_run_sub), style = type.bodySmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), color = colors.onAccent)
         }
         Box(
             modifier = Modifier.size(56.dp).clip(CircleShape).background(colors.onAccent),

@@ -54,8 +54,9 @@
     <string name="home_editor">Buat workout</string>
 
     <!-- S02 Beranda -->
-    <string name="s02_title">Beranda</string>
+    <string name="s02_title">Latihan</string>
     <string name="s02_free_run">Lari Bebas</string>
+    <string name="s02_resume_label">Lanjutkan sesi</string>
     <string name="s02_resume_title">Sesi belum selesai</string>
     <string name="s02_resume_detail">%1$s · disimpan %2$s</string>
     <string name="s02_create_first">Belum ada workout. Buat workout pertamamu.</string>

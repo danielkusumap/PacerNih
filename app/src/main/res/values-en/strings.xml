@@ -55,7 +55,8 @@
     <string name="home_editor">Create workout</string>
 
     <!-- S02 Home -->
-    <string name="s02_title">Home</string>
+    <string name="s02_title">Workout</string>
+    <string name="s02_resume_label">Resume session</string>
     <string name="s02_free_run">Free run</string>
     <string name="s02_resume_title">Unfinished session</string>
     <string name="s02_resume_detail">%1$s · saved %2$s</string>
