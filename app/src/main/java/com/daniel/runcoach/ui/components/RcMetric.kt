@@ -63,7 +63,7 @@ fun HeroPace(paceSecPerKm: Double?, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         val availablePx = with(density) { maxWidth.toPx() }
         val sizeSp = remember(text, availablePx) {
-            listOf(96, 90, 84, 78, 72).firstOrNull { sp ->
+            listOf(150, 132, 120, 108, 96, 84, 72).firstOrNull { sp ->
                 measurer.measure(text, style = type.displayHero.copy(fontSize = sp.sp)).size.width <= availablePx
             } ?: 72
         }
@@ -74,7 +74,7 @@ fun HeroPace(paceSecPerKm: Double?, modifier: Modifier = Modifier) {
                 color = if (missing) colors.textTertiary else colors.textPrimary,
                 maxLines = 1,
             )
-            Text("/km", style = type.titleS, color = colors.textSecondary)
+            Text("/KM", style = type.label, color = colors.textSecondary)
         }
     }
 }

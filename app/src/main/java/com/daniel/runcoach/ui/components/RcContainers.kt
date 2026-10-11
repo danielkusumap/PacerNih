@@ -1,6 +1,7 @@
 package com.daniel.runcoach.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,7 +34,7 @@ import com.daniel.runcoach.ui.theme.LocalRcSpacing
 import com.daniel.runcoach.ui.theme.LocalRcTypography
 import com.daniel.runcoach.ui.theme.RcIcons
 
-/** TopBar: 56dp (64dp on tab pages), title left, back arrow left, actions right (DESIGN.md section 6). */
+/** TopBar: 48dp, back arrow left, title (Manrope bold), actions right (DESIGN-RESKIN section 3). */
 @Composable
 fun TopBar(
     title: String,
@@ -48,7 +49,7 @@ fun TopBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(if (tabPage) 64.dp else 56.dp)
+            .height(48.dp)
             .padding(horizontal = spacing.s2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -59,18 +60,27 @@ fun TopBar(
         }
         Text(
             title,
-            style = if (tabPage) type.titleL else type.titleM,
+            style = type.titleS,
             color = colors.textPrimary,
+            maxLines = 1,
             modifier = Modifier.weight(1f).padding(start = spacing.s1),
         )
         actions()
     }
 }
 
+/** Big uppercase page title for tab pages (LATIHAN / RIWAYAT / STATISTIK / PENGATURAN). */
+@Composable
+fun RcScreenTitle(text: String, modifier: Modifier = Modifier) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    Text(text.uppercase(), style = type.titleL, color = colors.textPrimary, maxLines = 1, modifier = modifier)
+}
+
 /** One bottom-bar tab. */
 data class RcTabItem(val icon: Int, val label: String)
 
-/** BottomBar: 64dp + inset, 4 tabs, active accent bar 3x24dp above the icon (DESIGN.md section 6). */
+/** BottomBar: 68dp + inset, 4 tabs, active accent bar 24x3 at the top edge (DESIGN-RESKIN section 2). */
 @Composable
 fun RcBottomBar(
     items: List<RcTabItem>,
@@ -85,7 +95,7 @@ fun RcBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(64.dp)
+                .height(68.dp)
                 .windowInsetsPadding(WindowInsets.navigationBars),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -104,7 +114,7 @@ fun RcBottomBar(
                         modifier = Modifier
                             .height(3.dp)
                             .width(24.dp)
-                            .background(if (active) colors.accent else Color.Transparent, RoundedCornerShape(2.dp)),
+                            .background(if (active) colors.accent else Color.Transparent, RoundedCornerShape(bottomStart = 3.dp, bottomEnd = 3.dp)),
                     )
                     Icon(
                         painterResource(item.icon),
@@ -112,7 +122,7 @@ fun RcBottomBar(
                         tint = tint,
                         modifier = Modifier.padding(top = 6.dp).size(24.dp),
                     )
-                    Text(item.label, style = type.label, color = tint)
+                    Text(item.label.uppercase(), style = type.tabBar, color = tint)
                 }
             }
         }
@@ -170,12 +180,13 @@ fun RcDialog(
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(spacing.s2)
+                .padding(horizontal = 35.dp, vertical = spacing.s2)
                 .background(colors.surfaceRaised, RoundedCornerShape(shapes.radiusXL))
+                .border(1.dp, colors.outline, RoundedCornerShape(shapes.radiusXL))
                 .padding(spacing.s5),
             verticalArrangement = Arrangement.spacedBy(spacing.s3),
         ) {
-            Text(title, style = type.titleM, color = colors.textPrimary)
+            Text(title.uppercase(), style = type.titleDlg, color = colors.textPrimary)
             content()
             Row(
                 modifier = Modifier.fillMaxWidth(),

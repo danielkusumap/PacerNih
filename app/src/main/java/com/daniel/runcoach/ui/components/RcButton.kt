@@ -26,19 +26,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.daniel.runcoach.ui.theme.LocalRcColors
 import com.daniel.runcoach.ui.theme.LocalRcShapes
 import com.daniel.runcoach.ui.theme.LocalRcSpacing
 import com.daniel.runcoach.ui.theme.LocalRcTypography
 
-/** RcButton variants (DESIGN.md section 6). */
+/** RcButton variants (DESIGN-RESKIN section 2). */
 enum class RcButtonVariant { Primary, Secondary, Tertiary, Destructive, DestructiveFilled }
 
-enum class RcButtonSize { Regular, Small }
+enum class RcButtonSize { Regular, Small, Large }
 
-/** Reusable button. Height 56dp (Small 44dp), radius 14, no Material pill. */
+/** Reusable button: 56dp (Small 44, Large 64), radius 14, Barlow 800 uppercase (DESIGN-RESKIN section 2). */
 @Composable
 fun RcButton(
     text: String,
@@ -58,7 +57,11 @@ fun RcButton(
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
 
-    val height = if (size == RcButtonSize.Small) 44.dp else 56.dp
+    val height = when (size) {
+        RcButtonSize.Small -> 44.dp
+        RcButtonSize.Regular -> 56.dp
+        RcButtonSize.Large -> 64.dp
+    }
     val (container, border, content) = when (variant) {
         RcButtonVariant.Primary -> Triple(colors.accent, null, colors.onAccent)
         RcButtonVariant.Secondary -> Triple(Color.Transparent, BorderStroke(1.5.dp, colors.outlineStrong), colors.textPrimary)
@@ -67,6 +70,7 @@ fun RcButton(
         RcButtonVariant.DestructiveFilled -> Triple(colors.fail, null, colors.onFail)
     }
     val pressOverlay = if (pressed) 0.10f else 0f
+    val textStyle = if (size == RcButtonSize.Large) type.numberXS else type.button
 
     Box(
         modifier = modifier
@@ -86,16 +90,39 @@ fun RcButton(
             } else if (icon != null) {
                 Icon(painter = painterResource(icon), contentDescription = null, tint = content, modifier = Modifier.size(20.dp))
             }
-            Text(
-                text = text,
-                color = content,
-                style = if (variant == RcButtonVariant.Primary) type.titleS.copy(fontWeight = FontWeight.Bold) else type.titleS,
-            )
+            Text(text = text.uppercase(), color = content, style = textStyle, maxLines = 1)
         }
     }
 }
 
-/** RcIconButton: 48dp touch area, 24dp icon (DESIGN.md section 6). */
+/** Text-button (DESIGN-RESKIN section 2): Barlow 800 18-20, accent / textSecondary / fail. */
+enum class RcTextButtonTone { Accent, Neutral, Destructive }
+
+@Composable
+fun RcTextButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    tone: RcTextButtonTone = RcTextButtonTone.Accent,
+    enabled: Boolean = true,
+) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    val color = when (tone) {
+        RcTextButtonTone.Accent -> colors.accentText
+        RcTextButtonTone.Neutral -> colors.textSecondary
+        RcTextButtonTone.Destructive -> colors.fail
+    }
+    Text(
+        text = text.uppercase(),
+        color = color,
+        style = type.tab,
+        maxLines = 1,
+        modifier = modifier.alpha(if (enabled) 1f else 0.38f).clickable(enabled = enabled, onClick = onClick),
+    )
+}
+
+/** RcIconButton: 48dp touch area, 24dp icon (DESIGN-RESKIN section 2). */
 enum class RcIconButtonVariant { Plain, Filled, Accent }
 
 @Composable
@@ -122,7 +149,7 @@ fun RcIconButton(
     }
     Box(
         modifier = modifier
-            .size(if (variant == RcIconButtonVariant.Plain) 48.dp else 56.dp)
+            .size(48.dp)
             .alpha(if (enabled) 1f else 0.38f)
             .background(container, CircleShape)
             .clickable(enabled = enabled, onClick = onClick),

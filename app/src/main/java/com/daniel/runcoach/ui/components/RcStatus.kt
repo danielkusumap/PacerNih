@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -81,11 +82,11 @@ fun StatusBadge(
         }
         Text(
             label.uppercase(),
-            style = type.titleS.copy(fontWeight = FontWeight.Bold),
+            style = type.band,
             color = status.onColor(),
             modifier = Modifier.weight(1f),
         )
-        if (delta != null) Text(delta, style = type.titleS, color = status.onColor())
+        if (delta != null) Text(delta, style = type.band, color = status.onColor())
     }
 }
 
@@ -97,6 +98,7 @@ fun ResultChip(status: RcStatus, label: String, modifier: Modifier = Modifier) {
     val dashed = status == RcStatus.Neutral && label.equals("DATA KURANG", ignoreCase = true)
     Row(
         modifier = modifier
+            .height(26.dp)
             .background(status.containerColor(), RoundedCornerShape(shapes.radiusS))
             .then(
                 if (status == RcStatus.Neutral) {
@@ -105,16 +107,16 @@ fun ResultChip(status: RcStatus, label: String, modifier: Modifier = Modifier) {
                     Modifier
                 },
             )
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         if (!dashed) {
             status.icon()?.let {
                 Icon(painterResource(it), contentDescription = null, tint = status.onColor(), modifier = Modifier.size(16.dp))
             }
         }
-        Text(label.uppercase(), style = type.label, color = status.onColor(), maxLines = 1, softWrap = false)
+        Text(label.uppercase(), style = type.chip, color = status.onColor(), maxLines = 1, softWrap = false)
     }
 }
 
@@ -141,17 +143,16 @@ fun Banner(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 48.dp)
             .background(container, RoundedCornerShape(shapes.radiusM))
             .then(if (variant == RcBannerVariant.Accent) Modifier.border(1.dp, colors.accent, RoundedCornerShape(shapes.radiusM)) else Modifier)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Icon(painterResource(icon), contentDescription = null, tint = content, modifier = Modifier.size(24.dp))
+        Icon(painterResource(icon), contentDescription = null, tint = content, modifier = Modifier.size(20.dp))
         Text(text, style = type.bodySmall.copy(fontWeight = FontWeight.Bold), color = content, modifier = Modifier.weight(1f))
         if (action != null && onAction != null) {
-            Text(action, style = type.titleS, color = content, modifier = Modifier.clickable(onClick = onAction))
+            RcTextButton(text = action, onClick = onAction, tone = RcTextButtonTone.Accent)
         }
     }
 }

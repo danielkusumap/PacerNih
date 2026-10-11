@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -38,7 +40,7 @@ import com.daniel.runcoach.ui.theme.LocalRcSpacing
 import com.daniel.runcoach.ui.theme.LocalRcTypography
 import com.daniel.runcoach.ui.theme.RcIcons
 
-/** SegmentedControl: 44dp track, active filled accent (DESIGN.md section 6). */
+/** SegmentedControl: 40dp track, padding 3, active filled accent (DESIGN-RESKIN section 2). */
 @Composable
 fun <T> SegmentedControl(
     options: List<Pair<T, String>>,
@@ -52,9 +54,9 @@ fun <T> SegmentedControl(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(44.dp)
+            .height(40.dp)
             .background(colors.surfaceRaised, RoundedCornerShape(shapes.radiusM))
-            .padding(2.dp),
+            .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         options.forEach { (value, label) ->
@@ -63,11 +65,11 @@ fun <T> SegmentedControl(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .background(if (active) colors.accent else Color.Transparent, RoundedCornerShape(shapes.radiusM - 2.dp))
+                    .background(if (active) colors.accent else Color.Transparent, RoundedCornerShape(11.dp))
                     .clickable { onSelect(value) },
                 contentAlignment = Alignment.Center,
             ) {
-                Text(label, style = type.titleS, color = if (active) colors.onAccent else colors.textSecondary)
+                Text(label.uppercase(), style = type.segmented, color = if (active) colors.onAccent else colors.textSecondary, maxLines = 1)
             }
         }
     }
@@ -141,7 +143,7 @@ fun NumberStepper(
     ) {
         StepperButton(icon = RcIcons.ChevronLeft, enabled = enabled, onClick = onDecrement)
         Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(value, style = type.numberM, color = colors.textPrimary)
+            Text(value, style = type.numberL, color = colors.textPrimary)
             Text(stepLabel, style = type.caption, color = colors.textTertiary)
         }
         StepperButton(icon = RcIcons.ChevronRight, enabled = enabled, onClick = onIncrement)
@@ -151,12 +153,11 @@ fun NumberStepper(
 @Composable
 private fun StepperButton(icon: Int, enabled: Boolean, onClick: () -> Unit) {
     val colors = LocalRcColors.current
-    val shapes = LocalRcShapes.current
     Box(
         modifier = Modifier
             .size(48.dp)
             .alpha(if (enabled) 1f else 0.38f)
-            .background(colors.surfaceRaised, RoundedCornerShape(shapes.radiusS))
+            .background(colors.surfaceRaised, CircleShape)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -164,7 +165,7 @@ private fun StepperButton(icon: Int, enabled: Boolean, onClick: () -> Unit) {
     }
 }
 
-/** RcTextField: 56dp (multiline min 96dp), surfaceRaised, focus accent, error fail (DESIGN.md section 6). */
+/** RcTextField: external label, 48dp field (multiline min 96dp), surfaceRaised, radius 14 (DESIGN-RESKIN 2). */
 @Composable
 fun RcTextField(
     value: String,
@@ -192,35 +193,41 @@ fun RcTextField(
         else -> colors.outlineStrong
     }
     Column(modifier = modifier) {
+        if (label.isNotEmpty()) {
+            Text(
+                label.uppercase(),
+                style = type.label,
+                color = colors.textSecondary,
+                modifier = Modifier.padding(bottom = 6.dp),
+            )
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = if (multiline) 96.dp else 56.dp)
+                .then(if (multiline) Modifier.heightIn(min = 96.dp) else Modifier.height(48.dp))
                 .background(colors.surfaceRaised, RoundedCornerShape(shapes.radiusM))
                 .border(if (focused) 2.dp else 1.5.dp, borderColor, RoundedCornerShape(shapes.radiusM))
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = 14.dp, vertical = if (multiline) 12.dp else 0.dp),
+            contentAlignment = if (multiline) Alignment.TopStart else Alignment.CenterStart,
         ) {
-            Column {
-                Text(label, style = type.label, color = colors.textSecondary)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        if (value.isEmpty() && placeholder != null) {
-                            Text(placeholder, style = type.body, color = colors.textTertiary)
-                        }
-                        BasicTextField(
-                            value = value,
-                            onValueChange = onValueChange,
-                            enabled = enabled,
-                            textStyle = type.body.copy(color = colors.textPrimary),
-                            cursorBrush = SolidColor(colors.accent),
-                            singleLine = !multiline,
-                            keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
-                            interactionSource = interaction,
-                            modifier = Modifier.fillMaxWidth().then(if (textFieldTag != null) Modifier.testTag(textFieldTag) else Modifier),
-                        )
+            Row(verticalAlignment = if (multiline) Alignment.Top else Alignment.CenterVertically) {
+                Box(modifier = Modifier.weight(1f)) {
+                    if (value.isEmpty() && placeholder != null) {
+                        Text(placeholder, style = type.body, color = colors.textTertiary)
                     }
-                    trailing?.invoke()
+                    BasicTextField(
+                        value = value,
+                        onValueChange = onValueChange,
+                        enabled = enabled,
+                        textStyle = type.body.copy(color = colors.textPrimary),
+                        cursorBrush = SolidColor(colors.accent),
+                        singleLine = !multiline,
+                        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
+                        interactionSource = interaction,
+                        modifier = Modifier.fillMaxWidth().then(if (textFieldTag != null) Modifier.testTag(textFieldTag) else Modifier),
+                    )
                 }
+                trailing?.invoke()
             }
         }
         if (isError && errorText != null) {

@@ -66,7 +66,7 @@ fun RcCard(
                     Modifier
                 },
             )
-            .padding(spacing.cardPad),
+            .padding(horizontal = spacing.s4, vertical = 14.dp),
     ) {
         content()
     }
@@ -90,7 +90,7 @@ fun SectionHeader(
     ) {
         Text(title.uppercase(), style = type.label, color = colors.textSecondary)
         if (action != null && onAction != null) {
-            Text(action, style = type.titleS, color = colors.accentText, modifier = Modifier.clickable(onClick = onAction))
+            RcTextButton(text = action, onClick = onAction, tone = RcTextButtonTone.Accent)
         }
     }
 }
