@@ -6,8 +6,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.daniel.runcoach.ui.theme.LocalRcColors
 import com.daniel.runcoach.ui.theme.RcDarkColors
-import com.daniel.runcoach.ui.theme.RcFontFamily
 import com.daniel.runcoach.ui.theme.RcLightColors
+import com.daniel.runcoach.ui.theme.RcSans
 import com.daniel.runcoach.ui.theme.RcTheme
 import com.daniel.runcoach.ui.theme.RcType
 import org.junit.Assert.assertEquals
@@ -17,7 +17,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /** U0 AC: RcTheme provides the right tokens in both themes, maps Material's palette to the tokens (no purple)
- * and the Inter family is the one bundled in res/font. */
+ * and the Manrope family is the one bundled in res/font (DESIGN-RESKIN 1.2). */
 @RunWith(AndroidJUnit4::class)
 class RcThemeTest {
 
@@ -38,7 +38,7 @@ class RcThemeTest {
         assertEquals(expected, captured)
         assertEquals("Material primary must be the token accent", expected.accent, materialPrimary)
         assertNotEquals("no default purple", androidx.compose.ui.graphics.Color(0xFF6650a4), materialPrimary)
-        assertEquals(RcFontFamily, RcType.body.fontFamily)
+        assertEquals(RcSans, RcType.body.fontFamily)
     }
 
     @Composable
