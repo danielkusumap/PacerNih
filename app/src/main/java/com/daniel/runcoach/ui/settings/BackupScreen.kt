@@ -41,6 +41,8 @@ import com.daniel.runcoach.ui.components.RcCard
 import com.daniel.runcoach.ui.components.RcDialog
 import com.daniel.runcoach.ui.components.RcStatus
 import com.daniel.runcoach.ui.components.RcTextField
+import com.daniel.runcoach.ui.components.RcTextButton
+import com.daniel.runcoach.ui.components.RcTextButtonTone
 import com.daniel.runcoach.ui.components.ResultChip
 import com.daniel.runcoach.ui.components.SectionHeader
 import com.daniel.runcoach.ui.components.SegmentedControl
@@ -177,13 +179,13 @@ fun BackupScreen(onBack: () -> Unit) {
                     RcTextField(value = deleteText, onValueChange = { deleteText = it }, label = "HAPUS")
                 }
             },
-            dismiss = { RcButton(stringResource(R.string.editor_discard_keep), onClick = { showDelete = false; deleteText = "" }, variant = RcButtonVariant.Tertiary) },
+            dismiss = { RcTextButton(stringResource(R.string.editor_discard_keep), onClick = { showDelete = false; deleteText = "" }, tone = RcTextButtonTone.Neutral) },
             confirm = {
-                RcButton(
+                RcTextButton(
                     stringResource(R.string.s13_delete_all),
                     onClick = { scope.launch { repository.deleteAllData(); showDelete = false; deleteText = ""; refresh() } },
                     enabled = deleteText.trim().uppercase() == "HAPUS",
-                    variant = RcButtonVariant.DestructiveFilled,
+                    tone = RcTextButtonTone.Destructive,
                 )
             },
         )

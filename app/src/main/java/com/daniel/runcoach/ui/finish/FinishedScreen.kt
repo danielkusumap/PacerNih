@@ -46,6 +46,8 @@ import com.daniel.runcoach.ui.components.RcButtonVariant
 import com.daniel.runcoach.ui.components.RcDialog
 import com.daniel.runcoach.ui.components.RcStatus
 import com.daniel.runcoach.ui.components.RcTextField
+import com.daniel.runcoach.ui.components.RcTextButton
+import com.daniel.runcoach.ui.components.RcTextButtonTone
 import com.daniel.runcoach.ui.components.ResultStrip
 import com.daniel.runcoach.ui.components.SectionHeader
 import com.daniel.runcoach.ui.theme.LocalRcColors
@@ -216,8 +218,8 @@ fun FinishedScreen(onDone: () -> Unit) {
             onDismiss = { showDiscard = false },
             title = stringResource(R.string.s06_discard_title),
             content = { Text(stringResource(R.string.s06_discard_message), style = type.body, color = colors.textSecondary) },
-            dismiss = { RcButton(stringResource(R.string.editor_discard_keep), onClick = { showDiscard = false }, variant = RcButtonVariant.Tertiary) },
-            confirm = { RcButton(stringResource(R.string.s06_discard_confirm), onClick = { showDiscard = false; discard() }, variant = RcButtonVariant.DestructiveFilled) },
+            dismiss = { RcTextButton(stringResource(R.string.editor_discard_keep), onClick = { showDiscard = false }, tone = RcTextButtonTone.Neutral) },
+            confirm = { RcTextButton(stringResource(R.string.s06_discard_confirm), onClick = { showDiscard = false; discard() }, tone = RcTextButtonTone.Destructive) },
         )
     }
 }

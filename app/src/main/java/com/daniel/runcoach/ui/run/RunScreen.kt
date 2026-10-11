@@ -2,6 +2,7 @@ package com.daniel.runcoach.ui.run
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,12 +55,15 @@ import com.daniel.runcoach.ui.components.MetricBlock
 import com.daniel.runcoach.ui.components.RcButton
 import com.daniel.runcoach.ui.components.RcButtonVariant
 import com.daniel.runcoach.ui.components.RcCard
+import com.daniel.runcoach.ui.components.RcChoiceChip
 import com.daniel.runcoach.ui.components.RcDialog
 import com.daniel.runcoach.ui.components.RcIconButton
 import com.daniel.runcoach.ui.components.RcIconButtonVariant
 import com.daniel.runcoach.ui.components.RcStatus
 import com.daniel.runcoach.ui.components.SegmentProgressBar
 import com.daniel.runcoach.ui.components.StatusBadge
+import com.daniel.runcoach.ui.components.RcTextButton
+import com.daniel.runcoach.ui.components.RcTextButtonTone
 import com.daniel.runcoach.ui.components.segmentKindColor
 import com.daniel.runcoach.ui.components.segmentKindIcon
 import com.daniel.runcoach.ui.map.RouteMapView
@@ -95,12 +99,12 @@ fun RunRoute(onStop: () -> Unit) {
             onDismiss = { showBackDialog = false },
             title = stringResource(R.string.run_back_title),
             content = { Text(stringResource(R.string.run_back_message), style = LocalRcTypography.current.body, color = LocalRcColors.current.textSecondary) },
-            dismiss = { RcButton(stringResource(R.string.run_stay), onClick = { showBackDialog = false }, variant = RcButtonVariant.Tertiary) },
+            dismiss = { RcTextButton(stringResource(R.string.run_stay), onClick = { showBackDialog = false }, tone = RcTextButtonTone.Accent) },
             confirm = {
-                RcButton(
+                RcTextButton(
                     stringResource(R.string.action_stop_run),
                     onClick = { showBackDialog = false; RunForegroundService.stop(context); onStop() },
-                    variant = RcButtonVariant.DestructiveFilled,
+                    tone = RcTextButtonTone.Destructive,
                 )
             },
         )
@@ -491,21 +495,31 @@ private fun CountdownOverlay(workoutName: String, seconds: Int, onCancel: () -> 
 
 @Composable
 private fun ExtendDialog(segment: Segment, onDismiss: () -> Unit, onExtend: (Double, Int) -> Unit) {
+    val type = LocalRcTypography.current
+    val colors = LocalRcColors.current
+    val isDistance = segment.limit is Limit.Distance
     RcDialog(
         onDismiss = onDismiss,
         title = stringResource(R.string.run_extend),
         content = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (segment.limit is Limit.Distance) {
-                    RcButton("+100 m", onClick = { onExtend(100.0, 0) }, variant = RcButtonVariant.Secondary, fillWidth = true)
-                    RcButton("+500 m", onClick = { onExtend(500.0, 0) }, variant = RcButtonVariant.Secondary, fillWidth = true)
-                } else {
-                    RcButton("+30 s", onClick = { onExtend(0.0, 30) }, variant = RcButtonVariant.Secondary, fillWidth = true)
-                    RcButton("+1 min", onClick = { onExtend(0.0, 60) }, variant = RcButtonVariant.Secondary, fillWidth = true)
+                Text(
+                    stringResource(if (isDistance) R.string.d07_distance else R.string.d07_duration).uppercase(),
+                    style = type.label,
+                    color = colors.textSecondary,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (isDistance) {
+                        RcChoiceChip("+100 m", selected = false, onClick = { onExtend(100.0, 0) }, modifier = Modifier.weight(1f))
+                        RcChoiceChip("+500 m", selected = false, onClick = { onExtend(500.0, 0) }, modifier = Modifier.weight(1f))
+                    } else {
+                        RcChoiceChip("+30 dtk", selected = false, onClick = { onExtend(0.0, 30) }, modifier = Modifier.weight(1f))
+                        RcChoiceChip("+1 mnt", selected = false, onClick = { onExtend(0.0, 60) }, modifier = Modifier.weight(1f))
+                    }
                 }
             }
         },
-        confirm = { RcButton(stringResource(R.string.run_countdown_cancel), onClick = onDismiss, variant = RcButtonVariant.Tertiary) },
+        dismiss = { RcTextButton(stringResource(R.string.run_countdown_cancel), onClick = onDismiss, tone = RcTextButtonTone.Neutral) },
     )
 }
 
@@ -513,22 +527,41 @@ private fun ExtendDialog(segment: Segment, onDismiss: () -> Unit, onExtend: (Dou
 private fun SegmentListSheet(ui: RunUiState, onDismiss: () -> Unit) {
     val colors = LocalRcColors.current
     val type = LocalRcTypography.current
+    val current = ui.state.stepIndex
     com.daniel.runcoach.ui.components.RcSheet(onDismiss = onDismiss) {
-        Text(stringResource(R.string.run_list_segments), style = type.titleM, color = colors.textPrimary)
+        Text(stringResource(R.string.run_list_segments).uppercase(), style = type.titleM, color = colors.textPrimary)
         ui.steps.forEachIndexed { index, seg ->
             val number = index + 1
+            val isCurrent = number == current
+            val isDone = number < current
             Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .then(if (isCurrent) Modifier.background(colors.accentContainer, RoundedCornerShape(14.dp)) else Modifier)
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Icon(painterResource(segmentKindIcon(seg.kind)), contentDescription = null, tint = segmentKindColor(seg.kind), modifier = Modifier.size(20.dp))
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .then(
+                            when {
+                                isCurrent -> Modifier.border(2.dp, colors.accent, CircleShape)
+                                isDone -> Modifier.background(colors.passContainer, CircleShape)
+                                else -> Modifier.border(1.5.dp, colors.outlineStrong, CircleShape)
+                            },
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (isDone) Icon(painterResource(RcIcons.Check), contentDescription = null, tint = colors.pass, modifier = Modifier.size(14.dp))
+                }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("$number. ${seg.label}", style = type.titleS, color = colors.textPrimary)
-                    Text(describeSegmentText(seg), style = type.bodySmall, color = colors.textSecondary)
+                    Text("$number. ${seg.label}", style = type.titleS, color = colors.textPrimary, maxLines = 1)
+                    Text(describeSegmentText(seg), style = type.caption, color = colors.textSecondary)
                 }
             }
-            com.daniel.runcoach.ui.components.RcDivider()
         }
     }
 }

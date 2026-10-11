@@ -54,6 +54,7 @@ import com.daniel.runcoach.ui.components.InfoIcon
 import com.daniel.runcoach.ui.components.RcButton
 import com.daniel.runcoach.ui.components.RcButtonVariant
 import com.daniel.runcoach.ui.components.RcCard
+import com.daniel.runcoach.ui.components.RcChoiceChip
 import com.daniel.runcoach.ui.components.RcDialog
 import com.daniel.runcoach.ui.components.RcIconButton
 import com.daniel.runcoach.ui.components.RcSheet
@@ -62,6 +63,7 @@ import com.daniel.runcoach.ui.components.RcTextField
 import com.daniel.runcoach.ui.components.SegmentStrip
 import com.daniel.runcoach.ui.components.SegmentedControl
 import com.daniel.runcoach.ui.components.RcTextButton
+import com.daniel.runcoach.ui.components.RcTextButtonTone
 import com.daniel.runcoach.ui.components.TopBar
 import com.daniel.runcoach.ui.components.segmentKindColor
 import com.daniel.runcoach.ui.components.segmentKindIcon
@@ -261,8 +263,8 @@ fun EditorScreen(initial: Workout? = null, onSaved: () -> Unit, onCancel: () -> 
             onDismiss = { showDiscard = false },
             title = stringResource(R.string.editor_discard_title),
             content = { Text(stringResource(R.string.editor_discard_message), style = type.body, color = colors.textSecondary) },
-            dismiss = { RcButton(stringResource(R.string.editor_discard_keep), onClick = { showDiscard = false }, variant = RcButtonVariant.Tertiary) },
-            confirm = { RcButton(stringResource(R.string.editor_discard_confirm), onClick = { showDiscard = false; onCancel() }, variant = RcButtonVariant.DestructiveFilled) },
+            dismiss = { RcTextButton(stringResource(R.string.editor_discard_keep), onClick = { showDiscard = false }, tone = RcTextButtonTone.Neutral) },
+            confirm = { RcTextButton(stringResource(R.string.editor_discard_confirm), onClick = { showDiscard = false; onCancel() }, tone = RcTextButtonTone.Destructive) },
         )
     }
 }
@@ -377,24 +379,27 @@ private fun SegmentSheet(
     val fallbackLabel = kindWord(kind)
 
     RcSheet(onDismiss = onDismiss) {
-        Text(stringResource(R.string.d01_title), style = type.titleM, color = colors.textPrimary)
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.d01_title).uppercase(), style = type.titleM, color = colors.textPrimary, modifier = Modifier.weight(1f))
+            RcIconButton(RcIcons.Close, contentDescription = null, onClick = onDismiss, tint = colors.textSecondary)
+        }
         RcTextField(value = label, onValueChange = { label = it }, label = stringResource(R.string.d01_label), modifier = Modifier.padding(top = spacing.s2))
 
-        Text(stringResource(R.string.d01_kind), style = type.label, color = colors.textSecondary, modifier = Modifier.padding(top = spacing.s2))
-        Row(modifier = Modifier.fillMaxWidth().padding(vertical = spacing.s2), horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-            SegmentKind.entries.forEach { k ->
-                val active = k == kind
-                Column(
-                    modifier = Modifier.weight(1f).background(if (active) colors.accentContainer else colors.surfaceRaised, RoundedCornerShape(spacing.s3)).clickable { kind = k; bound = defaultBoundFor(k) }.padding(vertical = 10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Icon(painterResource(segmentKindIcon(k)), contentDescription = null, tint = segmentKindColor(k), modifier = Modifier.size(24.dp))
-                    Text(kindWord(k), style = type.caption, color = colors.textPrimary)
-                }
+        Text(stringResource(R.string.d01_kind).uppercase(), style = type.label, color = colors.textSecondary, modifier = Modifier.padding(top = spacing.s2))
+        val kindOrder = listOf(SegmentKind.WARMUP, SegmentKind.RUN, SegmentKind.WALK, SegmentKind.RECOVERY, SegmentKind.COOLDOWN)
+        Row(modifier = Modifier.fillMaxWidth().padding(top = spacing.s2), horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+            kindOrder.take(3).forEach { k ->
+                RcChoiceChip(kindWord(k), selected = k == kind, onClick = { kind = k; bound = defaultBoundFor(k) }, modifier = Modifier.weight(1f))
             }
         }
+        Row(modifier = Modifier.fillMaxWidth().padding(top = spacing.s2), horizontalArrangement = Arrangement.spacedBy(spacing.s2), verticalAlignment = Alignment.CenterVertically) {
+            kindOrder.drop(3).forEach { k ->
+                RcChoiceChip(kindWord(k), selected = k == kind, onClick = { kind = k; bound = defaultBoundFor(k) }, modifier = Modifier.weight(1f))
+            }
+            InfoIcon(topic = kindWord(kind), onClick = { onInfo(kindTopic(kind)) })
+        }
 
-        Text(stringResource(R.string.d01_limit), style = type.label, color = colors.textSecondary)
+        Text(stringResource(R.string.d01_limit).uppercase(), style = type.label, color = colors.textSecondary, modifier = Modifier.padding(top = spacing.s2))
         SegmentedControl(
             options = buildList {
                 add(0 to stringResource(R.string.d01_distance_m))
@@ -515,7 +520,12 @@ private fun InfoSheet(topic: InfoTopic, onDismiss: () -> Unit) {
     val colors = LocalRcColors.current
     val type = LocalRcTypography.current
     RcSheet(onDismiss = onDismiss) {
-        Text(stringResource(topic.titleRes), style = type.titleM, color = colors.textPrimary)
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(modifier = Modifier.size(56.dp).background(colors.accentContainer, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(painterResource(RcIcons.Info), contentDescription = null, tint = colors.accentText, modifier = Modifier.size(28.dp))
+            }
+            Text(stringResource(topic.titleRes).uppercase(), style = type.titleM, color = colors.textPrimary, modifier = Modifier.weight(1f))
+        }
         Text(stringResource(topic.bodyRes), style = type.body, color = colors.textSecondary, modifier = Modifier.padding(top = 12.dp))
         RcButton(stringResource(R.string.info_understand), onClick = onDismiss, fillWidth = true, modifier = Modifier.padding(top = 16.dp))
     }

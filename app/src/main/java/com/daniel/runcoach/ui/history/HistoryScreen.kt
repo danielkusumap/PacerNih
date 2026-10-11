@@ -46,6 +46,8 @@ import com.daniel.runcoach.ui.components.RcDialog
 import com.daniel.runcoach.ui.components.RcIconButton
 import com.daniel.runcoach.ui.components.RcStatus
 import com.daniel.runcoach.ui.components.RcTextField
+import com.daniel.runcoach.ui.components.RcTextButton
+import com.daniel.runcoach.ui.components.RcTextButtonTone
 import com.daniel.runcoach.ui.components.ResultChip
 import com.daniel.runcoach.ui.components.RcScreenTitle
 import com.daniel.runcoach.ui.components.TopBar
@@ -143,8 +145,8 @@ fun HistoryScreen(onOpenSession: (String) -> Unit, onSelectTab: (MainTab) -> Uni
             onDismiss = { deleting = null },
             title = stringResource(R.string.d09_delete_session_title),
             content = { Text(stringResource(R.string.d09_delete_session_message, session.name), style = LocalRcTypography.current.body, color = colors.textSecondary) },
-            dismiss = { RcButton(stringResource(R.string.editor_discard_keep), onClick = { deleting = null }, variant = RcButtonVariant.Tertiary) },
-            confirm = { RcButton(stringResource(R.string.s07_delete), onClick = { scope.launch { repository.delete(session.id) }; deleting = null }, variant = RcButtonVariant.DestructiveFilled) },
+            dismiss = { RcTextButton(stringResource(R.string.editor_discard_keep), onClick = { deleting = null }, tone = RcTextButtonTone.Neutral) },
+            confirm = { RcTextButton(stringResource(R.string.s07_delete), onClick = { scope.launch { repository.delete(session.id) }; deleting = null }, tone = RcTextButtonTone.Destructive) },
         )
     }
 }
@@ -236,9 +238,9 @@ private fun EditSessionDialog(
                 com.daniel.runcoach.ui.components.RcSwitchRow(stringResource(R.string.d03_exclude), exclude, { exclude = it })
             }
         },
-        dismiss = { RcButton(stringResource(R.string.editor_discard_keep), onClick = onDismiss, variant = RcButtonVariant.Tertiary) },
+        dismiss = { RcTextButton(stringResource(R.string.editor_discard_keep), onClick = onDismiss, tone = RcTextButtonTone.Neutral) },
         confirm = {
-            RcButton(
+            RcTextButton(
                 stringResource(R.string.s06_save),
                 onClick = { onSave(name, note.ifBlank { null }, rpe, exclude) },
                 enabled = !noteTooLong,

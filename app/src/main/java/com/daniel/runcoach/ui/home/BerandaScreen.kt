@@ -208,12 +208,12 @@ fun BerandaScreen(
             onDismiss = { pendingDelete = null },
             title = stringResource(R.string.s02_delete_title),
             content = { Text(stringResource(R.string.s02_delete_message, template.name), style = LocalRcTypography.current.body, color = colors.textSecondary) },
-            dismiss = { RcButton(stringResource(R.string.editor_discard_keep), onClick = { pendingDelete = null }, variant = RcButtonVariant.Tertiary) },
+            dismiss = { RcTextButton(stringResource(R.string.editor_discard_keep), onClick = { pendingDelete = null }, tone = RcTextButtonTone.Neutral) },
             confirm = {
-                RcButton(
+                RcTextButton(
                     stringResource(R.string.s02_delete),
                     onClick = { scope.launch { repository.delete(template.id) }; pendingDelete = null },
-                    variant = RcButtonVariant.DestructiveFilled,
+                    tone = RcTextButtonTone.Destructive,
                 )
             },
         )

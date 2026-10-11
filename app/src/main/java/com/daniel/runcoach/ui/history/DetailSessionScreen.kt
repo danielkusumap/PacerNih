@@ -2,6 +2,7 @@ package com.daniel.runcoach.ui.history
 
 import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -59,6 +60,8 @@ import com.daniel.runcoach.ui.components.RcIconButton
 import com.daniel.runcoach.ui.components.RcSheet
 import com.daniel.runcoach.ui.components.RcStatus
 import com.daniel.runcoach.ui.components.RcTextField
+import com.daniel.runcoach.ui.components.RcTextButton
+import com.daniel.runcoach.ui.components.RcTextButtonTone
 import com.daniel.runcoach.ui.components.ResultChip
 import com.daniel.runcoach.ui.components.ResultStrip
 import com.daniel.runcoach.ui.components.TopBar
@@ -244,11 +247,11 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
             onDismiss = { showDelete = false },
             title = stringResource(R.string.d09_delete_session_title),
             content = { Text(stringResource(R.string.d09_delete_session_message, session?.name ?: ""), style = type.body, color = colors.textSecondary) },
-            dismiss = { RcButton(stringResource(R.string.editor_discard_keep), onClick = { showDelete = false }, variant = RcButtonVariant.Tertiary) },
+            dismiss = { RcTextButton(stringResource(R.string.editor_discard_keep), onClick = { showDelete = false }, tone = RcTextButtonTone.Neutral) },
             confirm = {
-                RcButton(stringResource(R.string.s07_delete), onClick = {
+                RcTextButton(stringResource(R.string.s07_delete), onClick = {
                     scope.launch { session?.let { repository.delete(it.id) }; showDelete = false; onBack() }
-                }, variant = RcButtonVariant.DestructiveFilled)
+                }, tone = RcTextButtonTone.Destructive)
             },
         )
     }
@@ -428,11 +431,25 @@ private fun CalibrateSheet(session: SessionEntity, onDismiss: () -> Unit, onAppl
     val actualKm = text.trim().replace(',', '.').toDoubleOrNull()
     val factor = actualKm?.let { CalibrationCalculator.factorFor(it * 1000.0, session.totalDistanceM, session.distanceCalibrationFactorUsed) }
     RcSheet(onDismiss = onDismiss) {
-        Text(stringResource(R.string.s08_calibrate), style = type.titleM, color = colors.textPrimary)
-        Text(stringResource(R.string.s08_calibrate_measured, Formatters.distanceKm(session.totalDistanceM)), style = type.bodySmall, color = colors.textSecondary)
+        Text(stringResource(R.string.s08_calibrate).uppercase(), style = type.titleM, color = colors.textPrimary)
+        Text(stringResource(R.string.s08_calibrate_measured_label).uppercase(), style = type.label, color = colors.textSecondary, modifier = Modifier.padding(top = 12.dp))
+        Text(Formatters.distanceKm(session.totalDistanceM), style = type.numberL, color = colors.textPrimary)
         RcTextField(value = text, onValueChange = { text = it }, label = stringResource(R.string.s08_calibrate_actual), modifier = Modifier.padding(top = 12.dp))
-        if (factor != null) Text(stringResource(R.string.s08_calibrate_new, "%.4f".format(factor)), style = type.titleS, color = colors.textPrimary)
-        else if (text.isNotBlank()) Text(stringResource(R.string.s08_calibrate_invalid), style = type.bodySmall, color = colors.fail)
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(stringResource(R.string.s08_calibrate_factor).uppercase(), style = type.label, color = colors.textSecondary)
+            Text(
+                factor?.let { "%.4f".format(it) } ?: "—",
+                style = type.numberL,
+                color = colors.accentText,
+            )
+        }
+        if (text.isNotBlank() && factor == null) {
+            Text(stringResource(R.string.s08_calibrate_invalid), style = type.bodySmall, color = colors.fail)
+        }
         RcButton(stringResource(R.string.s08_calibrate_apply), onClick = { factor?.let(onApply) }, enabled = factor != null, fillWidth = true, modifier = Modifier.padding(top = 12.dp))
     }
 }
@@ -443,13 +460,35 @@ private fun EditSheet(session: SessionEntity, onSave: (String, String?, Int?) ->
     val type = LocalRcTypography.current
     var name by remember { mutableStateOf(if (session.nameIsCustom) session.name else "") }
     var note by remember { mutableStateOf(session.note ?: "") }
-    var rpe by remember { mutableStateOf(session.rpe?.toString() ?: "") }
+    var rpe by remember { mutableStateOf(session.rpe) }
     RcSheet(onDismiss = onDismiss) {
-        Text(stringResource(R.string.d03_title), style = type.titleM, color = colors.textPrimary)
+        Text(stringResource(R.string.d03_title).uppercase(), style = type.titleM, color = colors.textPrimary)
         RcTextField(value = name, onValueChange = { name = it }, label = stringResource(R.string.d03_name), placeholder = session.name, modifier = Modifier.padding(top = 12.dp))
-        RcTextField(value = rpe, onValueChange = { rpe = it.filter(Char::isDigit).take(2) }, label = stringResource(R.string.d03_rpe), modifier = Modifier.padding(top = 8.dp))
+        Text(stringResource(R.string.d03_rpe).uppercase(), style = type.label, color = colors.textSecondary, modifier = Modifier.padding(top = 8.dp))
+        EffortCircles(rpe) { rpe = it }
         RcTextField(value = note, onValueChange = { note = it }, label = stringResource(R.string.d03_note), multiline = true, modifier = Modifier.padding(top = 8.dp))
-        RcButton(stringResource(R.string.s06_save), onClick = { onSave(name, note.ifBlank { null }, rpe.toIntOrNull()?.coerceIn(1, 10)) }, fillWidth = true, modifier = Modifier.padding(top = 12.dp))
+        RcButton(stringResource(R.string.s06_save), onClick = { onSave(name, note.ifBlank { null }, rpe) }, fillWidth = true, modifier = Modifier.padding(top = 12.dp))
+    }
+}
+
+@Composable
+private fun EffortCircles(selected: Int?, onSelect: (Int?) -> Unit) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        (1..10).forEach { value ->
+            val active = selected == value
+            Box(
+                modifier = Modifier
+                    .size(26.dp)
+                    .background(if (active) colors.accent else androidx.compose.ui.graphics.Color.Transparent, androidx.compose.foundation.shape.CircleShape)
+                    .border(1.5.dp, if (active) colors.accent else colors.outlineStrong, androidx.compose.foundation.shape.CircleShape)
+                    .clickable { onSelect(if (active) null else value) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(value.toString(), style = type.bodySmall, color = if (active) colors.onAccent else colors.textSecondary)
+            }
+        }
     }
 }
 
