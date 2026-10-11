@@ -523,6 +523,24 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
   dipakai di editor, pra-start, layar live, dan detail sesi. Mock data: pemanasan/pendinginan/pemulihan pakai ≥ 8:25.
 - DB naik ke v5 (`SegmentResult.targetBound`).
 
+## Re-skin UI mengikuti `docs/ui-review/DESIGN-RESKIN.md` (2026-10-11)
+Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halaman tetap dari `APP_GUIDE.md` +
+`RUNCOACH_PLAN.md`. Ikon/simbol memakai set existing (`RcIcons`). Commit per bagian:
+
+- **R1** fondasi: font **Barlow Condensed** (500/700/800) + **Manrope** (variabel) dibundel di `res/font`
+  (Inter dihapus); `RcTypography` diskala ulang (hero 150, displayL 96, displayM 72, displayS 56, judul 44/34/28/26,
+  label/chip/button/segmented/tabBar Barlow KAPITAL + letter-spacing, body Manrope). **Status bar** kini mengikuti
+  warna app (runtime di `RcTheme`), bukan ungu dari tema MaterialComponents.
+- **R2/R2b** komponen: `RcButton` (Barlow 800 KAPITAL, size Small 44/Large 64), `RcTextButton` (Manrope bold),
+  `ResultChip` 26, `StatusBadge` band (Barlow 20), `SegmentedControl` 40, field 48 + label eksternal, switch row
+  52 min + divider, stepper bulat, bottom bar 68, dialog margin 35.
+- **Per halaman** (commit masing-masing): S01, S02, S03, S04, S05, S06, S07, S08, S09/S10/S11, S12, S13, S14, S15.
+- **R3/R3b** UI test disesuaikan (label KAPITAL, tab, font tema).
+- Verifikasi: `:engine:test` + `:app:testDebugUnitTest` hijau; `:app:connectedDebugAndroidTest` **33/33 hijau** di
+  Realme (RMX1971). Screenshot hasil ada di `docs/ui-review/reskin-*.png` (mock build).
+- Catatan: D01/D02/D11 tetap memakai struktur/data existing (mock menyederhanakan D02 jadi daftar nama; data asli
+  punya form parameter). Tema terang diturunkan dari token `DESIGN.md` (mock hanya gelap).
+
 
 
 

@@ -388,3 +388,13 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
 - MAX (default): lulus bila pace ≤ target. MIN: lulus bila pace ≥ target; terlalu cepat = gagal/borderline.
 - Alert untuk MIN hanya "terlalu cepat" (tidak ada "terlalu lambat"); required-pace tidak relevan.
 - Nilai bound disimpan di `SegmentResult` agar detail sesi menampilkan simbol yang benar; DB naik ke v5.
+
+## D-056 Re-skin visual mengikuti `DESIGN-RESKIN.md` + `mock/`
+- `DESIGN.md` digantikan (bagian visual) oleh `docs/ui-review/DESIGN-RESKIN.md`; bila berbeda, **HTML/CSS di
+  `docs/ui-review/mock/` yang menang**. Data/isi halaman tetap dari `APP_GUIDE.md` + `RUNCOACH_PLAN.md`.
+- Font: Inter diganti **Barlow Condensed** (angka/judul/label/tombol) + **Manrope** (teks). Keduanya OFL, dibundel
+  di `res/font`, tanpa unduh runtime.
+- Ukuran kunci: pace hero 150 (autosize turun), jarak S06 96, jarak S08 72, GPS S04 56, judul tab 34, sheet 28,
+  dialog 26; chip 26; segmented 40; field 48; bottom bar 68; tombol 56 (Small 44, Large 64); kartu radius 20.
+- Ikon/simbol tidak berubah (pakai `RcIcons` existing). Warna token tidak berubah; `fastContainer` sudah ada.
+- Status bar/nav bar di-tint ke `bg` app saat runtime (sebelumnya ungu dari `Theme.MaterialComponents`).
