@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         KmSplitEntity::class,
         BestEffortEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 abstract class RunDatabase : RoomDatabase() {
@@ -80,10 +80,16 @@ abstract class RunDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `Session` ADD COLUMN `pending` INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         fun get(context: Context): RunDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(context.applicationContext, RunDatabase::class.java, "runcoach.db")
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .build()
                     .also { instance = it }
             }

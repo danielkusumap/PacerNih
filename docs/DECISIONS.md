@@ -374,3 +374,10 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
   sesi itu dan membuang `PendingSession`, dengan dialog konfirmasi.
 - Risiko: bila proses mati sebelum Simpan, sesi hilang (track point jadi orphan). Diterima demi alur eksplisit.
 - Hold-to-finish memicu konfirmasi saat animasi penuh (tidak perlu lepas tombol).
+
+## D-054 Auto-recovery lewat draft di database
+- Sesi selesai ditulis sebagai draft (`Session.pending = 1`) saat Stop; draft **tidak** muncul di Riwayat/statistik/rekor
+  (semua query menyaring `pending = 0`). Ini menghilangkan risiko kehilangan sesi bila app mati sebelum Simpan.
+- **Simpan** = `finalizeDraft` (pending=0 + form). **Buang** = hapus sesi + track point (cascade).
+- Pemulihan: saat app dibuka, kalau ada draft, langsung navigasi ke S06 (`AppNavHost`).
+- DB naik ke v4 dengan `MIGRATION_3_4` (ALTER TABLE Session ADD COLUMN pending).

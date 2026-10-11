@@ -2,6 +2,7 @@ package com.daniel.runcoach.ui
 
 import android.content.pm.ApplicationInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
@@ -10,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.daniel.runcoach.data.SessionRepository
 import com.daniel.runcoach.data.SettingsRepository
 import com.daniel.runcoach.data.WorkoutTemplateRepository
 import com.daniel.runcoach.ui.battery.BatteryGuideScreen
@@ -28,6 +30,7 @@ import com.daniel.runcoach.ui.settings.BackupScreen
 import com.daniel.runcoach.ui.settings.SettingsScreen
 import com.daniel.runcoach.ui.stats.RecordDetailScreen
 import com.daniel.runcoach.ui.stats.StatsScreen
+import com.daniel.runcoach.service.FinishedSessionHolder
 import kotlinx.coroutines.launch
 
 /** Navigation routes. More screens arrive in later tasks. */
@@ -56,6 +59,15 @@ fun AppNavHost(startDestination: String = Routes.ONBOARDING) {
     val scope = rememberCoroutineScope()
     val settingsRepository = remember(context) { SettingsRepository(context) }
     val debugBuild = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+
+    // Auto-recovery: if a finished-but-unsaved run (draft) exists, go straight to the save screen.
+    LaunchedEffect(Unit) {
+        val draft = SessionRepository(context).pendingDraft()
+        if (draft != null) {
+            FinishedSessionHolder.sessionId = draft.id
+            navController.navigate(Routes.FINISHED)
+        }
+    }
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.ONBOARDING) {

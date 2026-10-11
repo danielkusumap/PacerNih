@@ -24,16 +24,19 @@ interface SessionDao {
     @Query("SELECT * FROM Session WHERE id = :id")
     suspend fun session(id: String): SessionEntity?
 
-    @Query("SELECT * FROM Session ORDER BY startedAtEpochMs DESC LIMIT 1")
+    @Query("SELECT * FROM Session WHERE pending = 0 ORDER BY startedAtEpochMs DESC LIMIT 1")
     suspend fun latestSession(): SessionEntity?
 
-    @Query("SELECT * FROM Session ORDER BY startedAtEpochMs DESC")
+    @Query("SELECT * FROM Session WHERE pending = 1 ORDER BY startedAtEpochMs DESC LIMIT 1")
+    suspend fun pendingSession(): SessionEntity?
+
+    @Query("SELECT * FROM Session WHERE pending = 0 ORDER BY startedAtEpochMs DESC")
     fun observeSessions(): Flow<List<SessionEntity>>
 
-    @Query("SELECT * FROM Session ORDER BY startedAtEpochMs DESC")
+    @Query("SELECT * FROM Session WHERE pending = 0 ORDER BY startedAtEpochMs DESC")
     suspend fun allSessions(): List<SessionEntity>
 
-    @Query("SELECT COUNT(*) FROM Session")
+    @Query("SELECT COUNT(*) FROM Session WHERE pending = 0")
     suspend fun countSessions(): Int
 
     @Query("SELECT * FROM SegmentResult WHERE sessionId = :sessionId ORDER BY idx")
@@ -48,19 +51,23 @@ interface SessionDao {
     @Query("UPDATE Session SET name = :name, nameIsCustom = :custom, note = :note, rpe = :rpe, excludeFromRecords = :exclude, updatedAt = :updatedAt WHERE id = :id")
     suspend fun updateForm(id: String, name: String, custom: Boolean, note: String?, rpe: Int?, exclude: Boolean, updatedAt: Long)
 
-    /** Best time for a distance across all other sessions that are not excluded (plan 6.10). */
-    @Query("SELECT MIN(BestEffort.durationMs) FROM BestEffort JOIN Session ON Session.id = BestEffort.sessionId WHERE BestEffort.distanceKey = :key AND Session.excludeFromRecords = 0 AND BestEffort.sessionId != :excludeSessionId")
+    /** Turns a draft into a saved session, applying the S06 form in one update. */
+    @Query("UPDATE Session SET pending = 0, name = :name, nameIsCustom = :custom, note = :note, rpe = :rpe, excludeFromRecords = :exclude, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun finalizeDraft(id: String, name: String, custom: Boolean, note: String?, rpe: Int?, exclude: Boolean, updatedAt: Long)
+
+    /** Best time for a distance across all other sessions that are not excluded and not drafts (plan 6.10). */
+    @Query("SELECT MIN(BestEffort.durationMs) FROM BestEffort JOIN Session ON Session.id = BestEffort.sessionId WHERE BestEffort.distanceKey = :key AND Session.excludeFromRecords = 0 AND Session.pending = 0 AND BestEffort.sessionId != :excludeSessionId")
     suspend fun bestDurationExcluding(key: String, excludeSessionId: String): Long?
 
     @Query(
         "SELECT * FROM BestEffort WHERE distanceKey = :key AND sessionId IN " +
-            "(SELECT id FROM Session WHERE excludeFromRecords = 0) ORDER BY durationMs ASC LIMIT 1",
+            "(SELECT id FROM Session WHERE excludeFromRecords = 0 AND pending = 0) ORDER BY durationMs ASC LIMIT 1",
     )
     suspend fun bestEffort(key: String): BestEffortEntity?
 
     @Query(
         "SELECT * FROM BestEffort WHERE distanceKey = :key AND sessionId IN " +
-            "(SELECT id FROM Session WHERE excludeFromRecords = 0) ORDER BY durationMs ASC LIMIT :limit",
+            "(SELECT id FROM Session WHERE excludeFromRecords = 0 AND pending = 0) ORDER BY durationMs ASC LIMIT :limit",
     )
     suspend fun topEfforts(key: String, limit: Int): List<BestEffortEntity>
 
@@ -69,7 +76,7 @@ interface SessionDao {
             "BestEffort.durationMs AS durationMs, BestEffort.startOffsetM AS startOffsetM, " +
             "Session.startedAtEpochMs AS startedAtEpochMs, Session.name AS sessionName " +
             "FROM BestEffort JOIN Session ON Session.id = BestEffort.sessionId " +
-            "WHERE Session.excludeFromRecords = 0 ORDER BY Session.startedAtEpochMs ASC",
+            "WHERE Session.excludeFromRecords = 0 AND Session.pending = 0 ORDER BY Session.startedAtEpochMs ASC",
     )
     suspend fun allEfforts(): List<EffortWithSession>
 

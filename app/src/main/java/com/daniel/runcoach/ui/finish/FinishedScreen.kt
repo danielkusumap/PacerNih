@@ -32,13 +32,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.daniel.runcoach.R
-import com.daniel.runcoach.data.RecordRepository
-import com.daniel.runcoach.data.RunPersistence
+import com.daniel.runcoach.data.BestEffortEntity
+import com.daniel.runcoach.data.SessionEntity
 import com.daniel.runcoach.data.SessionRepository
-import com.daniel.runcoach.engine.result.BestEffort
 import com.daniel.runcoach.engine.voice.VoiceLanguage
 import com.daniel.runcoach.service.FinishedSessionHolder
-import com.daniel.runcoach.service.PendingSession
 import com.daniel.runcoach.ui.Formatters
 import com.daniel.runcoach.ui.components.Banner
 import com.daniel.runcoach.ui.components.MetricBlock
@@ -55,71 +53,63 @@ import com.daniel.runcoach.ui.theme.LocalRcSpacing
 import com.daniel.runcoach.ui.theme.LocalRcTypography
 import com.daniel.runcoach.ui.theme.RcIcons
 import java.util.Locale
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * S06 Finish & save (DESIGN.md section 8). The run is **not** stored yet: this screen edits the name and notes
- * and only writes the session when the user taps Save. Discard asks for confirmation and then drops the run.
+ * S06 Finish & save (DESIGN.md section 8). The run is stored as a **draft** until the user taps Save, so it
+ * survives the app being killed; this screen loads the draft by id, edits name/notes/RPE, and saves or discards.
  */
 @Composable
 fun FinishedScreen(onDone: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val repository = remember { SessionRepository(context) }
-    val recordRepository = remember { RecordRepository(context) }
-    val persistence = remember { RunPersistence(context) }
-    var pending by remember { mutableStateOf<PendingSession?>(FinishedSessionHolder.pending) }
-    var newRecords by remember { mutableStateOf<List<BestEffort>>(emptyList()) }
+    var session by remember { mutableStateOf<SessionEntity?>(null) }
+    var newRecords by remember { mutableStateOf<List<BestEffortEntity>>(emptyList()) }
     var name by remember { mutableStateOf("") }
     var rpe by remember { mutableStateOf<Int?>(null) }
     var note by remember { mutableStateOf("") }
     var showDiscard by remember { mutableStateOf(false) }
+    val id = FinishedSessionHolder.sessionId
 
-    LaunchedEffect(Unit) {
-        var p = FinishedSessionHolder.pending
+    LaunchedEffect(id) {
+        if (id == null) return@LaunchedEffect
+        var loaded = repository.get(id)
         var tries = 0
-        while (p == null && tries < 25) {
-            kotlinx.coroutines.delay(200)
-            p = FinishedSessionHolder.pending
+        while (loaded == null && tries < 25) {
+            delay(200)
+            loaded = repository.get(id)
             tries++
         }
-        if (p == null) return@LaunchedEffect
-        pending = p
-        val current = recordRepository.currentRecords()
-        newRecords = p.results.bestEfforts.filter { e ->
-            val cur = current[e.key]
-            cur == null || e.durationMs < cur.durationMs
+        session = loaded
+        if (loaded != null) {
+            name = if (loaded.nameIsCustom) loaded.name else ""
+            note = loaded.note ?: ""
+            rpe = loaded.rpe
+            newRecords = repository.newRecords(id)
         }
     }
 
     val colors = LocalRcColors.current
     val spacing = LocalRcSpacing.current
     val type = LocalRcTypography.current
-    val current = pending
+    val current = session
     val noteTooLong = note.length > SessionRepository.MAX_NOTE
 
     fun save() {
-        val p = current ?: return
+        val c = current ?: return
         scope.launch {
-            repository.saveSession(
-                p.entity.copy(
-                    name = name.ifBlank { p.entity.name },
-                    nameIsCustom = name.isNotBlank(),
-                    note = note.ifBlank { null },
-                    rpe = rpe,
-                    updatedAt = System.currentTimeMillis(),
-                ),
-                p.results,
-            )
+            repository.finalizeDraft(c.id, name, note.ifBlank { null }, rpe, false, currentLanguage(), System.currentTimeMillis())
             FinishedSessionHolder.clear()
             onDone()
         }
     }
 
     fun discard() {
-        val p = current ?: return
+        val c = current ?: return
         scope.launch {
-            runCatching { persistence.clear(p.entity.id) }
+            runCatching { repository.delete(c.id) }
             FinishedSessionHolder.clear()
             onDone()
         }
@@ -145,31 +135,31 @@ fun FinishedScreen(onDone: () -> Unit) {
             }
 
             Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(Formatters.distanceKm(current.entity.totalDistanceM).removeSuffix(" km"), style = type.displayL, color = colors.textPrimary)
+                Text(Formatters.distanceKm(current.totalDistanceM).removeSuffix(" km"), style = type.displayL, color = colors.textPrimary)
                 Text("km", style = type.titleS, color = colors.textSecondary)
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.s5)) {
-                MetricBlock(stringResource(R.string.s06_metric_time), Formatters.duration(current.entity.movingMs))
-                MetricBlock(stringResource(R.string.s06_metric_avg_pace), Formatters.pace(current.entity.avgPaceSecPerKm), unit = "/km")
+                MetricBlock(stringResource(R.string.s06_metric_time), Formatters.duration(current.movingMs))
+                MetricBlock(stringResource(R.string.s06_metric_avg_pace), Formatters.pace(current.avgPaceSecPerKm), unit = "/km")
                 MetricBlock(
                     stringResource(R.string.s06_metric_pass),
-                    "${current.entity.segPass}/${current.entity.segPass + current.entity.segFail + current.entity.segBorderline}",
+                    "${current.segPass}/${current.segPass + current.segFail + current.segBorderline}",
                 )
             }
             ResultStrip(statuses = buildList {
-                repeat(current.entity.segPass) { add(RcStatus.Pass) }
-                repeat(current.entity.segBorderline) { add(RcStatus.Warn) }
-                repeat(current.entity.segFail) { add(RcStatus.Fail) }
+                repeat(current.segPass) { add(RcStatus.Pass) }
+                repeat(current.segBorderline) { add(RcStatus.Warn) }
+                repeat(current.segFail) { add(RcStatus.Fail) }
             })
             Text(
-                stringResource(R.string.s06_seg_counts, current.entity.segPass, current.entity.segFail, current.entity.segBorderline),
+                stringResource(R.string.s06_seg_counts, current.segPass, current.segFail, current.segBorderline),
                 style = type.caption,
                 color = colors.textTertiary,
             )
 
             newRecords.forEach { record ->
                 Banner(
-                    text = stringResource(R.string.s06_record_badge, keyLabel(record.key), Formatters.duration(record.durationMs)),
+                    text = stringResource(R.string.s06_record_badge, keyLabel(record.distanceKey), Formatters.duration(record.durationMs)),
                     variant = RcBannerVariant.Accent,
                 )
             }
@@ -179,7 +169,7 @@ fun FinishedScreen(onDone: () -> Unit) {
                 value = name,
                 onValueChange = { name = it },
                 label = stringResource(R.string.s06_name),
-                placeholder = current.entity.name,
+                placeholder = current.name,
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(stringResource(R.string.s06_effort), style = type.bodySmall, color = colors.textSecondary)
@@ -197,7 +187,6 @@ fun FinishedScreen(onDone: () -> Unit) {
             Box(Modifier.padding(bottom = spacing.s3))
         }
 
-        // Sticky footer: Save (primary) + Discard (destructive).
         Column(modifier = Modifier.fillMaxWidth().background(colors.bg).padding(horizontal = spacing.screenH).padding(vertical = spacing.s3), verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
             RcButton(
                 text = stringResource(R.string.s06_save),
@@ -246,10 +235,16 @@ private fun EffortRow(selected: Int?, onSelect: (Int?) -> Unit) {
     }
 }
 
-private fun keyLabel(key: com.daniel.runcoach.engine.result.BestEffortKey): String = when (key) {
-    com.daniel.runcoach.engine.result.BestEffortKey.K1 -> "1 km"
-    com.daniel.runcoach.engine.result.BestEffortKey.K5 -> "5 km"
-    com.daniel.runcoach.engine.result.BestEffortKey.K10 -> "10 km"
-    com.daniel.runcoach.engine.result.BestEffortKey.HM -> "Half"
-    com.daniel.runcoach.engine.result.BestEffortKey.FM -> "Marathon"
+private fun currentLanguage(): VoiceLanguage {
+    val language = Locale.getDefault().language
+    return if (language.startsWith("in") || language == "id") VoiceLanguage.ID else VoiceLanguage.EN
+}
+
+private fun keyLabel(key: String): String = when (key) {
+    "K1" -> "1 km"
+    "K5" -> "5 km"
+    "K10" -> "10 km"
+    "HM" -> "Half"
+    "FM" -> "Marathon"
+    else -> key
 }

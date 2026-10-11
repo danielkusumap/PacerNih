@@ -30,6 +30,25 @@ class SessionRepository(context: Context) {
         )
     }
 
+    /** Writes the finished run as a draft (excluded from history/records) until the user saves it in S06. */
+    suspend fun saveDraft(session: SessionEntity, results: SessionResultsData) =
+        saveSession(session.copy(pending = true), results)
+
+    suspend fun pendingDraft(): SessionEntity? = dao.pendingSession()
+
+    /** Applies the S06 form and promotes the draft to a saved session. */
+    suspend fun finalizeDraft(id: String, name: String, note: String?, rpe: Int?, excludeFromRecords: Boolean, language: VoiceLanguage, nowMs: Long): Boolean {
+        val session = dao.session(id) ?: return false
+        val trimmed = name.trim()
+        val resolvedName = if (trimmed.isEmpty()) {
+            DefaultSessionNamer.name(session.startedAtEpochMs, session.zoneId, language)
+        } else {
+            trimmed
+        }
+        dao.finalizeDraft(id, resolvedName, trimmed.isNotEmpty(), note?.take(MAX_NOTE), rpe, excludeFromRecords, nowMs)
+        return true
+    }
+
     suspend fun get(id: String): SessionEntity? = dao.session(id)
 
     suspend fun latest(): SessionEntity? = dao.latestSession()

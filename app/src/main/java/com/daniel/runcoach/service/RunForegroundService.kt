@@ -436,8 +436,8 @@ class RunForegroundService : Service() {
             droppedSampleCount = state?.droppedSampleCount ?: 0,
             updatedAt = now,
         )
+        runCatching { SessionRepository(this@RunForegroundService).saveDraft(entity, results) }
         FinishedSessionHolder.sessionId = id
-        FinishedSessionHolder.pending = PendingSession(entity, results)
         runCatching { store.clearActiveSnapshot(id) }
     }
 

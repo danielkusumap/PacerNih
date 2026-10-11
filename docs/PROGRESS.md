@@ -507,6 +507,13 @@ dan item P1.9 yang menunggu P2.5/P2.8 (di atas). FASE P2 dikerjakan **step by st
   **Buang** dengan **dialog konfirmasi** (OK buang, Cancel kembali). Tombol **Lewati dihapus**.
 - Banner rekor di S06 dihitung dari hasil sesi vs rekor saat ini (sesi belum tersimpan).
 
+## U3.8 Auto-recovery draft (2026-10-11)
+- Sesi selesai disimpan sebagai **draft** di database (`Session.pending = 1`), dikecualikan dari Riwayat, statistik,
+  dan rekor. DB naik ke versi 4 (migrasi `MIGRATION_3_4` menambah kolom `pending`).
+- Kalau app mati sebelum menekan Simpan, saat dibuka lagi app langsung membuka S06 dengan draft itu (pemulihan di
+  `AppNavHost`). **Simpan** → `finalizeDraft` (pending=0 + nama/catatan/RPE). **Buang** → hapus sesi + track point.
+- `FinishedSessionHolder` kembali hanya menyimpan `sessionId`.
+
 
 
 

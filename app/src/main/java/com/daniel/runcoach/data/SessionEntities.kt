@@ -36,6 +36,8 @@ data class SessionEntity(
     val distanceCalibrationFactorUsed: Double,
     val droppedSampleCount: Int,
     val updatedAt: Long,
+    /** True while the session is a draft that has not been saved yet (S06). Excluded from history/records. */
+    val pending: Boolean = false,
 )
 
 @Entity(tableName = "SegmentResult", indices = [Index("sessionId")])
