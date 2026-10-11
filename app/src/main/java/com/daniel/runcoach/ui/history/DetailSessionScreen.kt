@@ -324,7 +324,7 @@ private fun SegmentsTab(segments: List<SegmentResultEntity>, splits: List<KmSpli
                     )
                     segment.deltaSec?.let {
                         MetricBlock(stringResource(R.string.s08_seg_delta), Formatters.deltaSeconds(it), valueStyle = type.numberS, valueColor = if (it <= 0) colors.pass else colors.fail)
-                    }
+                    } ?: MetricBlock(stringResource(R.string.s08_seg_delta), "—", valueStyle = type.numberS, valueColor = colors.textSecondary)
                 }
                 if (segment.status == "BORDERLINE") Text(stringResource(R.string.s08_borderline_note), style = type.caption, color = colors.warn)
                 if (segment.stopped) Text(stringResource(R.string.stopped_early), style = type.caption, color = colors.textSecondary, modifier = Modifier.padding(top = spacing.s1))
@@ -587,7 +587,7 @@ private fun segActualText(segment: SegmentResultEntity): String {
 private fun targetText(segment: SegmentResultEntity): String =
     segment.targetPace?.let {
         Formatters.targetPace(it, runCatching { com.daniel.runcoach.engine.model.PaceTargetBound.valueOf(segment.targetBound) }.getOrDefault(com.daniel.runcoach.engine.model.PaceTargetBound.MAX))
-    } ?: "Tanpa target"
+    } ?: "—"
 
 private fun formatRange(session: SessionEntity): String {
     val fmt = SimpleDateFormat("d MMM yyyy · HH:mm", Locale.getDefault())

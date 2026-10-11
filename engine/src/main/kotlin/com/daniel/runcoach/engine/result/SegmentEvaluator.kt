@@ -61,7 +61,21 @@ object SegmentEvaluator {
             SegmentEvaluation(status, distanceM, movingMs, null, null, null, null, emptyList(), extended)
 
         if (skipped) return plain(SegmentStatus.SKIPPED)
-        if (targetSecPerKm == null) return plain(SegmentStatus.NO_TARGET)
+        if (targetSecPerKm == null) {
+            // B3: actual pace is stored for every segment with enough distance, even without a target.
+            val avg = if (distanceM >= config.minPaceDistanceM) movingSec / (distanceM / 1000.0) else null
+            return SegmentEvaluation(
+                status = SegmentStatus.NO_TARGET,
+                distanceM = distanceM,
+                movingMs = movingMs,
+                avgPaceSecPerKm = avg,
+                avgPaceRoundedSec = avg?.let { roundHalfUp(it) },
+                deltaSec = null,
+                marginSec = null,
+                kmStatuses = emptyList(),
+                extended = extended,
+            )
+        }
         if (distanceM < config.minPaceDistanceM) return plain(SegmentStatus.NO_DATA)
 
         val avg = movingSec / (distanceM / 1000.0)

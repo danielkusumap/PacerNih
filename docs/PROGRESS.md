@@ -612,3 +612,7 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - `SegmentResultData.stopped` + kolom Room `SegmentResult.stopped` (migrasi v6). Service meneruskan `stoppedFrom`
   dari `RunnerState.stepIndex` (null bila `planCompleted`). S08 menampilkan chip + caption "Dihentikan sebelum selesai".
 - Engine **211 hijau** (2 test baru), instrumented **33/33 hijau**.
+
+## B3 Pace aktual untuk semua segmen (2026-10-11)
+- `SegmentEvaluator`: NO_TARGET kini mengembalikan `avgPace` bila `Ds >= 50 m` (null bila lebih pendek). S08 kartu segmen
+  menampilkan Target `—`, Aktual pace, Selisih `—` untuk segmen tanpa target.

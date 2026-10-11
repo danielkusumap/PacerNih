@@ -47,6 +47,10 @@ class SegmentEvaluatorTest {
     fun `no target and skipped are reported plainly`() {
         val noTarget = SegmentEvaluator.evaluate(null, false, 5000.0, 2100.0)
         assertEquals(SegmentStatus.NO_TARGET, noTarget.status)
+        // B3: actual pace is reported for every segment with enough distance, even without a target.
+        assertEquals(420.0, noTarget.avgPaceSecPerKm!!, 0.001)
+        val shortNoTarget = SegmentEvaluator.evaluate(null, false, 40.0, 16.8)
+        assertEquals(null, shortNoTarget.avgPaceSecPerKm)
         val skipped = SegmentEvaluator.evaluate(420, false, 5000.0, 2100.0, skipped = true)
         assertEquals(SegmentStatus.SKIPPED, skipped.status)
     }
