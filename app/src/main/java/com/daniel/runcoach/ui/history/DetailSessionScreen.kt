@@ -122,6 +122,15 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
     val spacing = LocalRcSpacing.current
     val type = LocalRcTypography.current
 
+    fun copyStructure() {
+        val json = session?.workoutSnapshotJson ?: return
+        val workout = runCatching { com.daniel.runcoach.engine.model.WorkoutJson.decode(json) }.getOrNull() ?: return
+        val text = com.daniel.runcoach.engine.model.WorkoutTextFormatter.format(workout, currentLanguage())
+        val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
+        clipboard?.setPrimaryClip(android.content.ClipData.newPlainText("workout", text))
+        android.widget.Toast.makeText(context, R.string.copied, android.widget.Toast.LENGTH_SHORT).show()
+    }
+
     Column(modifier = Modifier.fillMaxSize().background(colors.bg)) {
         TopBar(
             title = "",
@@ -137,6 +146,7 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
                     RcIconButton(RcIcons.MoreVert, stringResource(R.string.s08_more), onClick = { menu = true }, tint = colors.textPrimary)
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = colors.surfaceRaised) {
                         DropdownMenuItem(text = { Text(stringResource(R.string.s08_edit)) }, onClick = { menu = false; showEdit = true })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.copy_text)) }, onClick = { menu = false; copyStructure() })
                         DropdownMenuItem(text = { Text(stringResource(R.string.s08_export_gpx)) }, onClick = {
                             menu = false
                             val current = session
@@ -209,7 +219,7 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit) {
 
             TabRow(tab, hasMap = trackPoints.size >= 2 && settings.historyMap) { tab = it }
             when (tab) {
-                0 -> SegmentsTab(segments, splits)
+                0 -> SegmentsTab(segments, splits, onCopy = { copyStructure() })
                 1 -> SplitsTab(splits, bestEfforts)
                 2 -> ChartsTab(segments, splits, trackPoints)
                 else -> RouteMapView(
@@ -282,7 +292,7 @@ private fun TabRow(selected: Int, hasMap: Boolean, onSelect: (Int) -> Unit) {
 }
 
 @Composable
-private fun SegmentsTab(segments: List<SegmentResultEntity>, splits: List<KmSplitEntity>) {
+private fun SegmentsTab(segments: List<SegmentResultEntity>, splits: List<KmSplitEntity>, onCopy: () -> Unit) {
     val colors = LocalRcColors.current
     val type = LocalRcTypography.current
     val spacing = LocalRcSpacing.current
@@ -290,6 +300,10 @@ private fun SegmentsTab(segments: List<SegmentResultEntity>, splits: List<KmSpli
     // Cumulative distance at each segment boundary, to find the km splits inside a segment.
     val bounds = segments.runningFold(0.0) { acc, s -> acc + s.distanceM }
     Column(verticalArrangement = Arrangement.spacedBy(spacing.cardGap), modifier = Modifier.padding(top = spacing.s3)) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(stringResource(R.string.s08_tab_segments).uppercase(), style = type.label, color = colors.textSecondary)
+            RcTextButton(stringResource(R.string.copy_text), onClick = onCopy, tone = RcTextButtonTone.Accent)
+        }
         segments.forEach { segment ->
             val start = bounds.getOrElse(segment.idx - 1) { 0.0 }
             val end = bounds.getOrElse(segment.idx) { start + segment.distanceM }

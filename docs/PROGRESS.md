@@ -625,3 +625,8 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
   titik batas putih + cincin route.
 - Catatan: kolom `SegmentResult.startLat/Lon...` belum ditambah; F6 memakai `segmentIdx` langsung (dicatat di DECISIONS).
 - Instrumented **33/33 hijau**.
+
+## F1 Salin struktur workout sebagai teks (2026-10-11)
+- Engine `WorkoutTextFormatter` (pure) merender nama + struktur (batas/target, repeat menjorok 2 spasi, desimal ikut
+  bahasa). Golden test 5 kasus. UI S08 tab Segmen: tombol "? Salin sebagai teks" + item di menu ?; menyalin ke
+  clipboard + toast "Disalin".

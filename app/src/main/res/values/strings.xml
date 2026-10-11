@@ -281,6 +281,8 @@
     <string name="s08_fastest">Km tercepat</string>
     <string name="fastest_km">1 km tercepat di sesi ini</string>
     <string name="stopped_early">Dihentikan sebelum selesai</string>
+    <string name="copy_text">⧉ Salin sebagai teks</string>
+    <string name="copied">Disalin</string>
     <string name="s08_more">Menu sesi</string>
     <string name="s08_edit">Edit</string>
     <string name="s08_metric_time">Waktu berjalan</string>
