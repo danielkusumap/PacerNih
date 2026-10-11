@@ -1,5 +1,8 @@
 package com.daniel.runcoach.ui.theme
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -7,8 +10,12 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 
 private fun rcColorScheme(c: RcColors, dark: Boolean) =
     (if (dark) darkColorScheme() else lightColorScheme()).copy(
@@ -61,6 +68,18 @@ fun RcTheme(
     val colors = if (darkTheme) RcDarkColors else RcLightColors
     val widthDp = LocalConfiguration.current.screenWidthDp
     val spacing = RcSpacing(screenH = if (widthDp < 360) 16.dp else 20.dp)
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = view.context.findActivity()?.window ?: return@SideEffect
+            // Follow the app palette instead of the framework theme's purple.
+            window.statusBarColor = colors.bg.toArgb()
+            window.navigationBarColor = colors.bg.toArgb()
+            val controller = WindowCompat.getInsetsController(window, view)
+            controller.isAppearanceLightStatusBars = !darkTheme
+            controller.isAppearanceLightNavigationBars = !darkTheme
+        }
+    }
     CompositionLocalProvider(
         LocalRcColors provides colors,
         LocalRcTypography provides RcType,
@@ -75,4 +94,14 @@ fun RcTheme(
             content = content,
         )
     }
+}
+
+/** Unwraps the hosting [Activity] from a Compose view context (which may be a wrapper). */
+private fun Context.findActivity(): Activity? {
+    var context: Context? = this
+    while (context is ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
+    }
+    return null
 }
