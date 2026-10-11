@@ -586,6 +586,15 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
   `remember`) dan memakai **target pace segmen** sebagai cadangan. Jadi tidak lagi berubah ke `--:--` saat GPS
   hilang / berhenti / data belum cukup.
 
+## Segmen yang di-skip disimpan & tampil di riwayat (2026-10-11)
+- Akar masalah: hasil segmen dihitung ulang dari kurva jarak (`SessionResultsCalculator`) dengan `skipped=false`,
+  jadi info skip hilang.
+- `WorkoutRunner` kini mencatat `skippedSegments()` (indeks 1-based -> jarak/waktu yang sempat terkumpul).
+- `SessionResultsCalculator.compute(workout, points, skipped)` menandai segmen tersebut **SKIPPED** dan
+  menyelaraskan segmen setelahnya dengan kurva nyata (jarak yang di-skip tidak "dimakan" segmen berikutnya).
+- Service meneruskan data skip saat `finalizeSession`. Di **S08 Detail Sesi** segmen tampil dengan chip **DILEWATI**.
+- Uji: engine **209 hijau** (2 test baru), instrumented **33/33 hijau**.
+
 
 
 
