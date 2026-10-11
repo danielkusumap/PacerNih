@@ -1,6 +1,8 @@
 package com.daniel.runcoach.ui.history
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,8 +11,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
@@ -22,6 +26,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -42,6 +47,7 @@ import com.daniel.runcoach.ui.components.RcIconButton
 import com.daniel.runcoach.ui.components.RcStatus
 import com.daniel.runcoach.ui.components.RcTextField
 import com.daniel.runcoach.ui.components.ResultChip
+import com.daniel.runcoach.ui.components.RcScreenTitle
 import com.daniel.runcoach.ui.components.TopBar
 import com.daniel.runcoach.ui.theme.LocalRcColors
 import com.daniel.runcoach.ui.theme.LocalRcSpacing
@@ -64,7 +70,6 @@ fun HistoryScreen(onOpenSession: (String) -> Unit, onSelectTab: (MainTab) -> Uni
     val repository = remember { SessionRepository(context) }
     val sessions by repository.sessions.collectAsStateWithLifecycle(initialValue = emptyList())
     var query by remember { mutableStateOf("") }
-    var searchOpen by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<SessionEntity?>(null) }
     var deleting by remember { mutableStateOf<SessionEntity?>(null) }
     val colors = LocalRcColors.current
@@ -76,21 +81,19 @@ fun HistoryScreen(onOpenSession: (String) -> Unit, onSelectTab: (MainTab) -> Uni
 
     androidx.compose.material3.Scaffold(bottomBar = { MainBottomBar(MainTab.HISTORY, onSelectTab) }) { padding ->
         Column(modifier = Modifier.fillMaxSize().background(colors.bg).padding(padding)) {
-            TopBar(
-                title = stringResource(R.string.s07_title),
-                tabPage = true,
-                actions = {
-                    RcIconButton(RcIcons.Search, stringResource(R.string.s07_search), onClick = { searchOpen = !searchOpen }, tint = colors.textPrimary)
-                },
-            )
-            if (searchOpen) {
-                RcTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    label = stringResource(R.string.s07_search),
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.screenH),
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.screenH, vertical = spacing.s2),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RcScreenTitle(stringResource(R.string.s07_title), modifier = Modifier.weight(1f))
             }
+            RcTextField(
+                value = query,
+                onValueChange = { query = it },
+                label = "",
+                placeholder = stringResource(R.string.s07_search_hint),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.screenH),
+            )
             if (sessions.isEmpty()) {
                 EmptyState(
                     title = stringResource(R.string.s07_empty),
@@ -173,30 +176,29 @@ private fun SessionRow(session: SessionEntity, onOpen: () -> Unit, onEdit: () ->
     RcCard(interactive = true, onClick = onOpen) {
         Row(verticalAlignment = Alignment.Top) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(session.name, style = type.titleS, color = colors.textPrimary)
+                Text(session.name, style = type.titleS, color = colors.textPrimary, maxLines = 1)
                 Text(formatDateTime(session.startedAtEpochMs), style = type.bodySmall, color = colors.textSecondary)
+                Row(modifier = Modifier.fillMaxWidth().padding(top = spacing.s2), horizontalArrangement = Arrangement.spacedBy(spacing.s2), verticalAlignment = Alignment.CenterVertically) {
+                    Text(Formatters.duration(session.movingMs) + " · " + Formatters.pace(session.avgPaceSecPerKm) + " /km", style = type.bodySmall, color = colors.textSecondary, modifier = Modifier.weight(1f))
+                    ResultChip(
+                        status = if (targetCount == 0) RcStatus.Neutral else if (session.segFail == 0) RcStatus.Pass else RcStatus.Warn,
+                        label = if (targetCount == 0) stringResource(R.string.s07_chip_no_target) else stringResource(R.string.s07_chip_pass, session.segPass, targetCount),
+                    )
+                }
             }
             Column(horizontalAlignment = Alignment.End) {
+                Box {
+                    RcIconButton(RcIcons.MoreVert, stringResource(R.string.s07_more), onClick = { menu = true })
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = colors.surfaceRaised) {
+                        DropdownMenuItem(text = { Text(stringResource(R.string.s07_edit)) }, onClick = { menu = false; onEdit() })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.s07_delete)) }, onClick = { menu = false; onDelete() })
+                    }
+                }
                 Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(Formatters.distanceKm(session.totalDistanceM).removeSuffix(" km"), style = type.numberM, color = colors.textPrimary)
+                    Text(Formatters.distanceKm(session.totalDistanceM).removeSuffix(" km"), style = type.numberL, color = colors.textPrimary)
                     Text("km", style = type.bodySmall, color = colors.textSecondary)
                 }
-                Text(Formatters.duration(session.movingMs), style = type.bodySmall, color = colors.textSecondary)
             }
-            Box {
-                RcIconButton(RcIcons.MoreVert, stringResource(R.string.s07_more), onClick = { menu = true })
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = colors.surfaceRaised) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.s07_edit)) }, onClick = { menu = false; onEdit() })
-                    DropdownMenuItem(text = { Text(stringResource(R.string.s07_delete)) }, onClick = { menu = false; onDelete() })
-                }
-            }
-        }
-        Row(modifier = Modifier.fillMaxWidth().padding(top = spacing.s2), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(Formatters.pace(session.avgPaceSecPerKm) + " /km", style = type.bodySmall, color = colors.textSecondary, modifier = Modifier.weight(1f))
-            ResultChip(
-                status = if (targetCount == 0) RcStatus.Neutral else if (session.segFail == 0) RcStatus.Pass else RcStatus.Warn,
-                label = if (targetCount == 0) stringResource(R.string.s07_chip_no_target) else stringResource(R.string.s07_chip_pass, session.segPass, targetCount),
-            )
         }
     }
 }
@@ -211,7 +213,7 @@ private fun EditSessionDialog(
     val type = LocalRcTypography.current
     var name by remember { mutableStateOf(if (session.nameIsCustom) session.name else "") }
     var note by remember { mutableStateOf(session.note ?: "") }
-    var rpe by remember { mutableStateOf(session.rpe?.toString() ?: "") }
+    var rpe by remember { mutableStateOf(session.rpe) }
     var exclude by remember { mutableStateOf(session.excludeFromRecords) }
     val noteTooLong = note.length > SessionRepository.MAX_NOTE
 
@@ -221,7 +223,8 @@ private fun EditSessionDialog(
         content = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 RcTextField(value = name, onValueChange = { name = it }, label = stringResource(R.string.d03_name), placeholder = session.name)
-                RcTextField(value = rpe, onValueChange = { rpe = it.filter(Char::isDigit).take(2) }, label = stringResource(R.string.d03_rpe))
+                Text(stringResource(R.string.d03_rpe).uppercase(), style = type.label, color = colors.textSecondary)
+                EffortCircles(rpe) { rpe = it }
                 RcTextField(
                     value = note,
                     onValueChange = { note = it },
@@ -237,11 +240,32 @@ private fun EditSessionDialog(
         confirm = {
             RcButton(
                 stringResource(R.string.s06_save),
-                onClick = { onSave(name, note.ifBlank { null }, rpe.toIntOrNull()?.coerceIn(1, 10), exclude) },
+                onClick = { onSave(name, note.ifBlank { null }, rpe, exclude) },
                 enabled = !noteTooLong,
             )
         },
     )
+}
+
+@Composable
+private fun EffortCircles(selected: Int?, onSelect: (Int?) -> Unit) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        (1..10).forEach { value ->
+            val active = selected == value
+            Box(
+                modifier = Modifier
+                    .size(26.dp)
+                    .background(if (active) colors.accent else Color.Transparent, CircleShape)
+                    .border(1.5.dp, if (active) colors.accent else colors.outlineStrong, CircleShape)
+                    .clickable { onSelect(if (active) null else value) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(value.toString(), style = type.bodySmall, color = if (active) colors.onAccent else colors.textSecondary)
+            }
+        }
+    }
 }
 
 private fun formatDateTime(epochMs: Long): String =

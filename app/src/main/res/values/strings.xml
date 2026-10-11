@@ -235,6 +235,7 @@
     <!-- S07 Riwayat -->
     <string name="s07_title">Riwayat</string>
     <string name="s07_search">Cari nama</string>
+    <string name="s07_search_hint">Cari nama sesi</string>
     <string name="s07_empty">Belum ada sesi</string>
     <string name="s07_month_header">%1$s · %2$s · %3$d sesi</string>
     <string name="s07_chip_pass">%1$d/%2$d lulus</string>

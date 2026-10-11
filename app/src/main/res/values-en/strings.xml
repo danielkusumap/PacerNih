@@ -236,6 +236,7 @@
     <!-- S07 History -->
     <string name="s07_title">History</string>
     <string name="s07_search">Search by name</string>
+    <string name="s07_search_hint">Search session name</string>
     <string name="s07_empty">No sessions yet</string>
     <string name="s07_month_header">%1$s · %2$s · %3$d sessions</string>
     <string name="s07_chip_pass">%1$d/%2$d passed</string>
