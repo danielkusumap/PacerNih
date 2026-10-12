@@ -149,16 +149,17 @@ object ShareImageRenderer {
         }
     }
 
-    /** R1: uniform segment bars, one per selected segment, coloured by status. */
+    /** R1: uniform segment bars, one per selected segment, all the same colour. */
     private fun drawSegmentBars(canvas: Canvas, segments: List<ShareSegment>, x: Float, y: Float, width: Float, height: Float, ink: Int, outline: Int, font: Typeface) {
         if (segments.isEmpty()) return
         val slot = width / segments.size
         val barW = slot * 0.6f
         val barH = 160f
         val baseY = y + height - 40f
+        val accent = RcDarkColors.accent.toArgbInt()
         segments.forEachIndexed { index, seg ->
             val cx = x + slot * index + slot / 2f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = statusColor(seg.status); style = Paint.Style.FILL }
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = accent; style = Paint.Style.FILL }
             canvas.drawRoundRect(RectF(cx - barW / 2f, baseY - barH, cx + barW / 2f, baseY), 8f, 8f, paint)
             drawText(canvas, pace(seg.paceSecPerKm), cx, baseY - barH - 8f, 28f, font, ink, outline, Paint.Align.CENTER)
             drawText(canvas, "#${seg.index}", cx, y + height - 8f, 28f, font, ink, outline, Paint.Align.CENTER)
