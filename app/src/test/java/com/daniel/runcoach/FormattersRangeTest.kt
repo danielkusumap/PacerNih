@@ -24,4 +24,11 @@ class FormattersRangeTest {
     fun noTargetIsNull() {
         assertNull(Formatters.segmentTarget(null, null, PaceTargetBound.MAX))
     }
+
+    @Test
+    fun recordTimeAndPaceAgree() {
+        // 1_692_900 ms = 1692.9 s -> rounded 1693 s = 28:13; 5 km pace = 1693/5 = 338.6 -> 339 -> 5:39.
+        assertEquals("28:13", Formatters.recordTime(1_692_900L))
+        assertEquals("5:39", Formatters.recordPace(1_692_900L, 5000.0))
+    }
 }

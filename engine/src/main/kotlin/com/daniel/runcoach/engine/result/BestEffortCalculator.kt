@@ -43,7 +43,8 @@ object BestEffortCalculator {
         return BestEffort(key, durationMs, 0.0)
     }
 
-    private fun timeAtDistance(points: List<DistTimePoint>, distanceM: Double): Long {
+    /** Interpolated moving-time at cumulative distance [distanceM] (R3). */
+    fun timeAtDistance(points: List<DistTimePoint>, distanceM: Double): Long {
         if (distanceM <= points.first().cumulativeDistanceM) return points.first().elapsedMs
         if (distanceM >= points.last().cumulativeDistanceM) return points.last().elapsedMs
         for (i in 1 until points.size) {

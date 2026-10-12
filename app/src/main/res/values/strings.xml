@@ -280,6 +280,10 @@
     <string name="s08_no_note">Tambah catatan</string>
     <string name="s08_fastest">Km tercepat</string>
     <string name="fastest_km">1 km tercepat di sesi ini</string>
+    <string name="per_distance_title">Waktu per jarak</string>
+    <string name="dist_milestone_km">%1$s km</string>
+    <string name="dist_half_marathon">Half Marathon (21,0975 km)</string>
+    <string name="dist_marathon">Marathon (42,195 km)</string>
     <string name="stopped_early">Dihentikan sebelum selesai</string>
     <string name="copy_text">⧉ Salin sebagai teks</string>
     <string name="copied">Disalin</string>

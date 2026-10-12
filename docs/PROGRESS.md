@@ -702,3 +702,10 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - Grafik: sumbu Y grafik **pace** (S08 grafik, S09 pace per minggu, S11) kini **m:ss** (`axisValueFormatter`), konsisten
   dengan label garis/tooltip.
 - Test: app unit (FormattersRangeTest) + instrumented **38/38 hijau**.
+
+## Records consistent + waktu per jarak di detail sesi (2026-10-12)
+- Rekor: waktu & pace kini dihitung dari detik yang sama (`Formatters.recordTime`/`recordPace`, dibulatkan) sehingga
+  tidak lagi beda 1 dtk. Berlaku di S10 dan S11.
+- Detail sesi (S08): kartu **"Waktu per jarak"** menampilkan waktu + avg pace untuk 1/5/10/15 km, Half Marathon,
+  30 km, Marathon — **hanya yang jarak sesinya sudah tercapai**. Engine `MilestoneTimes` (kumulatif dari start).
+- Engine **230 hijau** (MilestoneTimesTest), app unit + instrumented **38/38 hijau**.

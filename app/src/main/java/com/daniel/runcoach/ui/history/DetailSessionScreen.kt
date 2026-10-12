@@ -216,6 +216,33 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit, onOpenShare: (Str
                 if (current.rpe != null) Text(stringResource(R.string.s08_rpe, current.rpe), style = type.titleS, color = colors.textPrimary)
             }
 
+            if (trackPoints.size >= 2) {
+                val milestones = remember(trackPoints) {
+                    val pts = buildCurve(trackPoints).mapNotNull { t ->
+                        t.timeMs?.let { com.daniel.runcoach.engine.result.DistTimePoint(t.distanceM, it) }
+                    }
+                    com.daniel.runcoach.engine.result.MilestoneTimes.compute(pts)
+                }
+                if (milestones.isNotEmpty()) {
+                    RcCard(modifier = Modifier.padding(top = spacing.s2)) {
+                        Text(stringResource(R.string.per_distance_title).uppercase(), style = type.label, color = colors.textSecondary)
+                        milestones.forEach { m ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(milestoneLabel(m.meters), style = type.titleS, color = colors.textPrimary)
+                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(Formatters.duration(m.durationMs), style = type.numberS, color = colors.textPrimary)
+                                    Text(Formatters.pace(m.paceSecPerKm) + " /km", style = type.bodySmall, color = colors.textSecondary)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             TabRow(tab, hasMap = trackPoints.size >= 2 && settings.historyMap) { tab = it }
             when (tab) {
                 0 -> SegmentsTab(segments, splits, onCopy = { copyStructure() })
@@ -589,6 +616,17 @@ private fun targetSteps(segments: List<SegmentResultEntity>): List<TargetStep> {
         segment.targetPace?.let { steps += TargetStep(start, cumulative, it.toDouble()) }
     }
     return steps
+}
+
+@Composable
+private fun milestoneLabel(meters: Double): String = when {
+    meters >= 42195.0 -> stringResource(R.string.dist_marathon)
+    meters >= 21097.0 -> stringResource(R.string.dist_half_marathon)
+    else -> {
+        val km = meters / 1000.0
+        val text = if (km == km.toInt().toDouble()) km.toInt().toString() else String.format(java.util.Locale.getDefault(), "%.1f", km)
+        stringResource(R.string.dist_milestone_km, text)
+    }
 }
 
 private fun limitText(segment: SegmentResultEntity): String = when (segment.limitType) {

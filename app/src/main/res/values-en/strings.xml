@@ -281,6 +281,10 @@
     <string name="s08_no_note">Add note</string>
     <string name="s08_fastest">Fastest km</string>
     <string name="fastest_km">Fastest 1 km in this session</string>
+    <string name="per_distance_title">Time per distance</string>
+    <string name="dist_milestone_km">%1$s km</string>
+    <string name="dist_half_marathon">Half Marathon (21.0975 km)</string>
+    <string name="dist_marathon">Marathon (42.195 km)</string>
     <string name="stopped_early">Stopped before finishing</string>
     <string name="copy_text">⧉ Copy as text</string>
     <string name="copied">Copied</string>

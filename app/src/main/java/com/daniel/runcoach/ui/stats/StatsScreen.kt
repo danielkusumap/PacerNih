@@ -160,10 +160,10 @@ private fun RecordCard(key: BestEffortKey, row: RecordRow?, onClick: () -> Unit)
             Column(modifier = Modifier.weight(1f)) {
                 Text(keyLabel(key).uppercase(), style = type.label, color = colors.textSecondary)
                 Text("${formatDate(row.startedAtEpochMs)} · ${row.sessionName}", style = type.bodySmall, color = colors.textSecondary, modifier = Modifier.padding(top = 6.dp))
-                Text(stringResource(R.string.s10_pace, Formatters.pace(paceOf(row))), style = type.bodySmall, color = colors.textSecondary)
+                Text(stringResource(R.string.s10_pace, Formatters.recordPace(row.durationMs, row.key.meters)), style = type.bodySmall, color = colors.textSecondary)
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-                Text(Formatters.duration(row.durationMs), style = type.numberXL, color = colors.textPrimary)
+                Text(Formatters.recordTime(row.durationMs), style = type.numberXL, color = colors.textPrimary)
                 Icon(painterResource(RcIcons.EmojiEvents), contentDescription = null, tint = colors.accentText, modifier = Modifier.size(24.dp))
             }
         }
@@ -212,8 +212,8 @@ fun RecordDetailScreen(keyName: String, onOpenSession: (String) -> Unit, onBack:
             if (hero == null) {
                 Text(stringResource(R.string.s10_none), style = type.body, color = colors.textSecondary)
             } else {
-                Text(Formatters.duration(hero.durationMs), style = type.displayL, color = colors.textPrimary)
-                Text(stringResource(R.string.s10_pace, Formatters.pace(paceOf(hero))), style = type.body, color = colors.textSecondary)
+                Text(Formatters.recordTime(hero.durationMs), style = type.displayL, color = colors.textPrimary)
+                Text(stringResource(R.string.s10_pace, Formatters.recordPace(hero.durationMs, hero.key.meters)), style = type.body, color = colors.textSecondary)
                 Row(
                     modifier = Modifier.clickable { onOpenSession(hero.sessionId) },
                     verticalAlignment = Alignment.CenterVertically,
@@ -250,8 +250,8 @@ fun RecordDetailScreen(keyName: String, onOpenSession: (String) -> Unit, onBack:
             top.forEachIndexed { index, row ->
                 ListRow(
                     leading = { Text("${index + 1}", style = type.numberM, color = if (index == 0) colors.accentText else colors.textSecondary) },
-                    title = Formatters.duration(row.durationMs),
-                    subtitle = "${Formatters.pace(paceOf(row))} · ${formatDate(row.startedAtEpochMs)}",
+                    title = Formatters.recordTime(row.durationMs),
+                    subtitle = "${Formatters.recordPace(row.durationMs, row.key.meters)} · ${formatDate(row.startedAtEpochMs)}",
                     trailing = { Text(row.sessionName, style = type.caption, color = colors.textTertiary) },
                     onClick = { onOpenSession(row.sessionId) },
                 )

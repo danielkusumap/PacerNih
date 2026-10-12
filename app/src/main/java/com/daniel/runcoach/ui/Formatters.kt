@@ -55,6 +55,16 @@ object Formatters {
         "${pace(fastSecPerKm.toDouble())}–${pace(slowSecPerKm.toDouble())}"
 
     /**
+     * Records: the record time rounded to the nearest second, so the time and the pace shown always agree.
+     */
+    fun recordSeconds(durationMs: Long): Long = roundHalfUp(durationMs / 1000.0)
+
+    fun recordTime(durationMs: Long): String = duration(recordSeconds(durationMs) * 1000)
+
+    fun recordPace(durationMs: Long, meters: Double): String =
+        pace(recordSeconds(durationMs).toDouble() / (meters / 1000.0))
+
+    /**
      * R2: the target label for a segment, honouring the bound. Returns `null` when there is no target;
      * for RANGE it returns `6:30–6:40`, otherwise `≤ 6:30` / `≥ 8:25`.
      */
