@@ -720,3 +720,10 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - Sample: track contoh dibuat lurus (lon konstan) agar jarak haversine = jarak nominal, sehingga "Waktu per jarak" di
   detail sesi sama dengan Rekor.
 - S04: tombol "Copy as text" di pra-start (struktur workout bisa disalin tanpa harus start).
+
+## Follow-up fixes (2026-10-12)
+- Map: satu rute **start -> stop** (bukan per segmen) -> rute selalu utuh walau berhenti di tengah segmen.
+- Share PNG: batang segmen **satu warna** (seragam).
+- S08: kolom waktu di **Split km** dan daftar **Km di dalam segmen** kini **waktu kumulatif**; label LULUS/GAGAL per-km
+  dihapus (penilaian hanya di level segmen).
+- A07 (segmen selesai) memakai **pace rata-rata segmen** (dikuatkan lewat test engine).
