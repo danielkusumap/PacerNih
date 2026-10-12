@@ -362,18 +362,19 @@ private fun describe(workout: Workout): String {
 }
 
 private fun targetRange(workout: Workout): String? {
-    val targets = collectTargets(workout.items).filterNotNull()
+    val targets = collectTargets(workout.items)
     if (targets.isEmpty()) return null
     val min = targets.min()
     val max = targets.max()
     return if (min == max) Formatters.pace(min.toDouble()) else "${Formatters.pace(min.toDouble())}-${Formatters.pace(max.toDouble())}"
 }
 
-private fun collectTargets(items: List<com.daniel.runcoach.engine.model.Block>): List<Int?> =
+/** All pace bounds in the workout (a RANGE segment contributes both its fast and slow bound). */
+private fun collectTargets(items: List<com.daniel.runcoach.engine.model.Block>): List<Int> =
     items.flatMap { block ->
         when (block) {
-            is Segment -> listOf(block.targetPaceSecPerKm)
-            is Repeat -> block.children.map { it.targetPaceSecPerKm }
+            is Segment -> listOfNotNull(block.targetPaceSecPerKm, block.targetPace2SecPerKm)
+            is Repeat -> block.children.flatMap { listOfNotNull(it.targetPaceSecPerKm, it.targetPace2SecPerKm) }
         }
     }
 

@@ -433,11 +433,11 @@
     <string name="d01_per_km">Per-km check</string>
     <string name="d01_done">Done</string>
     <string name="d01_target_bound">Target direction</string>
-    <string name="d01_bound_range">Range (fast–slow)</string>
+    <string name="d01_bound_range">Range</string>
     <string name="d01_target_fast">Fast bound (m:ss)</string>
     <string name="d01_target_slow">Slow bound (m:ss)</string>
-    <string name="d01_bound_max">≤ Max (not slower)</string>
-    <string name="d01_bound_min">≥ Min (not faster)</string>
+    <string name="d01_bound_max">≤ Max</string>
+    <string name="d01_bound_min">≥ Min</string>
 
     <!-- D02 Preset generator -->
     <string name="d02_title">Preset generator</string>

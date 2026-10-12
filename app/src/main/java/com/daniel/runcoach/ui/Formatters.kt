@@ -53,4 +53,21 @@ object Formatters {
     /** R2: a pace range as `6:30–6:40` (fast–slow). */
     fun targetPaceRange(fastSecPerKm: Int, slowSecPerKm: Int): String =
         "${pace(fastSecPerKm.toDouble())}–${pace(slowSecPerKm.toDouble())}"
+
+    /**
+     * R2: the target label for a segment, honouring the bound. Returns `null` when there is no target;
+     * for RANGE it returns `6:30–6:40`, otherwise `≤ 6:30` / `≥ 8:25`.
+     */
+    fun segmentTarget(
+        fastSecPerKm: Int?,
+        slowSecPerKm: Int?,
+        bound: com.daniel.runcoach.engine.model.PaceTargetBound,
+    ): String? {
+        val fast = fastSecPerKm ?: return null
+        return if (bound == com.daniel.runcoach.engine.model.PaceTargetBound.RANGE && slowSecPerKm != null) {
+            targetPaceRange(fast, slowSecPerKm)
+        } else {
+            targetPace(fast, bound)
+        }
+    }
 }
