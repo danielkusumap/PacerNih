@@ -240,6 +240,7 @@ fun RecordDetailScreen(keyName: String, onOpenSession: (String) -> Unit, onBack:
                     reversedPace = pace,
                     fasterLabel = if (pace) stringResource(R.string.chart_faster) else null,
                     valueFormatter = { value -> if (pace) Formatters.pace(value) else Formatters.duration((value * 1000).toLong()) },
+                    axisValueFormatter = { value -> if (pace) Formatters.pace(value) else Formatters.duration((value * 1000).toLong()) },
                 )
             } else {
                 Text(stringResource(R.string.s11_need_two), style = type.caption, color = colors.textTertiary)

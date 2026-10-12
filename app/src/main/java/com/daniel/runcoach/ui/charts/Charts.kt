@@ -282,6 +282,7 @@ fun ChartLine(
     reversedPace: Boolean = true,
     fasterLabel: String? = null,
     valueFormatter: (Double) -> String = { "" },
+    axisValueFormatter: ((Double) -> String)? = null,
     contentDescription: String? = null,
     onTap: (LinePoint) -> Unit = {},
 ) {
@@ -352,7 +353,7 @@ fun ChartLine(
         ticks.forEach { tick ->
             val y = py(tick)
             drawLine(colors.outline, Offset(left, y), Offset(right, y), strokeWidth = 1f)
-            drawText(measurer, formatTick(tick), 0f, y - 8f, colors.textTertiary, type)
+            drawText(measurer, axisValueFormatter?.invoke(tick) ?: formatTick(tick), 0f, y - 8f, colors.textTertiary, type)
         }
         if (fasterLabel != null) drawText(measurer, fasterLabel, left, top - 10f, colors.textTertiary, type)
 

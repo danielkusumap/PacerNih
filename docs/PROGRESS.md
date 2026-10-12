@@ -694,3 +694,11 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - Hapus baris "1 km tercepat di sesi ini" (S08) dan "dari km y" (S11). Vektor V14 & test best-effort diperbarui; mock
   effort offset = 0.
 - Engine **227 hijau**, instrumented **38/38 hijau**.
+
+## R2/R3 fix + grafik pace m:ss (2026-10-12)
+- R2 fix: label target dipusatkan (`Formatters.segmentTarget`) -> range ditampilkan di S02/S03/S04/S05 (bukan hanya
+  batas cepat). Label arah target diperpendek ("= Maks", "= Min", "Rentang") agar tidak terpotong.
+- R3 fix: baris **Top 10** di detail rekor bisa diklik -> detail sesi (S08).
+- Grafik: sumbu Y grafik **pace** (S08 grafik, S09 pace per minggu, S11) kini **m:ss** (`axisValueFormatter`), konsisten
+  dengan label garis/tooltip.
+- Test: app unit (FormattersRangeTest) + instrumented **38/38 hijau**.
