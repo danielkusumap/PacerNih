@@ -24,7 +24,10 @@ class ShareImageTest {
         movingMs = 2_052_000L,
         avgPaceSecPerKm = 408.0,
         splits = listOf("1" to 400.0, "2" to 410.0),
-        passedSegments = listOf("#1" to 385.0, "#2" to 388.0),
+        segments = listOf(
+            com.daniel.runcoach.share.ShareSegment(1, "Lari", 385.0, "PASS"),
+            com.daniel.runcoach.share.ShareSegment(2, "Jalan", 540.0, "NO_TARGET"),
+        ),
         track = listOf(-8.58 to 116.10, -8.581 to 116.101, -8.582 to 116.103),
     )
 

@@ -40,6 +40,7 @@ import com.daniel.runcoach.share.ShareData
 import com.daniel.runcoach.share.ShareImageRenderer
 import com.daniel.runcoach.share.ShareImageStore
 import com.daniel.runcoach.share.ShareItem
+import com.daniel.runcoach.share.ShareSegment
 import com.daniel.runcoach.share.ShareTemplate
 import com.daniel.runcoach.share.ShareTextColor
 import com.daniel.runcoach.ui.Formatters
@@ -76,6 +77,7 @@ fun ShareScreen(sessionId: String, onBack: () -> Unit) {
 
     var data by remember { mutableStateOf<ShareData?>(null) }
     var selected by remember { mutableStateOf(setOf(ShareItem.NAME, ShareItem.DISTANCE, ShareItem.TIME, ShareItem.PACE)) }
+    var selectedSegments by remember { mutableStateOf<Set<Int>>(emptySet()) }
     var template by remember { mutableStateOf(ShareTemplate.COMPACT) }
     var textColor by remember { mutableStateOf(ShareTextColor.WHITE) }
     var preview by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
@@ -86,12 +88,15 @@ fun ShareScreen(sessionId: String, onBack: () -> Unit) {
         val segments = repository.segments(sessionId)
         val splits = repository.splits(sessionId)
         val track = repository.trackPoints(sessionId)
-        val passed = segments.filter { it.status == "PASS" }.map { "#${it.idx}" to (it.avgPace ?: 0.0) }
+        // R1: every segment with a measured pace is selectable, whatever its status.
+        val segRows = segments.filter { it.avgPace != null && it.avgPace!! > 0.0 }
+            .map { ShareSegment(it.idx, it.label, it.avgPace!!, it.status) }
         val splitPairs = splits.map { (if (it.distanceM < 1000.0) "%.2f".format(it.distanceM / 1000.0) else "${it.idx}") to (it.paceSecPerKm ?: 0.0) }
-        val hasPassed = passed.isNotEmpty()
+        val hasSegments = segRows.isNotEmpty()
         val hasTrack = track.size >= 2
+        selectedSegments = segRows.map { it.index }.toSet()
         selected = selected + buildSet {
-            if (hasPassed) add(ShareItem.SEGMENTS)
+            if (hasSegments) add(ShareItem.SEGMENTS)
             if (hasTrack) add(ShareItem.ROUTE)
         }
         data = ShareData(
@@ -101,21 +106,23 @@ fun ShareScreen(sessionId: String, onBack: () -> Unit) {
             movingMs = session.movingMs,
             avgPaceSecPerKm = session.avgPaceSecPerKm,
             splits = splitPairs,
-            passedSegments = passed,
+            segments = segRows,
             track = track.map { it.lat to it.lon },
         )
     }
 
-    LaunchedEffect(data, selected, template, textColor) {
+    LaunchedEffect(data, selected, selectedSegments, template, textColor) {
         val d = data ?: return@LaunchedEffect
+        val renderData = d.copy(segments = d.segments.filter { it.index in selectedSegments })
         preview = withContext(Dispatchers.Default) {
-            ShareImageRenderer.render(context, d, selected, template, textColor)
+            ShareImageRenderer.render(context, renderData, selected, template, textColor)
         }
     }
 
     fun render(): android.graphics.Bitmap? {
         val d = data ?: return null
-        return ShareImageRenderer.render(context, d, selected, template, textColor)
+        val renderData = d.copy(segments = d.segments.filter { it.index in selectedSegments })
+        return ShareImageRenderer.render(context, renderData, selected, template, textColor)
     }
 
     Column(modifier = Modifier.fillMaxSize().background(colors.bg)) {
@@ -128,7 +135,6 @@ fun ShareScreen(sessionId: String, onBack: () -> Unit) {
 
             SectionHeader(stringResource(R.string.share_pick_data))
             RcCard {
-                val hasPassed = data?.passedSegments?.isNotEmpty() == true
                 val hasTrack = (data?.track?.size ?: 0) >= 2
                 ShareItemRow(stringResource(R.string.share_item_name), ShareItem.NAME, selected, { selected = toggle(selected, it) })
                 ShareItemRow(stringResource(R.string.share_item_distance), ShareItem.DISTANCE, selected, { selected = toggle(selected, it) })
@@ -136,13 +142,30 @@ fun ShareScreen(sessionId: String, onBack: () -> Unit) {
                 ShareItemRow(stringResource(R.string.share_item_pace), ShareItem.PACE, selected, { selected = toggle(selected, it) })
                 ShareItemRow(stringResource(R.string.share_item_splits), ShareItem.SPLITS, selected, { selected = toggle(selected, it) })
                 ShareItemRow(
-                    if (hasPassed) stringResource(R.string.share_item_segments) else stringResource(R.string.no_passed_segments),
-                    ShareItem.SEGMENTS, selected, { selected = toggle(selected, it) }, enabled = hasPassed,
-                )
-                ShareItemRow(
                     stringResource(R.string.share_item_route), ShareItem.ROUTE, selected, { selected = toggle(selected, it) },
                     enabled = hasTrack, showDivider = false,
                 )
+            }
+
+            // R1: pick which segments to show (any status). Uniform bars, colour = status.
+            val segRows = data?.segments.orEmpty()
+            if (segRows.isNotEmpty()) {
+                SectionHeader(stringResource(R.string.share_pick_segments))
+                if (!template.supports(ShareItem.SEGMENTS)) {
+                    Text(stringResource(R.string.tpl_unsupported), style = type.caption, color = colors.textTertiary)
+                }
+                RcCard {
+                    segRows.forEachIndexed { i, seg ->
+                        val checked = seg.index in selectedSegments
+                        SegmentPickRow(
+                            title = "#${seg.index} ${seg.label}",
+                            status = seg.status,
+                            checked = checked,
+                            showDivider = i < segRows.lastIndex,
+                            onToggle = { selectedSegments = if (checked) selectedSegments - seg.index else selectedSegments + seg.index },
+                        )
+                    }
+                }
             }
 
             SectionHeader(stringResource(R.string.share_pick_template))
@@ -202,6 +225,52 @@ fun ShareScreen(sessionId: String, onBack: () -> Unit) {
 
 private fun toggle(set: Set<ShareItem>, item: ShareItem): Set<ShareItem> =
     if (item in set) set - item else set + item
+
+@Composable
+private fun SegmentPickRow(title: String, status: String, checked: Boolean, showDivider: Boolean, onToggle: () -> Unit) {
+    val colors = LocalRcColors.current
+    val type = LocalRcTypography.current
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().height(52.dp).clickable { onToggle() },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(title, style = type.body, color = colors.textPrimary, maxLines = 1, modifier = Modifier.weight(1f))
+            com.daniel.runcoach.ui.components.ResultChip(statusFor(status), statusLabel(status))
+            Box(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .height(24.dp)
+                    .background(if (checked) colors.accent else androidx.compose.ui.graphics.Color.Transparent, RoundedCornerShape(8.dp))
+                    .border(1.5.dp, if (checked) colors.accent else colors.outlineStrong, RoundedCornerShape(8.dp))
+                    .padding(horizontal = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (checked) Text("✓", style = type.chip, color = colors.onAccent)
+            }
+        }
+        if (showDivider) Box(Modifier.fillMaxWidth().height(1.dp).background(colors.outline))
+    }
+}
+
+private fun statusFor(status: String): com.daniel.runcoach.ui.components.RcStatus = when (status) {
+    "PASS" -> com.daniel.runcoach.ui.components.RcStatus.Pass
+    "FAIL" -> com.daniel.runcoach.ui.components.RcStatus.Fail
+    "BORDERLINE" -> com.daniel.runcoach.ui.components.RcStatus.Warn
+    else -> com.daniel.runcoach.ui.components.RcStatus.Neutral
+}
+
+@Composable
+private fun statusLabel(status: String): String = stringResource(
+    when (status) {
+        "PASS" -> R.string.result_pass
+        "FAIL" -> R.string.result_fail
+        "BORDERLINE" -> R.string.result_borderline
+        "SKIPPED" -> R.string.result_skipped
+        else -> R.string.result_no_target
+    },
+)
 
 @Composable
 private fun ShareItemRow(label: String, item: ShareItem, selected: Set<ShareItem>, onToggle: (ShareItem) -> Unit, enabled: Boolean = true, showDivider: Boolean = true) {

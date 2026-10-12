@@ -34,6 +34,9 @@ enum class ShareTemplate(val width: Int, val height: Int) {
 /** F3: text colour. */
 enum class ShareTextColor { WHITE, BLACK }
 
+/** One segment row on the share image: uniform bar coloured by its status (R1). */
+data class ShareSegment(val index: Int, val label: String, val paceSecPerKm: Double, val status: String)
+
 /** All the data the renderer needs, already formatted. */
 data class ShareData(
     val name: String,
@@ -43,8 +46,8 @@ data class ShareData(
     val avgPaceSecPerKm: Double?,
     /** label -> pace seconds per km, for the split-km chart. */
     val splits: List<Pair<String, Double>>,
-    /** "#n" -> pace seconds per km, only PASSED segments (F5). */
-    val passedSegments: List<Pair<String, Double>>,
+    /** selected segments (any status), drawn as uniform status-coloured bars (R1). */
+    val segments: List<ShareSegment>,
     val track: List<Pair<Double, Double>>,
 )
 
@@ -105,11 +108,11 @@ object ShareImageRenderer {
                     }
                 }
                 ShareItem.SEGMENTS -> {
-                    if (data.passedSegments.isNotEmpty()) {
+                    if (data.segments.isNotEmpty()) {
                         drawText(canvas, "SPLIT SEGMENT", PAD, y + 36f, 36f, label, ink, outline, Paint.Align.LEFT, letterSpacing = 0.14f)
                         y += 36f + 28f
                         val h = 300f
-                        drawBars(canvas, data.passedSegments, PAD, y, w - 2 * PAD, h, ink, outline, number)
+                        drawSegmentBars(canvas, data.segments, PAD, y, w - 2 * PAD, h, ink, outline, number)
                         y += h + 24f
                     }
                 }
@@ -144,6 +147,29 @@ object ShareImageRenderer {
             canvas.drawRoundRect(RectF(x + labelW, cy - barH / 2f, x + labelW + len, cy + barH / 2f), barH / 2f, barH / 2f, paint)
             drawText(canvas, pace(paceSec), x + width, cy + 10f, 28f, font, ink, outline, Paint.Align.RIGHT)
         }
+    }
+
+    /** R1: uniform segment bars, one per selected segment, coloured by status. */
+    private fun drawSegmentBars(canvas: Canvas, segments: List<ShareSegment>, x: Float, y: Float, width: Float, height: Float, ink: Int, outline: Int, font: Typeface) {
+        if (segments.isEmpty()) return
+        val slot = width / segments.size
+        val barW = slot * 0.6f
+        val barH = 160f
+        val baseY = y + height - 40f
+        segments.forEachIndexed { index, seg ->
+            val cx = x + slot * index + slot / 2f
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = statusColor(seg.status); style = Paint.Style.FILL }
+            canvas.drawRoundRect(RectF(cx - barW / 2f, baseY - barH, cx + barW / 2f, baseY), 8f, 8f, paint)
+            drawText(canvas, pace(seg.paceSecPerKm), cx, baseY - barH - 8f, 28f, font, ink, outline, Paint.Align.CENTER)
+            drawText(canvas, "#${seg.index}", cx, y + height - 8f, 28f, font, ink, outline, Paint.Align.CENTER)
+        }
+    }
+
+    private fun statusColor(status: String): Int = when (status) {
+        "PASS" -> RcDarkColors.pass.toArgbInt()
+        "FAIL" -> RcDarkColors.fail.toArgbInt()
+        "BORDERLINE" -> RcDarkColors.warn.toArgbInt()
+        else -> RcDarkColors.neutral.toArgbInt()
     }
 
     private fun drawBars(canvas: Canvas, bars: List<Pair<String, Double>>, x: Float, y: Float, width: Float, height: Float, ink: Int, outline: Int, font: Typeface) {

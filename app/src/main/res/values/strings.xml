@@ -289,6 +289,7 @@
     <string name="share">Bagikan</string>
     <string name="share_title">Bagikan sesi</string>
     <string name="share_pick_data">Pilih data</string>
+    <string name="share_pick_segments">Pilih segmen</string>
     <string name="share_pick_template">Pilih template</string>
     <string name="share_text_color">Warna teks</string>
     <string name="share_white">Putih</string>

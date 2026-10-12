@@ -25,13 +25,13 @@ object WorkoutPresets {
     ): Workout {
         val items = mutableListOf<Block>()
         if (warmUpMeters > 0) {
-            items += seg("Warm up", SegmentKind.WARMUP, Limit.Distance(warmUpMeters), startPaceSecPerKm + 20)
+            items += seg("Warm up", SegmentKind.WARMUP, Limit.Distance(warmUpMeters), null)
         }
         repeat(kilometers) { index ->
             items += seg("Tempo ${index + 1}", SegmentKind.RUN, Limit.Distance(1000), startPaceSecPerKm - index * stepSecPerKm)
         }
         if (coolDownMeters > 0) {
-            items += seg("Cooldown", SegmentKind.COOLDOWN, Limit.Distance(coolDownMeters), startPaceSecPerKm + 20)
+            items += seg("Cooldown", SegmentKind.COOLDOWN, Limit.Distance(coolDownMeters), null)
         }
         return Workout(id = "", name = "Progressive tempo $kilometers km", items = items)
     }

@@ -290,6 +290,7 @@
     <string name="share">Share</string>
     <string name="share_title">Share session</string>
     <string name="share_pick_data">Choose data</string>
+    <string name="share_pick_segments">Choose segments</string>
     <string name="share_pick_template">Choose template</string>
     <string name="share_text_color">Text color</string>
     <string name="share_white">White</string>

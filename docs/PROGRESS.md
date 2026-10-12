@@ -672,3 +672,8 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
   izin, privasi, testing, docs. Screenshot di `docs/screenshots/` (S02, S03, D01, S07, S08, S09, S10, S12).
 - Screenshot di-capture ulang biner-aman (`adb shell screencap` + `adb pull`). Judul halaman Statistik diperbaiki
   ("STATISTIK", sebelumnya "Weekly summary").
+
+## R1 Warm-up/cool-down tanpa target + pemilih segmen PNG (2026-10-12)
+- Preset Progressive tempo: warm-up/cool-down **tanpa target**. Halaman Bagikan: blok segmen jadi **daftar centang per
+  segmen** (semua status, default tercentang); batang **seragam** dengan **warna per status** (hijau/merah/kuning/abu).
+- Engine unit + instrumented **38/38 hijau**.
