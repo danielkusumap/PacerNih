@@ -31,6 +31,11 @@ data class Segment(
     val fastMarginSec: Int? = 20,
     val perKmCheck: Boolean = true,
     val targetBound: PaceTargetBound = PaceTargetBound.MAX,
+    /**
+     * R2: the second pace bound for [PaceTargetBound.RANGE]. With RANGE, [targetPaceSecPerKm] is the **fast**
+     * bound and this is the **slow** bound (fast < slow). Null for MAX/MIN.
+     */
+    val targetPace2SecPerKm: Int? = null,
 ) : Block
 
 /**
@@ -68,9 +73,12 @@ sealed interface Limit {
 enum class SegmentKind { WARMUP, RUN, WALK, COOLDOWN, RECOVERY }
 
 /**
- * Which way a target pace is enforced. [MAX] (default, for run/work) is a ceiling: the average pace must be
- * **at most** the target (faster passes). [MIN] (for warm-up, cool-down, recovery) is a floor: the average
- * pace must be **at least** the target, i.e. you may not go faster than it.
+ * Which way a target pace is enforced.
+ * - [MAX] (default, for run/work) is a ceiling: the average pace must be **at most** the target (faster passes).
+ * - [MIN] (for warm-up, cool-down, recovery) is a floor: the average pace must be **at least** the target, i.e.
+ *   you may not go faster than it.
+ * - [RANGE] (R2) keeps the pace inside a band: [Segment.targetPaceSecPerKm] is the fast bound and
+ *   [Segment.targetPace2SecPerKm] is the slow bound (fast < slow). Alerts fire on both sides.
  */
 @Serializable
-enum class PaceTargetBound { MAX, MIN }
+enum class PaceTargetBound { MAX, MIN, RANGE }

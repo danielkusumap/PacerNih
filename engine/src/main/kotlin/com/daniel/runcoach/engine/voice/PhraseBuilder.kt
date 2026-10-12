@@ -1,6 +1,7 @@
 package com.daniel.runcoach.engine.voice
 
 import com.daniel.runcoach.engine.model.Limit
+import com.daniel.runcoach.engine.model.PaceTargetBound
 import com.daniel.runcoach.engine.model.Segment
 import com.daniel.runcoach.engine.model.SegmentKind
 import com.daniel.runcoach.engine.result.SegmentStatus
@@ -23,9 +24,15 @@ object PhraseBuilder {
         val head = if (language == VoiceLanguage.ID) "Segmen $index dari $total." else "Segment $index of $total."
         val type = capitalize(segmentKind(segment.kind, language))
         val limit = segmentLimit(segment.limit, language)
-        val target = segment.targetPaceSecPerKm
-            ?.let { "Target pace ${pace(it.toDouble(), language)}." }
-            ?: (if (language == VoiceLanguage.ID) "Tanpa target." else "No target.")
+        val target = when {
+            segment.targetPaceSecPerKm == null -> if (language == VoiceLanguage.ID) "Tanpa target." else "No target."
+            segment.targetBound == PaceTargetBound.RANGE && segment.targetPace2SecPerKm != null -> {
+                val fast = pace(segment.targetPaceSecPerKm.toDouble(), language)
+                val slow = pace(segment.targetPace2SecPerKm.toDouble(), language)
+                if (language == VoiceLanguage.ID) "Target pace $fast sampai $slow." else "Target pace $fast to $slow."
+            }
+            else -> "Target pace ${pace(segment.targetPaceSecPerKm.toDouble(), language)}."
+        }
         return "$head $type $limit. $target"
     }
 

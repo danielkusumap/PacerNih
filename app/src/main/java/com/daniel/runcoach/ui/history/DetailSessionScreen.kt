@@ -624,10 +624,16 @@ private fun segActualText(segment: SegmentResultEntity): String {
     return "$distance · ${Formatters.duration(segment.durationMs)}"
 }
 
-private fun targetText(segment: SegmentResultEntity): String =
-    segment.targetPace?.let {
-        Formatters.targetPace(it, runCatching { com.daniel.runcoach.engine.model.PaceTargetBound.valueOf(segment.targetBound) }.getOrDefault(com.daniel.runcoach.engine.model.PaceTargetBound.MAX))
-    } ?: "—"
+private fun targetText(segment: SegmentResultEntity): String {
+    val fast = segment.targetPace ?: return "—"
+    val bound = runCatching { com.daniel.runcoach.engine.model.PaceTargetBound.valueOf(segment.targetBound) }
+        .getOrDefault(com.daniel.runcoach.engine.model.PaceTargetBound.MAX)
+    return if (bound == com.daniel.runcoach.engine.model.PaceTargetBound.RANGE && segment.targetPace2 != null) {
+        Formatters.targetPaceRange(fast, segment.targetPace2!!)
+    } else {
+        Formatters.targetPace(fast, bound)
+    }
+}
 
 private fun formatRange(session: SessionEntity): String {
     val fmt = SimpleDateFormat("d MMM yyyy · HH:mm", Locale.getDefault())

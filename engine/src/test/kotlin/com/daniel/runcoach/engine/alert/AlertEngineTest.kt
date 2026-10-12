@@ -27,6 +27,8 @@ class AlertEngineTest {
         running: Boolean = true,
         gpsLost: Boolean = false,
         open: Boolean = false,
+        bound: com.daniel.runcoach.engine.model.PaceTargetBound = com.daniel.runcoach.engine.model.PaceTargetBound.MAX,
+        slow: Int? = null,
     ) = CorrectionInput(
         segmentTargetSecPerKm = target,
         fastMarginSec = fastMargin,
@@ -43,6 +45,8 @@ class AlertEngineTest {
         requiredSecPerKm = required,
         running = running,
         gpsLost = gpsLost,
+        targetBound = bound,
+        targetPace2SecPerKm = slow,
     )
 
     @Test
@@ -126,5 +130,40 @@ class AlertEngineTest {
             listOf(AlertEvent.TooSlow(435.0, 420, null), AlertEvent.SegmentEnd(1, segment)),
         )
         assertTrue(picked is AlertEvent.SegmentEnd)
+    }
+
+    @Test
+    fun `R2 a min target also guards the slow side`() {
+        val engine = AlertEngine()
+        val bound = com.daniel.runcoach.engine.model.PaceTargetBound.MIN
+        engine.evaluate(input(paceLive = 520.0, target = 510, bound = bound), 0)
+        var event: AlertEvent? = null
+        for (t in 1_000..7_000 step 1_000) {
+            event = engine.evaluate(input(paceLive = 540.0, target = 510, bound = bound), t.toLong())
+            if (event != null) break
+        }
+        assertTrue(event is AlertEvent.TooSlow, "min target raises too slow when far slower than target+margin")
+    }
+
+    @Test
+    fun `R2 a range fires too fast below the fast bound and too slow above the slow bound`() {
+        val range = com.daniel.runcoach.engine.model.PaceTargetBound.RANGE
+        val fast = AlertEngine()
+        fast.evaluate(input(paceLive = 395.0, target = 390, bound = range, slow = 400), 0)
+        var event: AlertEvent? = null
+        for (t in 1_000..7_000 step 1_000) {
+            event = fast.evaluate(input(paceLive = 380.0, target = 390, bound = range, slow = 400), t.toLong())
+            if (event != null) break
+        }
+        assertTrue(event is AlertEvent.TooFast)
+
+        val slowEngine = AlertEngine()
+        slowEngine.evaluate(input(paceLive = 395.0, target = 390, bound = range, slow = 400), 0)
+        var slowEvent: AlertEvent? = null
+        for (t in 1_000..7_000 step 1_000) {
+            slowEvent = slowEngine.evaluate(input(paceLive = 412.0, target = 390, bound = range, slow = 400), t.toLong())
+            if (slowEvent != null) break
+        }
+        assertTrue(slowEvent is AlertEvent.TooSlow)
     }
 }

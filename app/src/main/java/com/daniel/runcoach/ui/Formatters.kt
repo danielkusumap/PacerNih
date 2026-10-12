@@ -49,4 +49,8 @@ object Formatters {
         val symbol = if (bound == com.daniel.runcoach.engine.model.PaceTargetBound.MIN) "≥" else "≤"
         return "$symbol ${pace(secPerKm?.toDouble())}"
     }
+
+    /** R2: a pace range as `6:30–6:40` (fast–slow). */
+    fun targetPaceRange(fastSecPerKm: Int, slowSecPerKm: Int): String =
+        "${pace(fastSecPerKm.toDouble())}–${pace(slowSecPerKm.toDouble())}"
 }

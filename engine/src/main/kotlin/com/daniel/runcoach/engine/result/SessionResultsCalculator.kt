@@ -21,6 +21,8 @@ data class SegmentResultData(
     val deltaSec: Long?,
     val status: String,
     val targetBound: com.daniel.runcoach.engine.model.PaceTargetBound = com.daniel.runcoach.engine.model.PaceTargetBound.MAX,
+    /** R2: slow bound for RANGE (fast bound is [targetPace]). */
+    val targetPace2: Int? = null,
     /** P1: true when the session was stopped during or before this segment. */
     val stopped: Boolean = false,
 )
@@ -87,6 +89,7 @@ object SessionResultsCalculator {
                     deltaSec = null,
                     status = SegmentStatus.SKIPPED.name,
                     targetBound = segment.targetBound,
+                    targetPace2 = segment.targetPace2SecPerKm,
                     stopped = false,
                 )
                 startDist = endDist
@@ -137,6 +140,7 @@ object SessionResultsCalculator {
                 kmTimesSec = kmTimes,
                 skipped = false,
                 bound = segment.targetBound,
+                slowSecPerKm = segment.targetPace2SecPerKm,
             )
             // P1: on Stop, the running segment and every planned segment after it are marked stopped. Target -> FAIL,
             // no target -> NO_TARGET (never failed); Open segments are left as NO_TARGET.
@@ -167,6 +171,7 @@ object SessionResultsCalculator {
                 deltaSec = if (notStarted) null else evaluation.deltaSec,
                 status = status,
                 targetBound = segment.targetBound,
+                targetPace2 = segment.targetPace2SecPerKm,
                 stopped = stoppedHere,
             )
 

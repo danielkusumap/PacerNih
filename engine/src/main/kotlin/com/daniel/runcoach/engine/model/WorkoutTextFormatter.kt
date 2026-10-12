@@ -36,7 +36,12 @@ object WorkoutTextFormatter {
             is Limit.Duration -> duration(l.seconds)
             Limit.Open -> "tanpa batas"
         }
-        val target = segment.targetPaceSecPerKm?.let { " · ${target(it, segment.targetBound)}" } ?: ""
+        val target = when {
+            segment.targetPaceSecPerKm == null -> ""
+            segment.targetBound == PaceTargetBound.RANGE && segment.targetPace2SecPerKm != null ->
+                " · ${pace(segment.targetPaceSecPerKm)}–${pace(segment.targetPace2SecPerKm)} /km"
+            else -> " · ${target(segment.targetPaceSecPerKm, segment.targetBound)}"
+        }
         return "${segment.label} $limit$target"
     }
 
@@ -62,4 +67,6 @@ object WorkoutTextFormatter {
         val symbol = if (bound == PaceTargetBound.MIN) "≥" else "≤"
         return "$symbol %d:%02d /km".format(secPerKm / 60, secPerKm % 60)
     }
+
+    private fun pace(secPerKm: Int): String = "%d:%02d".format(secPerKm / 60, secPerKm % 60)
 }

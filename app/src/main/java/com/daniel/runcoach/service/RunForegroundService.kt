@@ -320,6 +320,7 @@ class RunForegroundService : Service() {
             running = state.phase == RunnerPhase.RUNNING,
             gpsLost = state.gpsLost,
             targetBound = segment.targetBound,
+            targetPace2SecPerKm = segment.targetPace2SecPerKm,
         )
     }
 

@@ -438,6 +438,7 @@ private fun SegmentSheet(
     var distance by remember { mutableStateOf((initial.limit as? Limit.Distance)?.meters?.toString() ?: "1000") }
     var duration by remember { mutableStateOf((initial.limit as? Limit.Duration)?.let { formatPace(it.seconds) } ?: "6:00") }
     var target by remember { mutableStateOf(initial.targetPaceSecPerKm?.let { formatPace(it) } ?: "") }
+    var target2 by remember { mutableStateOf(initial.targetPace2SecPerKm?.let { formatPace(it) } ?: "") }
     var bound by remember { mutableStateOf(initial.targetBound) }
     var margin by remember { mutableStateOf(initial.fastMarginSec?.toString() ?: "20") }
     var marginEnabled by remember { mutableStateOf(initial.fastMarginSec != null) }
@@ -496,16 +497,22 @@ private fun SegmentSheet(
             else -> Text(stringResource(R.string.d01_open), style = type.body, color = colors.textSecondary, modifier = Modifier.padding(top = spacing.s2))
         }
 
-        RcTextField(value = target, onValueChange = { target = it }, label = stringResource(R.string.d01_target), modifier = Modifier.padding(top = spacing.s2))
         Text(stringResource(R.string.d01_target_bound).uppercase(), style = type.label, color = colors.textSecondary, modifier = Modifier.padding(top = spacing.s2))
         SegmentedControl(
             options = listOf(
                 com.daniel.runcoach.engine.model.PaceTargetBound.MAX to stringResource(R.string.d01_bound_max),
                 com.daniel.runcoach.engine.model.PaceTargetBound.MIN to stringResource(R.string.d01_bound_min),
+                com.daniel.runcoach.engine.model.PaceTargetBound.RANGE to stringResource(R.string.d01_bound_range),
             ),
             selected = bound,
             onSelect = { bound = it },
         )
+        if (bound == com.daniel.runcoach.engine.model.PaceTargetBound.RANGE) {
+            RcTextField(value = target, onValueChange = { target = it }, label = stringResource(R.string.d01_target_fast), placeholder = "6:30", modifier = Modifier.padding(top = spacing.s2))
+            RcTextField(value = target2, onValueChange = { target2 = it }, label = stringResource(R.string.d01_target_slow), placeholder = "6:40", modifier = Modifier.padding(top = spacing.s2))
+        } else {
+            RcTextField(value = target, onValueChange = { target = it }, label = stringResource(R.string.d01_target), modifier = Modifier.padding(top = spacing.s2))
+        }
         RcSwitchRow(stringResource(R.string.d01_fast_margin), marginEnabled, onCheckedChange = { marginEnabled = it })
         if (marginEnabled) {
             NumberStepper(
@@ -535,6 +542,11 @@ private fun SegmentSheet(
                         fastMarginSec = if (marginEnabled) (margin.toIntOrNull() ?: 20) else null,
                         perKmCheck = perKm,
                         targetBound = bound,
+                        targetPace2SecPerKm = if (bound == com.daniel.runcoach.engine.model.PaceTargetBound.RANGE) {
+                            target2.takeIf { it.isNotBlank() }?.let { parsePace(it) }
+                        } else {
+                            null
+                        },
                     ),
                 )
             },

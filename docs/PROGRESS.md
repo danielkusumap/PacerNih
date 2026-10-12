@@ -677,3 +677,13 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - Preset Progressive tempo: warm-up/cool-down **tanpa target**. Halaman Bagikan: blok segmen jadi **daftar centang per
   segmen** (semua status, default tercentang); batang **seragam** dengan **warna per status** (hijau/merah/kuning/abu).
 - Engine unit + instrumented **38/38 hijau**.
+
+## R2 Target pace tiga mode: Maks / Min / Rentang (2026-10-12)
+- Model: `PaceTargetBound { MAX, MIN, RANGE }`; `Segment.targetPace2SecPerKm` (slow bound untuk RANGE; fast bound =
+  `targetPaceSecPerKm`). Validasi RANGE: cepat < lambat.
+- Evaluator: RANGE LULUS di dalam band, BORDERLINE dalam margin GPS, GAGAL di luar.
+- Alert: Maks (2 alert), Min (+ Terlalu lambat baru, margin per segmen dipakai dua arah), Rentang (dua sisi).
+  Wording margin jadi netral ("Margin pace").
+- D01: pilihan tiga mode + dua field (cepat/lambat). Voice A03 rentang "6:30 sampai 6:40". Riwayat/live tampilkan
+  "6:30–6:40". DB `SegmentResult.targetPace2` (migrasi v7).
+- Engine **227 hijau** (5 test baru), instrumented **38/38 hijau**.

@@ -1,6 +1,7 @@
 package com.daniel.runcoach.engine.voice
 
 import com.daniel.runcoach.engine.model.Limit
+import com.daniel.runcoach.engine.model.PaceTargetBound
 import com.daniel.runcoach.engine.model.Segment
 import com.daniel.runcoach.engine.model.SegmentKind
 import com.daniel.runcoach.engine.result.SegmentStatus
@@ -154,5 +155,14 @@ class PhraseBuilderTest {
         assertTrue(!id.contains("Target pace"), "no target-pace phrase")
         val en = PhraseBuilder.segmentStart(2, 5, noTarget, VoiceLanguage.EN)
         assertTrue(!en.contains("Target pace"), "no target-pace phrase")
+    }
+
+    @Test
+    fun `R2 range target is spoken as a band`() {
+        val range = Segment("Tempo", SegmentKind.RUN, Limit.Distance(1000), 390, targetBound = PaceTargetBound.RANGE, targetPace2SecPerKm = 400)
+        val id = PhraseBuilder.segmentStart(1, 1, range, VoiceLanguage.ID)
+        assertTrue(id.contains("6 menit 30 sampai 6 menit 40"), "id range: $id")
+        val en = PhraseBuilder.segmentStart(1, 1, range, VoiceLanguage.EN)
+        assertTrue(en.contains("6 minutes 30 seconds to 6 minutes 40 seconds"), "en range: $en")
     }
 }

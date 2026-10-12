@@ -331,8 +331,16 @@ private fun TargetRow(segment: Segment?) {
     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.run_target_label).uppercase(), style = type.label, color = colors.textSecondary)
         val target = segment?.targetPaceSecPerKm
-        if (target != null) Text(Formatters.targetPace(target, segment.targetBound), style = type.numberM, color = colors.textPrimary)
-        else Text(stringResource(R.string.run_no_target), style = type.bodySmall, color = colors.textSecondary)
+        if (target != null) {
+            val text = if (segment.targetBound == com.daniel.runcoach.engine.model.PaceTargetBound.RANGE && segment.targetPace2SecPerKm != null) {
+                Formatters.targetPaceRange(target, segment.targetPace2SecPerKm!!)
+            } else {
+                Formatters.targetPace(target, segment.targetBound)
+            }
+            Text(text, style = type.numberM, color = colors.textPrimary)
+        } else {
+            Text(stringResource(R.string.run_no_target), style = type.bodySmall, color = colors.textSecondary)
+        }
     }
 }
 

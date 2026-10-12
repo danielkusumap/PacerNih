@@ -104,5 +104,14 @@ object WorkoutValidator {
         if (pace != null && pace !in MIN_TARGET_PACE_SEC_PER_KM..MAX_TARGET_PACE_SEC_PER_KM) {
             errors += WorkoutError(WorkoutErrorCode.TARGET_PACE_OUT_OF_RANGE, "$path.targetPaceSecPerKm")
         }
+        // R2: RANGE needs a valid slow bound that is strictly slower than the fast bound.
+        if (segment.targetBound == PaceTargetBound.RANGE) {
+            val slow = segment.targetPace2SecPerKm
+            if (slow == null || slow !in MIN_TARGET_PACE_SEC_PER_KM..MAX_TARGET_PACE_SEC_PER_KM) {
+                errors += WorkoutError(WorkoutErrorCode.TARGET_PACE_OUT_OF_RANGE, "$path.targetPace2SecPerKm")
+            } else if (pace == null || pace >= slow) {
+                errors += WorkoutError(WorkoutErrorCode.TARGET_PACE_OUT_OF_RANGE, "$path.targetPace2SecPerKm")
+            }
+        }
     }
 }

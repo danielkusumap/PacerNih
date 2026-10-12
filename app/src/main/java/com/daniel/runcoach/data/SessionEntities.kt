@@ -58,6 +58,8 @@ data class SegmentResultEntity(
     val kmDetailJson: String?,
     val targetBound: String = "MAX",
     val stopped: Boolean = false,
+    /** R2: slow bound for RANGE (fast bound is [targetPace]). */
+    val targetPace2: Int? = null,
 )
 
 @Entity(tableName = "KmSplit", indices = [Index("sessionId")])

@@ -196,7 +196,7 @@
     <string name="s12_style_beep">Beep</string>
     <string name="s12_style_voice">Suara angka</string>
     <string name="s12_alert">Alert</string>
-    <string name="s12_fast_margin">Margin terlalu cepat default (detik)</string>
+    <string name="s12_fast_margin">Margin pace default (detik)</string>
     <string name="s12_vibrate">Getar</string>
     <string name="s12_tracking">Tracking</string>
     <string name="s12_auto_pause">Auto-pause</string>
@@ -428,10 +428,13 @@
     <string name="d01_duration_ms">Durasi (mm:ss)</string>
     <string name="d01_open">Tanpa batas (segmen terakhir)</string>
     <string name="d01_target">Target pace m:ss (opsional)</string>
-    <string name="d01_fast_margin">Margin terlalu cepat, detik (0 = mati)</string>
+    <string name="d01_fast_margin">Margin pace, detik (0 = mati)</string>
     <string name="d01_per_km">Per-km check</string>
     <string name="d01_done">Selesai</string>
     <string name="d01_target_bound">Arah target</string>
+    <string name="d01_bound_range">Rentang (cepat–lambat)</string>
+    <string name="d01_target_fast">Batas cepat (m:ss)</string>
+    <string name="d01_target_slow">Batas lambat (m:ss)</string>
     <string name="d01_bound_max">≤ Maks (tidak lebih lambat)</string>
     <string name="d01_bound_min">≥ Min (tidak lebih cepat)</string>
 

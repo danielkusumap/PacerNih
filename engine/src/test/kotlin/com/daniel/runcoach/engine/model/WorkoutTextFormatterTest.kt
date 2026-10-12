@@ -83,4 +83,15 @@ class WorkoutTextFormatterTest {
         )
         assertEquals("W\nA 45 dtk\nB 2 mnt 30 dtk\nC 1 jam 0 mnt", fmt(workout))
     }
+
+    @Test
+    fun rangeTargetIsFormattedAsABand() {
+        val workout = Workout(
+            id = "", name = "W",
+            items = listOf(
+                Segment("Tempo", SegmentKind.RUN, Limit.Distance(1000), 390, targetBound = PaceTargetBound.RANGE, targetPace2SecPerKm = 400),
+            ),
+        )
+        assertEquals("W\nTempo 1 km · 6:30–6:40 /km", fmt(workout))
+    }
 }

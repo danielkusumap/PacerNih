@@ -54,6 +54,7 @@ object SegmentEvaluator {
         skipped: Boolean = false,
         extended: Boolean = false,
         bound: com.daniel.runcoach.engine.model.PaceTargetBound = com.daniel.runcoach.engine.model.PaceTargetBound.MAX,
+        slowSecPerKm: Int? = null,
         config: EngineConfig = EngineConfig(),
     ): SegmentEvaluation {
         val movingMs = roundHalfUp(movingSec * 1000.0)
@@ -77,6 +78,59 @@ object SegmentEvaluator {
             )
         }
         if (distanceM < config.minPaceDistanceM) return plain(SegmentStatus.NO_DATA)
+
+        // R2: range mode keeps the pace inside [fast, slow]; PASS inside, BORDERLINE within the GPS margin, else FAIL.
+        if (bound == com.daniel.runcoach.engine.model.PaceTargetBound.RANGE && slowSecPerKm != null) {
+            val fast = targetSecPerKm.toLong()
+            val slow = slowSecPerKm.toLong()
+            val avgR = roundHalfUp(movingSec / (distanceM / 1000.0))
+            val marginAvg = marginSec(targetSecPerKm.toDouble(), distanceM, config)
+            val marginKm = marginKmSec(targetSecPerKm.toDouble(), config)
+            fun excessRounded(value: Long): Long = when {
+                value < fast -> fast - value
+                value > slow -> value - slow
+                else -> 0L
+            }
+            val kmStatuses = if (perKmCheck) {
+                kmTimesSec.mapIndexed { index, kmTimeSec ->
+                    val kmR = roundHalfUp(kmTimeSec)
+                    val kmDelta = when {
+                        kmR < fast -> kmR - fast
+                        kmR > slow -> kmR - slow
+                        else -> 0L
+                    }
+                    val status = when {
+                        excessRounded(kmR) == 0L -> SegmentStatus.PASS
+                        excessRounded(kmR).toDouble() <= marginKm -> SegmentStatus.BORDERLINE
+                        else -> SegmentStatus.FAIL
+                    }
+                    KmStatus(index + 1, kmTimeSec, kmR, kmDelta, status)
+                }
+            } else {
+                emptyList()
+            }
+            val status = when {
+                excessRounded(avgR) == 0L && kmStatuses.all { it.status == SegmentStatus.PASS } -> SegmentStatus.PASS
+                excessRounded(avgR).toDouble() <= marginAvg && kmStatuses.none { it.status == SegmentStatus.FAIL } -> SegmentStatus.BORDERLINE
+                else -> SegmentStatus.FAIL
+            }
+            val deltaSec = when {
+                avgR < fast -> avgR - fast
+                avgR > slow -> avgR - slow
+                else -> 0L
+            }
+            return SegmentEvaluation(
+                status = status,
+                distanceM = distanceM,
+                movingMs = movingMs,
+                avgPaceSecPerKm = movingSec / (distanceM / 1000.0),
+                avgPaceRoundedSec = avgR,
+                deltaSec = deltaSec,
+                marginSec = marginAvg,
+                kmStatuses = kmStatuses,
+                extended = extended,
+            )
+        }
 
         val avg = movingSec / (distanceM / 1000.0)
         val avgR = roundHalfUp(avg)

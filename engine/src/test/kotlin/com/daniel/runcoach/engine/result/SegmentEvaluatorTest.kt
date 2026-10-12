@@ -62,6 +62,20 @@ class SegmentEvaluatorTest {
         assertEquals(1L, result.deltaSec)
     }
 
+    @Test
+    fun `R2 range passes inside the band and grades outside it`() {
+        val range = com.daniel.runcoach.engine.model.PaceTargetBound.RANGE
+        fun ev(avg: Double) = SegmentEvaluator.evaluate(390, perKmCheck = false, distanceM = 1000.0, movingSec = avg, bound = range, slowSecPerKm = 400)
+        assertEquals(SegmentStatus.PASS, ev(395.0).status)
+        assertEquals(SegmentStatus.PASS, ev(390.0).status)
+        assertEquals(SegmentStatus.PASS, ev(400.0).status)
+        // margin = min(390 * 6 / 1000, 15) = 2.34 s/km
+        assertEquals(SegmentStatus.BORDERLINE, ev(388.0).status)
+        assertEquals(SegmentStatus.FAIL, ev(385.0).status)
+        assertEquals(SegmentStatus.BORDERLINE, ev(402.0).status)
+        assertEquals(SegmentStatus.FAIL, ev(410.0).status)
+    }
+
     private fun evaluate(
         avg: Double,
         distanceM: Double = 1000.0,
