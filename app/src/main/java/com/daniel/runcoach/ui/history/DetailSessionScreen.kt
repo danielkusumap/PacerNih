@@ -248,19 +248,10 @@ fun DetailSessionScreen(sessionId: String, onBack: () -> Unit, onOpenShare: (Str
                 0 -> SegmentsTab(segments, splits, onCopy = { copyStructure() })
                 1 -> SplitsTab(splits)
                 2 -> ChartsTab(segments, splits, trackPoints)
-                else -> {
-                    val routeSegments = segmentPolylines(trackPoints).mapIndexedNotNull { i, pts ->
-                        segments.getOrNull(i)?.let { s ->
-                            com.daniel.runcoach.ui.map.RouteSegment(pts, s.idx, s.label, s.distanceM, s.durationMs)
-                        }
-                    }
-                    RouteMapView(
-                        points = trackPoints.map { it.lat to it.lon },
-                        segments = routeSegments,
-                        boundaryIndices = boundaryIndices(trackPoints, segments),
-                        modifier = Modifier.fillMaxWidth().height(360.dp),
-                    )
-                }
+                else -> RouteMapView(
+                    points = trackPoints.map { it.lat to it.lon },
+                    modifier = Modifier.fillMaxWidth().height(360.dp),
+                )
             }
         }
     }
@@ -332,6 +323,9 @@ private fun SegmentsTab(segments: List<SegmentResultEntity>, splits: List<KmSpli
     var expanded by remember { mutableStateOf<Set<Int>>(emptySet()) }
     // Cumulative distance at each segment boundary, to find the km splits inside a segment.
     val bounds = segments.runningFold(0.0) { acc, s -> acc + s.distanceM }
+    // Cumulative session time at each km (prefix sums), so the km list shows elapsed time, not per-km time.
+    val cumulativeMs = splits.sortedBy { it.idx }.runningFold(0L) { acc, s -> acc + s.durationMs }
+    fun cumulativeTime(idx: Int): Long = cumulativeMs.getOrElse(idx) { cumulativeMs.lastOrNull() ?: 0L }
     Column(verticalArrangement = Arrangement.spacedBy(spacing.cardGap), modifier = Modifier.padding(top = spacing.s3)) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
             RcTextButton(stringResource(R.string.copy_text), onClick = onCopy, tone = RcTextButtonTone.Accent)
@@ -395,9 +389,8 @@ private fun SegmentsTab(segments: List<SegmentResultEntity>, splits: List<KmSpli
                         inside.forEach { split ->
                             Row(modifier = Modifier.fillMaxWidth().padding(start = spacing.s2, top = 2.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text(if (split.distanceM < 1000.0) "%.2f km".format(split.distanceM / 1000.0) else "Km ${split.idx}", style = type.bodySmall, color = colors.textPrimary)
-                                Text(Formatters.duration(split.durationMs), style = type.bodySmall, color = colors.textSecondary)
+                                Text(Formatters.duration(cumulativeTime(split.idx)), style = type.bodySmall, color = colors.textSecondary)
                                 Text(Formatters.pace(split.paceSecPerKm), style = type.bodySmall, color = colors.textSecondary)
-                                ResultChip(statusFor(split.status ?: ""), statusLabel(split.status ?: ""))
                             }
                         }
                     }
@@ -413,17 +406,20 @@ private fun SplitsTab(splits: List<KmSplitEntity>) {
     val type = LocalRcTypography.current
     val spacing = LocalRcSpacing.current
     val fastestIndex = splits.filter { it.distanceM >= 1000.0 && it.paceSecPerKm != null }.minByOrNull { it.paceSecPerKm!! }?.idx
+    val ordered = splits.sortedBy { it.idx }
+    // Cumulative session time at each km (prefix sums): the time column shows elapsed, not per-km time.
+    val cumulativeMs = ordered.runningFold(0L) { acc, s -> acc + s.durationMs }
     Column(modifier = Modifier.padding(top = spacing.s3)) {
         Row(modifier = Modifier.fillMaxWidth().padding(vertical = spacing.s2)) {
             listOf(stringResource(R.string.s08_col_km), stringResource(R.string.s08_col_time), stringResource(R.string.s08_col_pace), stringResource(R.string.s08_col_delta)).forEach {
                 Text(it.uppercase(), style = type.label, color = colors.textSecondary, modifier = Modifier.weight(1f))
             }
         }
-        splits.forEach { split ->
+        ordered.forEachIndexed { i, split ->
             val partial = split.distanceM < 1000.0
             Row(modifier = Modifier.fillMaxWidth().height(52.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(if (partial) "%.2f km".format(split.distanceM / 1000.0) else "Km ${split.idx}", style = type.titleS, color = colors.textPrimary, modifier = Modifier.weight(1f))
-                Text(Formatters.duration(split.durationMs), style = type.numberS, color = colors.textPrimary, modifier = Modifier.weight(1f))
+                Text(Formatters.duration(cumulativeMs[i + 1]), style = type.numberS, color = colors.textPrimary, modifier = Modifier.weight(1f))
                 Text(Formatters.pace(split.paceSecPerKm), style = type.numberS, color = colors.textPrimary, modifier = Modifier.weight(1f))
                 Text(split.deltaSec?.let { Formatters.deltaSeconds(it) } ?: "", style = type.bodySmall, color = if ((split.deltaSec ?: 0) <= 0) colors.pass else colors.fail, modifier = Modifier.weight(1f))
             }
