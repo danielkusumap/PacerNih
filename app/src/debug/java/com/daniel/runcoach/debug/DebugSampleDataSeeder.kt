@@ -128,6 +128,17 @@ object DebugSampleDataSeeder : SampleDataSeeder {
         var distanceM = 0.0
         var timeMs = 0.0
         var idx = 0
+        track += TrackPointEntity(
+            sessionId = sessionId,
+            idx = 0,
+            timeMs = 0L,
+            lat = baseLat,
+            lon = baseLon,
+            accuracyM = 6.0,
+            speedMps = 1000.0 / defaultPaceSecPerKm,
+            segmentIdx = 1,
+        )
+        idx = 1
 
         expanded.forEachIndexed { index, segment ->
             val pace = segment.targetPaceSecPerKm?.toDouble() ?: defaultPaceSecPerKm
@@ -145,18 +156,16 @@ object DebugSampleDataSeeder : SampleDataSeeder {
                 distanceM += stepM
                 remaining -= stepM
                 curve += DistTimePoint(distanceM, timeMs.toLong())
-                if (idx % 2 == 0) {
-                    track += TrackPointEntity(
-                        sessionId = sessionId,
-                        idx = idx,
-                        timeMs = timeMs.toLong(),
-                        lat = baseLat + distanceM / 111_195.0,
-                        lon = baseLon + (distanceM / 111_195.0) * 0.25,
-                        accuracyM = 6.0,
-                        speedMps = if (pace > 0) 1000.0 / pace else 3.0,
-                        segmentIdx = index + 1,
-                    )
-                }
+                track += TrackPointEntity(
+                    sessionId = sessionId,
+                    idx = idx,
+                    timeMs = timeMs.toLong(),
+                    lat = baseLat + distanceM / 111_195.0,
+                    lon = baseLon,
+                    accuracyM = 6.0,
+                    speedMps = if (pace > 0) 1000.0 / pace else 3.0,
+                    segmentIdx = index + 1,
+                )
                 idx++
             }
         }
