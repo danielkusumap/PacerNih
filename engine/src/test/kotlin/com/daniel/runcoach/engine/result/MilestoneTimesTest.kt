@@ -39,4 +39,14 @@ class MilestoneTimesTest {
     fun aShortSessionHasNoMilestones() {
         assertEquals(emptyList(), MilestoneTimes.compute(track(900)))
     }
+
+    @Test
+    fun recordsMatchThePerDistanceTimes() {
+        val points = track(12_000, stepM = 100, paceSecPerKm = 330.0)
+        val milestones = MilestoneTimes.compute(points).associateBy { it.meters }
+        val efforts = BestEffortCalculator.compute(points).associateBy { it.key }
+        assertEquals(efforts.getValue(BestEffortKey.K1).durationMs, milestones.getValue(1000.0).durationMs)
+        assertEquals(efforts.getValue(BestEffortKey.K5).durationMs, milestones.getValue(5000.0).durationMs)
+        assertEquals(efforts.getValue(BestEffortKey.K10).durationMs, milestones.getValue(10000.0).durationMs)
+    }
 }

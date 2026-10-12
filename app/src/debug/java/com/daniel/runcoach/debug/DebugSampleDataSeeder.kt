@@ -14,17 +14,16 @@ import com.daniel.runcoach.engine.model.SegmentKind
 import com.daniel.runcoach.engine.model.Workout
 import com.daniel.runcoach.engine.model.WorkoutExpander
 import com.daniel.runcoach.engine.model.WorkoutJson
-import com.daniel.runcoach.engine.result.BestEffort
-import com.daniel.runcoach.engine.result.BestEffortKey
-import com.daniel.runcoach.engine.result.KmSplit
-import com.daniel.runcoach.engine.result.SegmentResultData
-import com.daniel.runcoach.engine.result.SegmentStatus
-import com.daniel.runcoach.engine.result.SessionResultsData
+import com.daniel.runcoach.engine.result.DistTimePoint
+import com.daniel.runcoach.engine.result.SessionResultsCalculator
 import java.time.ZoneId
 
 /**
  * Debug-only sample data (B1). Lives in `src/debug/`, so release builds contain none of it. Every row uses an id
- * starting with `mock_`. Seeding happens once per install, guarded by a flag that data wipes never clear.
+ * starting with `mock_`. Fill/clear is manual from S15.
+ *
+ * Sample sessions are generated as a real distance/time curve and their segment/split/record numbers are computed
+ * from that curve (not fabricated), so the records page always matches the session history.
  */
 object DebugSampleDataSeeder : SampleDataSeeder {
 
@@ -59,23 +58,24 @@ object DebugSampleDataSeeder : SampleDataSeeder {
         val day = 24L * 60 * 60 * 1000
         val persistence = RunPersistence(context)
 
-        data class Seed(val daysAgo: Int, val name: String, val workout: Workout, val distanceM: Double, val paceSecPerKm: Double, val failSegments: Set<Int>)
+        data class Seed(val daysAgo: Int, val name: String, val workout: Workout, val distanceM: Double, val paceSecPerKm: Double)
 
         val seeds = listOf(
-            Seed(2, "Lari Pagi", stable5k, 5030.0, 342.0, emptySet()),
-            Seed(4, "Tempo Sore", tempo5k, 7000.0, 358.0, setOf(2)),
-            Seed(7, "Recovery Ringan", freeRun, 3010.0, 372.0, emptySet()),
-            Seed(11, "Long Run", freeRun, 10050.0, 370.0, emptySet()),
-            Seed(15, "Interval 6x400", interval6x400, 5600.0, 352.0, setOf(6, 10)),
-            Seed(21, "Lari Pagi", stable5k, 5000.0, 360.0, emptySet()),
+            Seed(2, "Lari Pagi", stable5k, 5030.0, 342.0),
+            Seed(4, "Tempo Sore", tempo5k, 7000.0, 358.0),
+            Seed(7, "Recovery Ringan", freeRun, 3010.0, 372.0),
+            Seed(11, "Long Run", freeRun, 10050.0, 370.0),
+            Seed(15, "Interval 6x400", interval6x400, 5600.0, 352.0),
+            Seed(21, "Lari Pagi", stable5k, 5000.0, 360.0),
         )
 
         seeds.forEachIndexed { i, seed ->
             val started = now - seed.daysAgo * day
-            val distanceM = seed.distanceM
-            val movingMs = (distanceM / 1000.0 * seed.paceSecPerKm * 1000).toLong()
-            val id = "${PREFIX}${seed.daysAgo}_$i"
-            val results = resultsFor(seed.workout, distanceM, seed.paceSecPerKm, seed.failSegments)
+            val id = "$PREFIX${seed.daysAgo}_$i"
+            val (curve, track) = buildRun(seed.workout, seed.distanceM, seed.paceSecPerKm, id)
+            val results = SessionResultsCalculator.compute(seed.workout, curve)
+            val distanceM = curve.last().cumulativeDistanceM
+            val movingMs = curve.last().elapsedMs
             val entity = SessionEntity(
                 id = id,
                 templateId = null,
@@ -93,7 +93,7 @@ object DebugSampleDataSeeder : SampleDataSeeder {
                 movingMs = movingMs,
                 pausedMs = 0L,
                 totalDistanceM = distanceM,
-                avgPaceSecPerKm = seed.paceSecPerKm,
+                avgPaceSecPerKm = if (distanceM > 0) movingMs / distanceM else null,
                 segPass = results.segments.count { it.status == "PASS" },
                 segFail = results.segments.count { it.status == "FAIL" },
                 segBorderline = results.segments.count { it.status == "BORDERLINE" },
@@ -105,8 +105,62 @@ object DebugSampleDataSeeder : SampleDataSeeder {
                 updatedAt = started,
             )
             repository.saveSession(entity, results)
-            persistence.appendTrackPoints(trackFor(id, distanceM, started, movingMs))
+            persistence.appendTrackPoints(track)
         }
+    }
+
+    /**
+     * Walks the expanded plan at each segment's target pace (or [defaultPaceSecPerKm]) up to [targetDistanceM],
+     * producing a consistent cumulative distance/time curve plus a matching straight-line GPS track.
+     */
+    private fun buildRun(
+        workout: Workout,
+        targetDistanceM: Double,
+        defaultPaceSecPerKm: Double,
+        sessionId: String,
+    ): Pair<List<DistTimePoint>, List<TrackPointEntity>> {
+        val expanded = runCatching { WorkoutExpander.expandFinite(workout.items) }.getOrDefault(emptyList())
+        val curve = mutableListOf(DistTimePoint(0.0, 0L))
+        val track = mutableListOf<TrackPointEntity>()
+        val baseLat = -8.5833
+        val baseLon = 116.1167
+        val step = 25.0
+        var distanceM = 0.0
+        var timeMs = 0.0
+        var idx = 0
+
+        expanded.forEachIndexed { index, segment ->
+            val pace = segment.targetPaceSecPerKm?.toDouble() ?: defaultPaceSecPerKm
+            val segmentMeters = when (val l = segment.limit) {
+                is Limit.Distance -> l.meters.toDouble()
+                is Limit.Duration -> (l.seconds * 1000.0) / pace
+                Limit.Open -> (targetDistanceM - distanceM).coerceAtLeast(0.0)
+            }
+            var remaining = segmentMeters
+            while (remaining > 0.0 && distanceM < targetDistanceM) {
+                val stepM = minOf(step, remaining, targetDistanceM - distanceM)
+                if (stepM <= 0.0) break
+                // milliseconds per metre = seconds per km (pace).
+                timeMs += stepM * pace
+                distanceM += stepM
+                remaining -= stepM
+                curve += DistTimePoint(distanceM, timeMs.toLong())
+                if (idx % 2 == 0) {
+                    track += TrackPointEntity(
+                        sessionId = sessionId,
+                        idx = idx,
+                        timeMs = timeMs.toLong(),
+                        lat = baseLat + distanceM / 111_195.0,
+                        lon = baseLon + (distanceM / 111_195.0) * 0.25,
+                        accuracyM = 6.0,
+                        speedMps = if (pace > 0) 1000.0 / pace else 3.0,
+                        segmentIdx = index + 1,
+                    )
+                }
+                idx++
+            }
+        }
+        return curve to track
     }
 
     private val stable5k = Workout(
@@ -116,9 +170,9 @@ object DebugSampleDataSeeder : SampleDataSeeder {
     private val tempo5k = Workout(
         id = "", name = "Tempo 5 km",
         items = listOf(
-            Segment("Pemanasan", SegmentKind.WARMUP, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
+            Segment("Pemanasan", SegmentKind.WARMUP, Limit.Distance(1000), targetPaceSecPerKm = null),
             Segment("Tempo", SegmentKind.RUN, Limit.Distance(5000), targetPaceSecPerKm = 340),
-            Segment("Pendinginan", SegmentKind.COOLDOWN, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
+            Segment("Pendinginan", SegmentKind.COOLDOWN, Limit.Distance(1000), targetPaceSecPerKm = null),
         ),
     )
     private val freeRun = Workout(
@@ -128,7 +182,7 @@ object DebugSampleDataSeeder : SampleDataSeeder {
     private val interval6x400 = Workout(
         id = "", name = "Interval 6x400",
         items = listOf(
-            Segment("Pemanasan", SegmentKind.WARMUP, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
+            Segment("Pemanasan", SegmentKind.WARMUP, Limit.Distance(1000), targetPaceSecPerKm = null),
             Repeat(
                 times = 6,
                 children = listOf(
@@ -136,92 +190,9 @@ object DebugSampleDataSeeder : SampleDataSeeder {
                     Segment("Pemulihan", SegmentKind.RECOVERY, Limit.Distance(200), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
                 ),
             ),
-            Segment("Pendinginan", SegmentKind.COOLDOWN, Limit.Distance(1000), targetPaceSecPerKm = 505, targetBound = PaceTargetBound.MIN),
+            Segment("Pendinginan", SegmentKind.COOLDOWN, Limit.Distance(1000), targetPaceSecPerKm = null),
         ),
     )
-
-    /** Builds one segment result per expanded segment plus km splits and best efforts for the whole session. */
-    private fun resultsFor(workout: Workout, distanceM: Double, paceSecPerKm: Double, failSegments: Set<Int>): SessionResultsData {
-        val expanded = runCatching { WorkoutExpander.expandFinite(workout.items) }.getOrDefault(emptyList())
-        var cursor = 0.0
-        val segments = expanded.mapIndexed { index, seg ->
-            val meters = (seg.limit as? Limit.Distance)?.meters?.toDouble() ?: (distanceM - cursor).coerceAtLeast(0.0)
-            val pace = seg.targetPaceSecPerKm?.toDouble() ?: paceSecPerKm
-            val durationMs = (meters / 1000.0 * pace * 1000).toLong()
-            cursor += meters
-            val hasTarget = seg.targetPaceSecPerKm != null
-            val status = when {
-                !hasTarget -> "NO_TARGET"
-                (index + 1) in failSegments -> "FAIL"
-                else -> "PASS"
-            }
-            val delta = if (hasTarget && status == "FAIL") (pace * 0.06).toLong() else 0L
-            SegmentResultData(
-                idx = index + 1,
-                label = seg.label,
-                kind = seg.kind.name,
-                limitType = when (seg.limit) {
-                    is Limit.Distance -> "distance"
-                    is Limit.Duration -> "duration"
-                    Limit.Open -> "open"
-                },
-                limitValue = (seg.limit as? Limit.Distance)?.meters?.toDouble() ?: (seg.limit as? Limit.Duration)?.seconds?.toDouble() ?: 0.0,
-                targetPace = seg.targetPaceSecPerKm,
-                distanceM = meters,
-                durationMs = durationMs,
-                avgPace = if (meters > 0) durationMs / 1000.0 / (meters / 1000.0) else null,
-                deltaSec = delta,
-                status = status,
-            )
-        }
-
-        val kmCount = (distanceM / 1000.0).toInt()
-        val splits = (1..kmCount).map { km ->
-            val isPartial = km == kmCount && distanceM % 1000.0 > 10.0
-            val kmDistance = if (isPartial) distanceM - (kmCount - 1) * 1000.0 else 1000.0
-            val pace = paceSecPerKm + ((km % 5) - 2) * 3.0
-            KmSplit(
-                index = km,
-                isPartial = isPartial,
-                distanceM = kmDistance,
-                durationMs = (kmDistance / 1000.0 * pace * 1000).toLong(),
-                paceSecPerKm = pace,
-                targetSecPerKm = paceSecPerKm.toInt(),
-                deltaSec = (pace - paceSecPerKm).toLong(),
-                status = if (km in failSegments) SegmentStatus.FAIL else SegmentStatus.PASS,
-            )
-        }
-
-        val efforts = buildList {
-            if (distanceM >= 1000) add(BestEffort(BestEffortKey.K1, (paceSecPerKm * 0.97 * 1000).toLong(), 0.0))
-            if (distanceM >= 5000) add(BestEffort(BestEffortKey.K5, (paceSecPerKm * 0.99 * 5000).toLong(), 0.0))
-            if (distanceM >= 10000) add(BestEffort(BestEffortKey.K10, (paceSecPerKm * 10000).toLong(), 0.0))
-        }
-        return SessionResultsData(segments, splits, efforts)
-    }
-
-    private fun trackFor(sessionId: String, distanceM: Double, startedAtMs: Long, movingMs: Long): List<TrackPointEntity> {
-        val points = 80
-        val baseLat = -8.5833
-        val baseLon = 116.1167
-        return (0 until points).map { i ->
-            val f = i.toDouble() / (points - 1)
-            val angle = f * 2 * Math.PI
-            val radiusM = 240.0 + 80 * Math.sin(angle * 2)
-            val lat = baseLat + (radiusM * Math.cos(angle)) / 111_195.0
-            val lon = baseLon + (radiusM * Math.sin(angle)) / (111_195.0 * Math.cos(Math.toRadians(baseLat)))
-            TrackPointEntity(
-                sessionId = sessionId,
-                idx = i,
-                timeMs = (f * movingMs).toLong(),
-                lat = lat,
-                lon = lon,
-                accuracyM = 6.0,
-                speedMps = if (movingMs > 0) distanceM / (movingMs / 1000.0) else 3.0,
-                segmentIdx = 1,
-            )
-        }
-    }
 
     private const val PREFIX = "mock_"
 }

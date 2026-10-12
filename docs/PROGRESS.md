@@ -709,3 +709,9 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - Detail sesi (S08): kartu **"Waktu per jarak"** menampilkan waktu + avg pace untuk 1/5/10/15 km, Half Marathon,
   30 km, Marathon — **hanya yang jarak sesinya sudah tercapai**. Engine `MilestoneTimes` (kumulatif dari start).
 - Engine **230 hijau** (MilestoneTimesTest), app unit + instrumented **38/38 hijau**.
+
+## Sample data konsisten dengan rekor (2026-10-12)
+- Debug sample dirombak: sesi dibangun sebagai kurva jarak/waktu nyata (jalan sesuai target tiap segmen), lalu
+  segmen/split/**rekor** dihitung via `SessionResultsCalculator` dari kurva itu (tidak lagi angka karangan 0.97/0.99).
+  Jadi halaman Rekor selalu cocok dengan data historisnya.
+- Test: `MilestoneTimesTest` menambah cek rekor == waktu per-jarak. Engine **231 hijau**.
