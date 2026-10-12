@@ -252,6 +252,7 @@ fun RecordDetailScreen(keyName: String, onOpenSession: (String) -> Unit, onBack:
                     title = Formatters.duration(row.durationMs),
                     subtitle = "${Formatters.pace(paceOf(row))} · ${formatDate(row.startedAtEpochMs)}",
                     trailing = { Text(row.sessionName, style = type.caption, color = colors.textTertiary) },
+                    onClick = { onOpenSession(row.sessionId) },
                 )
                 RcDivider()
             }
