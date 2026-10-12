@@ -53,6 +53,8 @@ import com.daniel.runcoach.ui.components.RcButtonSize
 import com.daniel.runcoach.ui.components.RcCard
 import com.daniel.runcoach.ui.components.RcIconButton
 import com.daniel.runcoach.ui.components.RcStatus
+import com.daniel.runcoach.ui.components.RcTextButton
+import com.daniel.runcoach.ui.components.RcTextButtonTone
 import com.daniel.runcoach.ui.components.ResultChip
 import com.daniel.runcoach.ui.components.SegmentStrip
 import com.daniel.runcoach.ui.components.SegmentedControl
@@ -92,6 +94,13 @@ fun PraStartScreen(workout: Workout, onStarted: () -> Unit, onBack: () -> Unit) 
         onStarted()
     }
 
+    fun copyStructure() {
+        val text = com.daniel.runcoach.engine.model.WorkoutTextFormatter.format(workout, voiceLanguage)
+        val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
+        clipboard?.setPrimaryClip(android.content.ClipData.newPlainText("workout", text))
+        android.widget.Toast.makeText(context, R.string.copied, android.widget.Toast.LENGTH_SHORT).show()
+    }
+
     val colors = LocalRcColors.current
     val spacing = LocalRcSpacing.current
     val type = LocalRcTypography.current
@@ -109,7 +118,7 @@ fun PraStartScreen(workout: Workout, onStarted: () -> Unit, onBack: () -> Unit) 
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f),
             )
-            Box(Modifier.size(48.dp))
+            RcTextButton(stringResource(R.string.copy_text), onClick = { copyStructure() }, tone = RcTextButtonTone.Accent)
         }
         Column(
             modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = spacing.screenH),
