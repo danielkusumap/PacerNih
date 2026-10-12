@@ -427,3 +427,13 @@ dari plan dan dapat dikembalikan ke latest stable saat rilis. `compileSdk` tetap
   announcer mengucapkan A07 (di-join dengan A03 berikutnya jadi satu ucapan), A08/A09/A10 (dengan pace/target
   terakhir untuk BackToStable), dan menandai skip tanpa A07. Tick service 250 ms.
 - Sisa (belum): `SpeechSink`/`RecordingSpeechSink`, snapshot test A01-A17 lengkap, golden urutan ucapan 60x.
+
+## D-060 Revisi pemilik (R1-R3, 2026-10-12)
+Lihat `docs/pacernih-update/UPDATE-BUGS-AND-FEATURES.md` bagian 12.
+- **R1**: default warm-up/cool-down = TANPA TARGET; PNG share memakai daftar centang per segmen (semua status, default
+  tercentang); batang seragam, warna per status.
+- **R2**: target pace tiga mode (Maks/Min/**Rentang**); rentang sempit (>=5 dtk) didukung; penilaian rentang LULUS di
+  dalam, BORDERLINE dalam margin GPS, GAGAL di luar; **Min** mendapat alert Terlalu lambat (penjagaan baru) selain
+  Terlalu cepat; **Maks** tetap dua alert; margin per segmen dipakai dua arah, wording diubah.
+- **R3**: rekor = jarak D **pertama dari start** (kumulatif), HM=21,0975 km, FM=42,195 km; sliding-window dihapus;
+  baris "1 km tercepat" (S08) dan "dari km y" (S11) dihapus.

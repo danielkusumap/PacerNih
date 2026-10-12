@@ -433,3 +433,65 @@ Satu commit per item. Perbarui `docs/PROGRESS.md` setelah tiap item dengan hasil
 - N1 (pace rata-rata sejak mulai di layar live): **dibatalkan**.
 - Rekor/skala capek/catatan/jumlah segmen lulus pada gambar share: tidak ada.
 - Peta dasar (tile) pada gambar share: tidak ada, hanya polyline.
+
+---
+
+## 12. Revisi pemilik (2026-10-12)
+
+Tiga revisi ini **final**. Semua mengalahkan aturan sebelumnya yang bertentangan. Urutan: R1 → R2 → R3, satu commit per item.
+
+### R1. Warm-up/cool-down tanpa target + pemilih segmen di PNG
+**Masalah:** warm-up/cool-down default punya target MIN sehingga bisa GAGAL/BORDERLINE, dan grafik PNG hanya memuat segmen LULUS → mereka sering tak muncul.
+
+**Aturan baru:**
+1. **Default warm-up & cool-down = TANPA TARGET** (tidak dinilai). Pengguna tetap boleh menambahkan target manual.
+2. Di halaman **Bagikan sesi**, blok "Hasil segmen" berubah dari "hanya yang lulus" menjadi **daftar centang per segmen**: pengguna memilih sendiri segmen mana yang ditampilkan, **apa pun statusnya** (LULUS/GAGAL/BORDERLINE/TANPA TARGET/DILEWATI). Default: **semua dicentang**. Segmen tanpa pace terukur (mis. `Ds < 50 m`) tetap tidak bisa dipilih (tidak ada nilainya).
+3. **Batang seragam**: semua batang **ukuran sama** (lebar & tinggi sama; tidak lagi sebanding kecepatan). **Warna per status**: hijau=LULUS, merah=GAGAL, kuning=BORDERLINE, abu=TANPA TARGET/DILEWATI.
+4. Label blok tetap "SPLIT SEGMENT"; nomor segmen memakai nomor rencana lengkap (`#3`).
+
+**AC:**
+- [ ] Workout baru: warm-up/cool-down tanpa target (status TANPA TARGET), tetap bisa diberi target manual.
+- [ ] PNG share: daftar centang per segmen (semua status), default semua tercentang; batang seragam berwarna per status.
+- [ ] Segmen tanpa pace (`Ds < 50 m`) tidak muncul di daftar pilihan.
+- [ ] Hanya segmen yang dicentang yang tergambar.
+
+### R2. Target pace tiga mode: Maks / Min / **Rentang**
+**Aturan baru:**
+1. D01 "Target pace" punya **tiga** pilihan: **Maks** (`≤`, jangan lebih lambat), **Min** (`≥`, jangan lebih cepat), **Rentang** (dua pace: batas cepat & batas lambat).
+2. **Rentang** = dua field pace; validasi **cepat < lambat**. Rentang sempit harus didukung: **10 dtk** (mis. 6:30–6:40) bahkan **5 dtk**; tidak ada lebar minimum.
+3. **Penilaian:**
+   - Maks/Min: seperti sekarang.
+   - Rentang: **LULUS** bila rata-rata ada di dalam `[cepat, lambat]`; **BORDERLINE** bila keluar dalam margin error GPS `min(T × 6 / Ds, 15)` (T = batas yang dilanggar); **GAGAL** di luar itu.
+4. **Alert (dua arah untuk ketiga mode):**
+   - **Maks**: Terlalu lambat (`projected > target`) + Terlalu cepat (`paceLive < target − margin`).
+   - **Min**: Terlalu cepat (`paceLive < target`) + **Terlalu lambat** (`paceLive > target + margin`) — *penjagaan baru*.
+   - **Rentang**: Terlalu cepat (`paceLive < batas cepat`) + Terlalu lambat (`paceLive > batas lambat`).
+   - Semua lewat state machine yang ada: hold 5 dtk, cooldown ulang 25 dtk, hysteresis 3 dtk/km, gerbang awal segmen, tanpa alert 15 dtk terakhir, tanpa koreksi di segmen pendek (< 400 m / < 60 dtk). Jadi tidak bawel.
+5. **Margin** tetap **per segmen** (field `fastMarginSec` yang ada, dipakai untuk **kedua arah**: terlalu cepat & terlalu lambat). **Wording UI** diubah dari "Margin terlalu cepat" menjadi netral, mis. **"Margin (detik)"** (atau "Toleransi pace"). Mode Rentang **mengabaikan** margin ini (batas rentang sudah jadi marginnya).
+6. **Voice A03** untuk Rentang: "Target pace {cepat}–{lambat}" (mis. "6 menit 30 sampai 6 menit 40").
+
+**AC:**
+- [ ] D01 tiga mode; Rentang punya dua field + validasi cepat < lambat; rentang 5 dtk lolos validasi.
+- [ ] Evaluator: LULUS/BORDERLINE/GAGAL rentang sesuai aturan; Min menghasilkan Terlalu lambat saat pace > target + margin.
+- [ ] Maks tetap menghasilkan dua alert (terlalu lambat & terlalu cepat).
+- [ ] Unit test untuk tiap mode (penilaian + alert) dan A03 rentang.
+
+### R3. Records dihitung dari titik start (kumulatif), bukan sliding-window
+**Aturan baru:**
+1. Rekor untuk jarak **D** = waktu menempuh **D pertama dari start** (kumulatif dari 0), **bukan** window tercepat di mana pun.
+2. **D**: 1 km, 5 km, 10 km pertama; **Half Marathon = 21,0975 km**; **Marathon = 42,195 km** (tepat).
+3. Sesi dengan total jarak < D → tidak ada rekor untuk D.
+4. Sliding-window (`BestEffortCalculator` lama) **dihapus**. `startOffsetM` selalu 0 (kolom boleh dipertahankan demi kompatibilitas, tapi tidak ditampilkan).
+5. **Hapus** baris "1 km tercepat di sesi ini" di S08 (I1-UI) dan baris "dari km y" di S11.
+6. Filter anomali pace (< 2:30/km) tetap; `excludeFromRecords` tetap.
+
+**AC:**
+- [ ] Rekor = waktu pada jarak D dari start (uji dengan track yang sengaja lebih cepat di tengah → rekor memakai bagian awal).
+- [ ] HM/FM tepat 21,0975 km & 42,195 km; sesi < D tidak menghasilkan rekor.
+- [ ] Baris "1 km tercepat" (S08) dan "dari km y" (S11) hilang.
+- [ ] Vektor uji V13/V14/V15 dan mock diperbarui.
+
+### Ringkasan dampak
+- **R1**: UI share + default editor (+ mungkin mock/DB tak berubah).
+- **R2**: engine (model/evaluator/alert/voice) + DB (kolom batas rentang) + D01 + test.
+- **R3**: engine (`BestEffortCalculator`) + S08/S11 + test/vektor + mock.
