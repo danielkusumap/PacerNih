@@ -210,7 +210,7 @@ class WorkoutRunnerTest {
     }
 
     @Test
-    fun `segment end carries average pace for the announcement`() {
+    fun `segment end carries the segment average pace for the announcement`() {
         val workout = Workout("s", "s", listOf(distanceSegment("A", 60), distanceSegment("B", 60)))
         val runner = WorkoutRunner(workout, EngineConfig(startCountdownSec = 0))
         val sim = Sim(runner)
@@ -218,7 +218,8 @@ class WorkoutRunnerTest {
         sim.run(30, 3.0)
         val end = runner.lastOf<AlertEvent.SegmentEnd>()
         assertTrue(end != null)
-        assertTrue((end!!.avgPaceSecPerKm ?: 0.0) > 0.0, "avg pace present")
+        // 60 m covered over 21 s of segment moving time (first sample is the reference) -> ~350 s/km segment average.
+        assertEquals(350.0, end!!.avgPaceSecPerKm!!, 2.0)
     }
 
     @Test
