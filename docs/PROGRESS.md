@@ -715,3 +715,8 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
   segmen/split/**rekor** dihitung via `SessionResultsCalculator` dari kurva itu (tidak lagi angka karangan 0.97/0.99).
   Jadi halaman Rekor selalu cocok dengan data historisnya.
 - Test: `MilestoneTimesTest` menambah cek rekor == waktu per-jarak. Engine **231 hijau**.
+
+## Lanjutan (2026-10-12)
+- Sample: track contoh dibuat lurus (lon konstan) agar jarak haversine = jarak nominal, sehingga "Waktu per jarak" di
+  detail sesi sama dengan Rekor.
+- S04: tombol "Copy as text" di pra-start (struktur workout bisa disalin tanpa harus start).
