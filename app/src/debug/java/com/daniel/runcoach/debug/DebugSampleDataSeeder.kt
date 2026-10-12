@@ -193,9 +193,9 @@ object DebugSampleDataSeeder : SampleDataSeeder {
         }
 
         val efforts = buildList {
-            if (distanceM >= 1000) add(BestEffort(BestEffortKey.K1, (paceSecPerKm * 0.97 * 1000).toLong(), 200.0))
-            if (distanceM >= 5000) add(BestEffort(BestEffortKey.K5, (paceSecPerKm * 0.99 * 5000).toLong(), 400.0))
-            if (distanceM >= 10000) add(BestEffort(BestEffortKey.K10, (paceSecPerKm * 10000).toLong(), 300.0))
+            if (distanceM >= 1000) add(BestEffort(BestEffortKey.K1, (paceSecPerKm * 0.97 * 1000).toLong(), 0.0))
+            if (distanceM >= 5000) add(BestEffort(BestEffortKey.K5, (paceSecPerKm * 0.99 * 5000).toLong(), 0.0))
+            if (distanceM >= 10000) add(BestEffort(BestEffortKey.K10, (paceSecPerKm * 10000).toLong(), 0.0))
         }
         return SessionResultsData(segments, splits, efforts)
     }

@@ -159,8 +159,9 @@ class FormulaVectorsTest {
         }
         val best = BestEffortCalculator.compute(points)
         val k1 = best.first { it.key == BestEffortKey.K1 }
-        assertEquals(240000.0, k1.durationMs.toDouble(), 50.0)
-        assertEquals(4000.0, k1.startOffsetM, 1.0)
+        // R3: records come from the start, so the first 1 km is the slow one (360 s), not the fast middle km.
+        assertEquals(360000.0, k1.durationMs.toDouble(), 50.0)
+        assertEquals(0.0, k1.startOffsetM, 1.0)
         val k5 = best.first { it.key == BestEffortKey.K5 }
         assertEquals(1680000.0, k5.durationMs.toDouble(), 200.0)
         assertEquals(0.0, k5.startOffsetM, 1.0)

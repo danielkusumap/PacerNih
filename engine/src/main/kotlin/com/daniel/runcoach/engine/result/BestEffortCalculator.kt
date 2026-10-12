@@ -17,14 +17,13 @@ enum class BestEffortKey(val meters: Double) {
  */
 data class DistTimePoint(val cumulativeDistanceM: Double, val elapsedMs: Long)
 
-/** Fastest window covering [BestEffortKey.meters], starting at [startOffsetM] from the origin. */
+/** Time taken to cover [BestEffortKey.meters] from the start of the session ([startOffsetM] is always 0, R3). */
 data class BestEffort(val key: BestEffortKey, val durationMs: Long, val startOffsetM: Double)
 
 /**
- * Best effort = the fastest time to cover distance D *anywhere* in the session, not the aligned
- * km splits (plan 6.10). Sliding window over the distance curve with linear interpolation for the
- * window start, O(n) two-pointer. Windows faster than [EngineConfig.recordMinValidPaceSecPerKm]
- * are treated as GPS anomalies and skipped.
+ * R3: a record is the time to cover distance D **from the start** of the session (the first D km), not the
+ * fastest window anywhere. O(n) interpolation of the time at cumulative distance D. A duration faster than
+ * [EngineConfig.recordMinValidPaceSecPerKm] is a GPS anomaly and yields no record for D.
  */
 object BestEffortCalculator {
 
@@ -33,46 +32,30 @@ object BestEffortCalculator {
         return BestEffortKey.entries.mapNotNull { bestFor(it, points, config) }
     }
 
-    private fun bestFor(
-        key: BestEffortKey,
-        points: List<DistTimePoint>,
-        config: EngineConfig,
-    ): BestEffort? {
+    private fun bestFor(key: BestEffortKey, points: List<DistTimePoint>, config: EngineConfig): BestEffort? {
         val distanceM = key.meters
         if (points.last().cumulativeDistanceM < distanceM) return null
 
-        // A pace faster than the minimum corresponds to a shorter duration than this.
+        val startMs = points.first().elapsedMs
+        val durationMs = timeAtDistance(points, distanceM) - startMs
         val minValidMs = (distanceM / 1000.0 * config.recordMinValidPaceSecPerKm * 1000.0).toLong()
+        if (durationMs < minValidMs) return null
+        return BestEffort(key, durationMs, 0.0)
+    }
 
-        var best: BestEffort? = null
-        var startIndex = 0
-        for (endIndex in points.indices) {
-            val endDistanceM = points[endIndex].cumulativeDistanceM
-            if (endDistanceM < distanceM) continue
-
-            val targetStartM = endDistanceM - distanceM
-            while (
-                startIndex + 1 < endIndex &&
-                points[startIndex + 1].cumulativeDistanceM <= targetStartM
-            ) {
-                startIndex++
-            }
-            val start = points[startIndex]
-            val next = points[startIndex + 1]
-            val spanM = next.cumulativeDistanceM - start.cumulativeDistanceM
-            val startTimeMs = if (spanM > 0.0) {
-                start.elapsedMs +
-                    ((targetStartM - start.cumulativeDistanceM) / spanM * (next.elapsedMs - start.elapsedMs)).toLong()
-            } else {
-                start.elapsedMs
-            }
-
-            val durationMs = points[endIndex].elapsedMs - startTimeMs
-            if (durationMs < minValidMs) continue
-            if (best == null || durationMs < best.durationMs) {
-                best = BestEffort(key, durationMs, targetStartM)
+    private fun timeAtDistance(points: List<DistTimePoint>, distanceM: Double): Long {
+        if (distanceM <= points.first().cumulativeDistanceM) return points.first().elapsedMs
+        if (distanceM >= points.last().cumulativeDistanceM) return points.last().elapsedMs
+        for (i in 1 until points.size) {
+            val after = points[i]
+            if (after.cumulativeDistanceM >= distanceM) {
+                val before = points[i - 1]
+                val span = after.cumulativeDistanceM - before.cumulativeDistanceM
+                if (span <= 0.0) return after.elapsedMs
+                val fraction = (distanceM - before.cumulativeDistanceM) / span
+                return before.elapsedMs + (fraction * (after.elapsedMs - before.elapsedMs)).toLong()
             }
         }
-        return best
+        return points.last().elapsedMs
     }
 }

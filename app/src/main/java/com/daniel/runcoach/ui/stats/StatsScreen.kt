@@ -213,7 +213,7 @@ fun RecordDetailScreen(keyName: String, onOpenSession: (String) -> Unit, onBack:
                 Text(stringResource(R.string.s10_none), style = type.body, color = colors.textSecondary)
             } else {
                 Text(Formatters.duration(hero.durationMs), style = type.displayL, color = colors.textPrimary)
-                Text(stringResource(R.string.s10_pace, Formatters.pace(paceOf(hero))) + " · " + stringResource(R.string.s11_from, "%.1f".format(hero.startOffsetM / 1000.0)), style = type.body, color = colors.textSecondary)
+                Text(stringResource(R.string.s10_pace, Formatters.pace(paceOf(hero))), style = type.body, color = colors.textSecondary)
                 Row(
                     modifier = Modifier.clickable { onOpenSession(hero.sessionId) },
                     verticalAlignment = Alignment.CenterVertically,

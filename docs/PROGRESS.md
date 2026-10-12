@@ -687,3 +687,10 @@ Sumber kebenaran visual baru = `docs/ui-review/mock/` (HTML/CSS). Isi/data halam
 - D01: pilihan tiga mode + dua field (cepat/lambat). Voice A03 rentang "6:30 sampai 6:40". Riwayat/live tampilkan
   "6:30–6:40". DB `SegmentResult.targetPace2` (migrasi v7).
 - Engine **227 hijau** (5 test baru), instrumented **38/38 hijau**.
+
+## R3 Rekor dihitung dari start (2026-10-12)
+- `BestEffortCalculator`: rekor = waktu menempuh **D pertama dari start** (kumulatif), bukan sliding-window.
+  `startOffsetM` selalu 0. HM=21,0975 km, FM=42,195 km (tetap). Filter anomali (<2:30/km) tetap.
+- Hapus baris "1 km tercepat di sesi ini" (S08) dan "dari km y" (S11). Vektor V14 & test best-effort diperbarui; mock
+  effort offset = 0.
+- Engine **227 hijau**, instrumented **38/38 hijau**.

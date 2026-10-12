@@ -38,14 +38,15 @@ class BestEffortCalculatorTest {
     }
 
     @Test
-    fun `a fast kilometre in the middle is found as the 1 km best effort`() {
+    fun `R3 records are measured from the start, not the fastest window`() {
         val result = BestEffortCalculator.compute(
             track(10_000, 100) { d -> if (d >= 4000.0 && d < 5000.0) 240.0 else 360.0 },
         )
         val k1 = best(result, BestEffortKey.K1)
-        assertMs(240_000.0, k1.durationMs, 50.0)
-        assertEquals(4000.0, k1.startOffsetM, 1.0)
-        // A 5 km window can only contain that one fast km: 4 km slow + 1 km fast.
+        // The first kilometre (360 s), not the faster one in the middle.
+        assertMs(360_000.0, k1.durationMs, 50.0)
+        assertEquals(0.0, k1.startOffsetM, 1.0)
+        // The first 5 km: 4 km slow + 1 km fast.
         assertMs(1_680_000.0, best(result, BestEffortKey.K5).durationMs, 200.0)
     }
 
